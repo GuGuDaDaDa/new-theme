@@ -1,0 +1,11 @@
+{{ with resources.Get "css/compiled.css" }}
+  {{ $css := . | fingerprint }}
+  <link
+    rel="stylesheet"
+    href="{{ $css.RelPermalink }}"
+    integrity="{{ $css.Data.Integrity }}"
+    crossorigin="anonymous"
+  />
+{{ else }}
+  {{ errorf "Missing compiled CSS. Run npm run build or npm run dev." }}
+{{ end }}

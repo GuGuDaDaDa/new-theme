@@ -1,0 +1,5 @@
+{{ $pages := partial "data/public-posts.html" . }}
+{{ if eq .Kind "term" }}
+  {{ $pages = partial "data/sort-posts.html" .RegularPages }}
+{{ end }}
+{{ return (dict "page" . "pages" $pages "pager" (.Paginate $pages 12)) }}

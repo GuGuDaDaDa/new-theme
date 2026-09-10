@@ -1,0 +1,22 @@
+:root {
+  color-scheme: light;
+  --bg: #f7f8fa;
+  --surface: #fff;
+  --text: #252b34;
+  --muted: #616c7b;
+  --accent: #355e85;
+  --soft: #e9eef3;
+  --line: #d7dfe7;
+  --focus: #386ea0;
+}
+[data-theme='dark'] {
+  color-scheme: dark;
+  --bg: #1b2028;
+  --surface: #242c37;
+  --text: #e5eaf0;
+  --muted: #a6b2c1;
+  --accent: #9dc5e8;
+  --soft: #293442;
+  --line: #465362;
+  --focus: #acd3f4;
+}

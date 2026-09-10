@@ -1,0 +1,5 @@
+<nav aria-label="主导航">
+  {{ range site.Menus.main }}
+    {{ with .Page }}<a href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>{{ end }}
+  {{ end }}
+</nav>

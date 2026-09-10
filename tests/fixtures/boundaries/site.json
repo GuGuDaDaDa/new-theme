@@ -1,0 +1,25 @@
+{
+  "clock": "2026-09-10T00:00:00Z",
+  "content": [
+    {
+      "path": "_index.md",
+      "source": "---\ntitle: Boundary Home\n---\n"
+    },
+    {
+      "path": "posts/_index.md",
+      "source": "---\ntitle: Boundary Posts\n---\n"
+    },
+    {
+      "path": "posts/public/index.md",
+      "source": "---\ntitle: Boundary Public\ndate: 2026-09-09T12:00:00Z\ndescription: Isolated fixture content\ntags:\n  - boundary\n---\n\nThis post is generated in an isolated project root.\n"
+    },
+    {
+      "path": "about/index.md",
+      "source": "---\ntitle: About Fixture\ntype: about\n---\n\nFixture about page.\n"
+    },
+    {
+      "path": "friends/index.md",
+      "source": "---\ntitle: Friends Fixture\ntype: friends\n---\n\nFixture friends page.\n"
+    }
+  ]
+}

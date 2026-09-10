@@ -1,0 +1,7 @@
+<div class="masonry" data-cards>
+  {{ range .pager.Pages }}
+    {{ partial "card.html" . }}
+  {{ else }}
+    <p>暂无文章</p>
+  {{ end }}
+</div>

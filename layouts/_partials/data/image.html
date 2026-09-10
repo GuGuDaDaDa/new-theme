@@ -1,0 +1,64 @@
+{{- $page := . -}}
+{{- $position := $page.Params.cover_position | default "50% 50%" -}}
+{{- $cover := dict
+  "url" ""
+  "originalURL" ""
+  "width" 0
+  "height" 0
+  "srcset" (slice)
+  "position" $position
+  "alt" ($page.Params.cover_alt | default "")
+-}}
+{{- with $page.Params.cover -}}
+  {{- $value := strings.TrimSpace . -}}
+  {{- if strings.HasPrefix $value "https://" -}}
+    {{- $cover = dict
+      "url" $value
+      "originalURL" $value
+      "width" 0
+      "height" 0
+      "srcset" (slice)
+      "position" $position
+      "alt" ($page.Params.cover_alt | default "")
+    -}}
+  {{- else if strings.HasPrefix $value "/" -}}
+    {{- $relative := strings.TrimPrefix $value "/" -}}
+    {{- $unsafe := strings.HasPrefix $value "//" -}}
+    {{- range split $relative "/" -}}
+      {{- if or (eq . "..") (eq . ".") (eq . "") -}}
+        {{- $unsafe = true -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $unsafe -}}
+      {{- warnf "Ignoring unsafe cover path %q for %s" $value $page.RelPermalink -}}
+    {{- else if os.FileExists (printf "static/%s" $relative) -}}
+      {{- $cover = dict
+        "url" (relURL $value)
+        "originalURL" (absURL $value)
+        "width" 0
+        "height" 0
+        "srcset" (slice)
+        "position" $position
+        "alt" ($page.Params.cover_alt | default "")
+      -}}
+    {{- else -}}
+      {{- warnf "Cover %q for %s was not found in the site static directory; omitting it" $value $page.RelPermalink -}}
+    {{- end -}}
+  {{- else -}}
+    {{- $resource := $page.Resources.GetMatch $value -}}
+    {{- if and $resource (eq $resource.MediaType.MainType "image") -}}
+      {{- $cover = dict
+        "url" $resource.RelPermalink
+        "originalURL" $resource.Permalink
+        "width" $resource.Width
+        "height" $resource.Height
+        "srcset" (slice)
+        "position" $position
+        "alt" ($page.Params.cover_alt | default "")
+      -}}
+    {{- else -}}
+      {{- warnf "Cover %q for %s was not found in the page bundle; omitting it" $value $page.RelPermalink -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $cover -}}

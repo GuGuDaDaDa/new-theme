@@ -1,0 +1,12 @@
+{{ $view := partial "data/post-view.html" . }}
+<article class="post" data-post-url="{{ .RelPermalink }}">
+  {{ partial "tags.html" . }}
+  <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
+  {{ with $view.text.cardExcerpt }}<p>{{ . }}</p>{{ end }}
+  <div class="meta">
+    {{ if .Params._night.updated }}更新于{{ end }}<time
+      datetime="{{ .Params._night.displayDate }}"
+      >{{ time.Format "2006 / 01 / 02" .Params._night.displayDate }}</time
+    >
+  </div>
+</article>

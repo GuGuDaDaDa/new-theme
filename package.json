@@ -1,0 +1,44 @@
+{
+  "name": "night-theme",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": "26.7.0"
+  },
+  "scripts": {
+    "dev": "node scripts/dev.mjs",
+    "build": "node scripts/build.mjs",
+    "preview": "node scripts/preview.mjs",
+    "lint": "eslint assets/js scripts tests eslint.config.js playwright.config.js --max-warnings=0",
+    "format": "prettier --write README.md package.json package-lock.json .prettierrc.json hugo.toml eslint.config.js playwright.config.js 'archetypes/**/*.md' 'assets/**/*.{css,js}' 'data/**/*.{json,yaml,yml}' 'docs/cycles/**/*.md' docs/README.md docs/validation.md 'layouts/**/*.{html,json,xml}' 'scripts/**/*.{js,mjs}' 'tests/**/*.{js,mjs,json}'",
+    "format:check": "prettier --check README.md package.json package-lock.json .prettierrc.json hugo.toml eslint.config.js playwright.config.js 'archetypes/**/*.md' 'assets/**/*.{css,js}' 'data/**/*.{json,yaml,yml}' 'docs/cycles/**/*.md' docs/README.md docs/validation.md 'layouts/**/*.{html,json,xml}' 'scripts/**/*.{js,mjs}' 'tests/**/*.{js,mjs,json}'",
+    "test": "node --test tests/unit/*.test.mjs tests/integration/*.test.mjs",
+    "test:browser": "playwright test",
+    "check": "npm run lint && npm run format:check && npm test && npm run build"
+  },
+  "dependencies": {
+    "fuse.js": "7.5.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "10.0.1",
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/cli": "4.3.3",
+    "axe-core": "4.13.0",
+    "cheerio": "1.2.0",
+    "chokidar": "5.0.0",
+    "esbuild": "0.28.2",
+    "eslint": "10.10.0",
+    "eslint-config-prettier": "10.1.8",
+    "eslint-plugin-jsdoc": "64.3.8",
+    "globals": "17.12.0",
+    "gray-matter": "4.0.3",
+    "lighthouse": "13.4.1",
+    "prettier": "3.9.6",
+    "prettier-plugin-go-template": "0.0.15",
+    "prettier-plugin-toml": "2.0.6",
+    "smol-toml": "1.8.0",
+    "tailwindcss": "4.3.3",
+    "yaml": "2.9.0"
+  }
+}

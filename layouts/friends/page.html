@@ -1,0 +1,10 @@
+{{ define "main" }}
+  <div class="prose">
+    <h1>{{ .Title }}</h1>
+    {{ .Content }}{{ range hugo.Data.friends }}
+      <p><a href="{{ .url }}">{{ .name }}</a></p>
+    {{ else }}
+      <p>友链整理中。</p>
+    {{ end }}
+  </div>
+{{ end }}

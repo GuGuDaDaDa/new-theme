@@ -1,0 +1,9 @@
+{{ $src := .Destination }}
+{{ $resource := .Page.Resources.Get .Destination }}
+{{ with $resource }}{{ $src = .RelPermalink }}{{ end }}
+<img
+  src="{{ $src | safeURL }}"
+  alt="{{ .PlainText }}"
+  loading="lazy"
+  {{ with $resource }}width="{{ .Width }}" height="{{ .Height }}"{{ end }}
+/>

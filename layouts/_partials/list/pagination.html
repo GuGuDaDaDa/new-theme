@@ -1,0 +1,9 @@
+<nav class="mt-12 flex gap-6" aria-label="文章分页" data-pagination>
+  {{ with .pager.Prev }}
+    <a href="{{ .URL }}" rel="prev">上一页</a>
+  {{ end }}{{ with .pager.Next }}
+    <a href="{{ .URL }}" rel="next" data-next>下一页</a>
+  {{ else }}
+    <p>已显示全部文章</p>
+  {{ end }}
+</nav>

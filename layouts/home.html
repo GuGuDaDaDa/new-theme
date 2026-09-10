@@ -1,0 +1,8 @@
+{{ define "main" }}
+  {{ $context := partial "list/context.html" . }}
+  <section class="latest" data-post-list>
+    <h1>{{ if .IsHome }}最新文章{{ else }}{{ .Title }}{{ end }}</h1>
+    {{ partial "list/cards.html" $context }}
+    {{ partial "list/pagination.html" $context }}
+  </section>
+{{ end }}

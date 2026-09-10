@@ -1,0 +1,7 @@
+{{- $entry := index (hugo.Data.night_text | default dict) .File.Path | default dict -}}
+{{- return (dict
+  "summaryText" ($entry.summaryText | default "")
+  "cardExcerpt" ($entry.cardExcerpt | default "")
+  "heroExcerpt" ($entry.heroExcerpt | default "")
+  "content" ($entry.content | default "")
+) -}}

@@ -1,0 +1,53 @@
+baseURL = 'http://localhost:4173/'
+locale = 'zh-CN'
+defaultContentLanguage = 'zh'
+title = 'BuGuLog'
+timeZone = 'Asia/Shanghai'
+hasCJKLanguage = true
+summaryLength = 100
+disableKinds = ['taxonomy', 'RSS']
+buildDrafts = false
+buildFuture = false
+buildExpired = false
+
+[taxonomies]
+tag = 'tags'
+[pagination]
+pagerSize = 12
+path = 'page'
+[outputs]
+home = ['HTML', 'Search']
+section = ['HTML']
+term = ['HTML']
+page = ['HTML']
+[outputFormats.Search]
+mediaType = 'application/json'
+baseName = 'index'
+isPlainText = true
+notAlternative = true
+[outputFormats.Prepare]
+mediaType = 'application/json'
+baseName = 'prepare'
+isPlainText = true
+notAlternative = true
+[frontmatter]
+date = ['date']
+publishDate = ['publishDate', 'date']
+lastmod = ['lastmod', 'date']
+expiryDate = ['expiryDate']
+[module.hugoVersion]
+min = '0.165.0'
+extended = true
+[params]
+description = '记录技术实践、游戏体验与个人观察。'
+footerText = '海雾深处，字字为灯'
+author = 'GuGuDaDa'
+[menus]
+[[menus.main]]
+name = '关于'
+pageRef = '/about'
+weight = 10
+[[menus.main]]
+name = '友链'
+pageRef = '/friends'
+weight = 20

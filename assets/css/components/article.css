@@ -1,0 +1,10 @@
+.prose img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 24px auto;
+}
+.article-head {
+  max-width: 740px;
+  margin: 0 auto 32px;
+}

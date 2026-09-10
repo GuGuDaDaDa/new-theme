@@ -1,0 +1,8 @@
+{{ $posts := slice }}
+{{ range partial "data/public-posts.html" . }}
+  {{ $view := partial "data/post-view.html" . }}
+  {{ $labels := slice }}
+  {{ range $view.tags }}{{ $labels = $labels | append .label }}{{ end }}
+  {{ $posts = $posts | append (dict "url" $view.url "title" $view.title "description" ($view.summaryText | default "") "content" ($view.text.content | default "") "tags" $labels "rank" $view.rank "displayDate" $view.displayDate "displayDateKind" $view.displayDateKind) }}
+{{ end }}
+{{ dict "schemaVersion" 1 "buildId" hugo.Data.night_build.buildId "posts" $posts | jsonify }}

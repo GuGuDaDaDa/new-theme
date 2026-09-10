@@ -1,0 +1,12 @@
+.footer {
+  background: #1b2028;
+  color: #e5eaf0;
+  padding: 48px 20px;
+}
+.footer-inner {
+  max-width: 1120px;
+  margin: auto;
+}
+.footer a {
+  color: #9dc5e8;
+}
