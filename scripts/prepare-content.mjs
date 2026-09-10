@@ -546,11 +546,13 @@ export async function prepareContent(generated, clock, projectRoot = root) {
       labels.set(key, label);
       return key;
     });
+    const updated = +post.lastmod !== +post.date;
     post.data._night = {
       rank,
       tagLabels,
-      updated: +post.lastmod !== +post.date,
-      displayDate: post.lastmod.toISOString(),
+      updated,
+      displayDateKind: updated ? 'updated' : 'published',
+      displayDate: (updated ? post.lastmod : post.date).toISOString(),
     };
   }
   for (const page of visible) {
@@ -589,7 +591,7 @@ export async function prepareContent(generated, clock, projectRoot = root) {
   }
   for (const file of ['hugo.toml', 'package-lock.json'])
     digest.update(await readFile(path.join(sourceRoot, file)));
-  digest.update(JSON.stringify(posts.map((post) => post.relative)));
+  digest.update(JSON.stringify(visible.map((page) => page.relative)));
   const metadata = {
     schemaVersion: 1,
     buildId: digest.digest('hex'),

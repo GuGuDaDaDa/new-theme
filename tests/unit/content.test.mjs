@@ -295,11 +295,12 @@ test('timestamps reject impossible calendar values and machine-local dates', () 
   );
 });
 test('tags are case sensitive and same-day order follows created', () => {
-  assert.deepEqual(normalizeTags([' AI ', 'AI', 'ai', '', '中文']), [
-    'AI',
-    'ai',
-    '中文',
-  ]);
+  assert.deepEqual(
+    normalizeTags(['  AI  ', 'AI', 'ai', '', '   ', '\t', '中文']),
+    ['AI', 'ai', '中文'],
+  );
+  assert.throws(() => normalizeTags('not-an-array'), /array of strings/);
+  assert.throws(() => normalizeTags(['valid', 123]), /array of strings/);
   const posts = [
     { day: '2026-09-10', created: 1, relative: 'b' },
     { day: '2026-09-10', created: 2, relative: 'c' },
@@ -310,11 +311,71 @@ test('tags are case sensitive and same-day order follows created', () => {
     ['c', 'a', 'b'],
   );
 });
+
+test('frontmatter validates cover_position format and coordinates', () => {
+  for (const position of ['0% 0%', '100% 100%', '50% 50%', '20.5% 80.2%']) {
+    assert.doesNotThrow(() =>
+      validateFrontmatter(
+        { title: 'x', date: '2026-09-09T00:00:00Z', cover_position: position },
+        'posts/valid-cover/index.md',
+        { post: true },
+      ),
+    );
+  }
+  for (const position of [
+    '101% 0%',
+    '0% -1%',
+    '50%',
+    '50% 50% 50%',
+    'top left',
+    123,
+  ]) {
+    assert.throws(
+      () =>
+        validateFrontmatter(
+          {
+            title: 'x',
+            date: '2026-09-09T00:00:00Z',
+            cover_position: position,
+          },
+          'posts/invalid-cover/index.md',
+          { post: true },
+        ),
+      /posts\/invalid-cover\/index\.md: cover_position/,
+    );
+  }
+});
 test('text cleaning removes control text and excerpts preserve Unicode', () => {
+  // UI control stripping
   assert.equal(
-    cleanText('<p>正文</p><button>下一张</button><pre>code</pre>', true),
+    cleanText(
+      '<script>alert(1)</script><style>body{color:red}</style><p>正文</p><button>下一张</button><nav>导航</nav><span class="footnote-backref">↩</span><div data-search-exclude>忽略</div><pre>code</pre>',
+      true,
+    ),
     '正文',
   );
-  assert.equal(cleanText('<p>正文</p><pre>code</pre>'), '正文 code');
+  // Summary excludes code, full text keeps code
+  assert.equal(
+    cleanText('<pre><code>def foo(): pass</code></pre><p>正文</p>', true),
+    '正文',
+  );
+  assert.equal(
+    cleanText('<pre><code>def foo(): pass</code></pre><p>正文</p>'),
+    'def foo(): pass 正文',
+  );
+  // Pure image returns empty string
+  assert.equal(cleanText('<p><img src="/img.jpg" alt="test"></p>', true), '');
+  assert.equal(cleanText(''), '');
+  // Unicode excerpts with emojis
   assert.equal(excerpt('😀测试文本', 3), '😀测…');
+  assert.equal(excerpt('😀测试文本', 5), '😀测试文本');
+  assert.equal(excerpt('', 110), '');
+  const longText = '🌟' + '字'.repeat(120);
+  const card = excerpt(longText, 110);
+  assert.equal(Array.from(card).length, 110);
+  assert.ok(card.endsWith('…'));
+  assert.ok(card.startsWith('🌟'));
+  const hero = excerpt(longText, 60);
+  assert.equal(Array.from(hero).length, 60);
+  assert.ok(hero.endsWith('…'));
 });

@@ -1,10 +1,23 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>{{ if not .IsHome }}{{ .Title }} ·{{ end }}{{ site.Title }}</title>
+{{- $context := dict "page" . -}}
+{{- if or .IsHome (eq .Kind "section") (eq .Kind "term") -}}
+  {{- $context = partial "list/context.html" . -}}
+{{- end -}}
+{{- $pager := false -}}
+{{- with $context.pager }}{{ $pager = . }}{{ end -}}
+<title>
+  {{ if not .IsHome }}
+    {{ .Title }} ·
+  {{ end }}{{ if and $pager (gt $pager.PageNumber 1) }}
+    第 {{ $pager.PageNumber }} 页 ·
+  {{ end }}{{ site.Title }}
+</title>
 <meta
   name="description"
   content="{{ .Description | default site.Params.description }}"
 />
 <link rel="icon" href="{{ "favicon.svg" | relURL }}" type="image/svg+xml" />
+{{ partial "head/metadata.html" $context }}
 {{ partial "head/css.html" . }}
 {{ partial "head/js.html" . }}

@@ -21,5 +21,15 @@
       "path": "friends/index.md",
       "source": "---\ntitle: Friends Fixture\ntype: friends\n---\n\nFixture friends page.\n"
     }
+  ],
+  "assets": [
+    {
+      "path": "assets/js/dynamic-sample.js",
+      "source": "export const message = 'DYNAMIC_CHUNK_OK';\n"
+    },
+    {
+      "path": "assets/js/main.js",
+      "source": "import { init } from './core/lifecycle.js';\ninit(document);\nimport('./dynamic-sample.js').then((mod) => {\n  window.__DYNAMIC_LOADED__ = mod.message;\n  document.documentElement.setAttribute('data-dynamic', mod.message);\n});\n"
+    }
   ]
 }

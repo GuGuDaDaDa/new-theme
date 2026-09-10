@@ -1,5 +1,26 @@
-{{ $pages := partial "data/public-posts.html" . }}
-{{ if eq .Kind "term" }}
-  {{ $pages = partial "data/sort-posts.html" .RegularPages }}
-{{ end }}
-{{ return (dict "page" . "pages" $pages "pager" (.Paginate $pages 12)) }}
+{{- $pages := partial "data/public-posts.html" . -}}
+{{- if eq .Kind "term" -}}
+  {{- $pages = partial "data/sort-posts.html" .RegularPages -}}
+{{- end -}}
+{{- $pager := .Paginate $pages 12 -}}
+{{- $key := printf "listContext-%d" $pager.PageNumber -}}
+{{- $cached := .Store.Get $key -}}
+{{- $context := $cached -}}
+{{- if not $context -}}
+  {{- $listId := "home" -}}
+  {{- if eq .Kind "term" -}}
+    {{- $listId = .Data.Term -}}
+  {{- else if eq .Kind "section" -}}
+    {{- $listId = .Section -}}
+  {{- end -}}
+  {{- $context = dict
+    "page" .
+    "pages" $pages
+    "pager" $pager
+    "listId" $listId
+    "buildId" (hugo.Data.night_build.buildId | default "")
+    "count" (len $pages)
+  -}}
+  {{- .Store.Set $key $context -}}
+{{- end -}}
+{{- return $context -}}

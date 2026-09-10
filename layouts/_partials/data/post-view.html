@@ -13,7 +13,7 @@
 {{- if .Params._night.updated -}}
   {{- $displayTime = .Lastmod -}}
 {{- end -}}
-{{- $displayDate := time.Format "2006 / 01 / 02" $displayTime -}}
+{{- $displayDate := time.Format "2006 / 01 / 02" $displayTime.Local -}}
 {{- $view := dict
   "page" .
   "url" .RelPermalink

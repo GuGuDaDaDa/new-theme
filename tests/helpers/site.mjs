@@ -84,6 +84,29 @@ export async function createBoundarySite({
     await mkdir(path.dirname(target), { recursive: true });
     await writeFile(target, entry.source);
   }
+  for (const groupName of ['templates', 'assets']) {
+    const group = source[groupName];
+    if (Array.isArray(group)) {
+      for (const entry of group) {
+        if (
+          !entry ||
+          typeof entry.source !== 'string' ||
+          typeof entry.path !== 'string'
+        )
+          throw new TypeError(
+            `Fixture ${groupName} entries require path and source text`,
+          );
+        const target = path.resolve(fixtureRoot, entry.path);
+        const outside = path.relative(fixtureRoot, target);
+        if (outside.startsWith('..') || path.isAbsolute(outside))
+          throw new Error(
+            `Fixture ${groupName} path escapes fixture root: ${entry.path}`,
+          );
+        await mkdir(path.dirname(target), { recursive: true });
+        await writeFile(target, entry.source);
+      }
+    }
+  }
   return { projectRoot: fixtureRoot, clock: buildClock, definition: source };
 }
 

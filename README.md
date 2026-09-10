@@ -20,17 +20,17 @@ npm run build
 npm run preview
 ```
 
-静态预览地址为 http://localhost:4173/。build 校验版本，生成公开内容，执行 Tailwind/esbuild 和两遍 Hugo 构建，校验产物后替换 public；preview 只提供现有产物。使用 npm 入口，不直接运行缺少生成资源的 `hugo`。
+静态预览地址为 http://localhost:4173/。build 校验版本，生成公开内容 staging 并原子切换，执行 Tailwind/esbuild 和两遍 Hugo 构建，校验产物后替换 public；preview 静态托管 public 产物。使用 npm 入口，不直接运行缺少生成资源的 `hugo`。
 
 ## 目录与生成文件
 
 `assets/css/components` 放组件样式；`assets/js/core` 和 `components` 放基础工具与功能模块；`layouts` 使用 Hugo 新模板目录（`_partials`、`_markup`、`_shortcodes`）。完整目录见技术文档。
 
-作者编辑 `content/`、`data/`、`hugo.toml`。`.generated/`、`.build/`、`public/` 是可再生成产物，不手工编辑或提交。`node_modules/`、npm 缓存、`.env` 与测试产物也已忽略。
+作者编辑 `content/`、`data/`、`hugo.toml`。`.generated/`、`.build/`、`public/` 是受管可再生成产物，不手工编辑或提交。`node_modules/`、npm 缓存、`.env` 与测试产物也已忽略。
 
-内容支持 YAML/TOML frontmatter，JSON 使用显式 `---json` 围栏。文章必须有 title 和含时区的 date；同日按 created 排序，缺省取 date。新文章建议 `content/posts/name/index.md` 与图片组成 page bundle，可用 `hugo new content posts/name/index.md` 创建草稿。草稿、未来和过期内容从生成输入排除；tags 规范化为独立 term，显示原标签名称。
+内容支持 YAML/TOML/JSON frontmatter（JSON 支持原生对象及 `---json` 围栏）。文章必须有 title 和含时区的有效 date；排序主键为上海日历日 date 降序，同日按 created（缺省回退 date）降序，平分以路径升序确定；新文章建议 `content/posts/name/index.md` 与图片组成 page bundle，可用 `hugo new content posts/name/index.md` 创建草稿。草稿、未来和到期内容从生成输入排除；tags 规范化为独立 term，显示原标签名称。
 
-## 代码检查
+## 代码检查与验证
 
 ```sh
 npm run lint
@@ -39,14 +39,24 @@ npm run format
 npm test
 npm run build
 npm run test:browser
+npm run check
 ```
 
-首次浏览器测试需 `npx playwright install chromium`。下载不可用时可设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指向本机 Chromium，验证记录需注明实际浏览器版本。`npm run check` 汇总 lint、format、单元测试、Hugo 集成测试和构建；浏览器 smoke 测试单独执行。ESLint 使用 flat config 与 JSDoc 规则，Prettier 支持 Go templates 和 TOML；原始内容、archetype 及既有需求文档不做自动重排。
+首次浏览器测试需 `npx playwright install chromium`。下载不可用时可设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指向本机 Chromium（`playwright.config.js` 已配置兼容回退），验证记录需注明实际浏览器版本。`npm run check` 汇总 lint、format:check、单元测试、Hugo 集成测试和构建；浏览器端到端测试由 `npm run test:browser` 独立执行。ESLint 使用 flat config 与 JSDoc 规则，Prettier 支持 Go templates 和 TOML；原始内容、archetype 及既有需求文档不做自动重排。
 
 ## 当前范围
 
-已接通构建管线、基础首页／文章／标签／关于／友链／404、公开索引和资源引用。当前列表是无 JS 网格基础层。
+已建立 Cycle 01 构建与公开内容基线：
 
-推荐切换、最短列定位、加载更多与返回恢复、主题菜单、搜索 UI、目录、灯箱、图片墙、引用、SEO 完整输出等仍为占位，未宣称完成功能验收。预留 shortcode 被使用时明确报错，避免静默吞掉正文；实现后再开放。预留 JS 模块不注册无效事件，尚未接入的按钮不输出。
+- 完整严格 frontmatter 校验与解析。
+- 统一时钟公开过滤（排除 draft/未来/到期/隐藏 leaf bundle 资源，独立页隔离）。
+- 上海时区稳定排序与连续 rank。
+- 大小写敏感 tags 独立 term 路由、无 taxonomy 总览、无 categories。
+- PostView 与本地/远程封面安全回退。
+- 两遍渲染与 HTML 纯文本提取（保留搜索代码，剥离控件）。
+- 12 篇分页、第二页 canonical 与短代码幂等试验。
+- esbuild ESM splitting、动态 chunk 与 mounts 合同。
+- staging 原子更新与失败保留旧 public。
+- 真实浏览器环境下的 CSS/JS/动态 chunk HTTP 加载与无 JS 降级浏览。
 
-验证结果见 [validation.md](docs/validation.md)。本轮不部署，也不请求 Google Analytics。
+推荐切换、瀑布流动态重排、追加加载与返回恢复、三态主题菜单、搜索弹窗 UI、目录、灯箱、多实例图片墙、完整引用交互等功能属于后续周期的增量，当前未宣称完成功能验收。预留 shortcode 与组件在实现后逐步接入。

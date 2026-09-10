@@ -31,7 +31,9 @@ export function cleanText(html, summary = false) {
     'script, style, button, nav, [data-search-exclude], .footnote-backref',
   ).remove();
   if (summary) $('pre, code').remove();
-  $('p, div, h1, h2, h3, li, br').each((_, element) => $(element).append(' '));
+  $('p, div, h1, h2, h3, h4, h5, h6, li, br, tr, th, td, blockquote, pre').each(
+    (_, element) => $(element).append(' '),
+  );
   return $.root().text().replace(/\s+/g, ' ').trim();
 }
 /** Unicode-safe excerpt. @param {string} text - Plain text. @param {number} limit - Maximum characters. @returns {string} Excerpt. */
@@ -44,15 +46,28 @@ export async function buildSite({
   development = false,
   projectRoot = root,
   clock = new Date(),
+  forbiddenMarkers = [],
 } = {}) {
   const sourceRoot = resolveProjectRoot(projectRoot);
   if (!(clock instanceof Date) || !Number.isFinite(clock.getTime()))
     throw new TypeError('clock must be a valid Date');
   checkVersions();
   const generated = path.join(sourceRoot, '.generated');
-  await removeGenerated(generated, sourceRoot);
-  const metadata = await prepareContent(generated, clock, sourceRoot);
-  await buildAssets(generated, development, sourceRoot);
+  const staging = path.join(
+    sourceRoot,
+    '.build',
+    `staging-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+  );
+  await mkdir(path.dirname(staging), { recursive: true });
+  await removeGenerated(staging, sourceRoot);
+  let metadata;
+  try {
+    metadata = await prepareContent(staging, clock, sourceRoot);
+    await buildAssets(staging, development, sourceRoot);
+  } catch (error) {
+    await removeGenerated(staging, sourceRoot).catch(() => {});
+    throw error;
+  }
   const mounts = [
     { source: '.generated/content', target: 'content' },
     ...['data', 'assets', 'static'].flatMap((dir) => [
@@ -75,8 +90,34 @@ export async function buildSite({
   };
   const finalConfig = path.join(generated, 'final.json');
   const prepareConfig = path.join(generated, 'prepare.json');
-  await json(finalConfig, baseConfig);
-  await json(prepareConfig, { ...baseConfig, outputs: { home: ['Prepare'] } });
+  await json(path.join(staging, 'final.json'), baseConfig);
+  await json(path.join(staging, 'prepare.json'), {
+    ...baseConfig,
+    outputs: { home: ['Prepare'] },
+  });
+
+  const backupGenerated = path.join(
+    sourceRoot,
+    '.build',
+    `backup-gen-${Date.now()}`,
+  );
+  let hadGenerated = false;
+  try {
+    await rename(generated, backupGenerated);
+    hadGenerated = true;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  try {
+    await rename(staging, generated);
+  } catch (error) {
+    if (hadGenerated) await rename(backupGenerated, generated).catch(() => {});
+    await removeGenerated(staging, sourceRoot).catch(() => {});
+    throw error;
+  }
+  if (hadGenerated) {
+    await removeGenerated(backupGenerated, sourceRoot).catch(() => {});
+  }
   const workspace = path.join(sourceRoot, '.build', metadata.buildId);
   await mkdir(path.dirname(workspace), { recursive: true });
   await removeGenerated(workspace, sourceRoot);
@@ -105,12 +146,15 @@ export async function buildSite({
   for (const post of source.posts) {
     const summaryText =
       post.description?.trim() || cleanText(post.summary, true);
-    text[post.path] = {
+    const normalizedPath = post.path.split('\\').join('/');
+    const entry = {
       summaryText,
       cardExcerpt: excerpt(summaryText, 110),
       heroExcerpt: excerpt(summaryText, 60),
       content: cleanText(post.content),
     };
+    text[post.path] = entry;
+    text[normalizedPath] = entry;
   }
   await json(path.join(generated, 'data/night_text.json'), text);
   const destination = path.join(workspace, 'site');
@@ -128,7 +172,7 @@ export async function buildSite({
     ],
     sourceRoot,
   );
-  await validateOutput(destination);
+  await validateOutput(destination, { forbiddenMarkers });
   if (!development) {
     const publicDir = path.join(sourceRoot, 'public');
     const backup = path.join(sourceRoot, '.build/previous-public');

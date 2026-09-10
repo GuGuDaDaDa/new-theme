@@ -9,7 +9,8 @@ export default defineConfig({
     trace: 'retain-on-failure',
     launchOptions: {
       executablePath:
-        process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH || undefined,
+        process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+        '/home/gugudada/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
     },
   },
   projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
