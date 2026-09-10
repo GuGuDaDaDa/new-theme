@@ -1,1 +1,18 @@
-{{/* Scaffold: implement the corresponding docs/tech-spec.md component. */}}
+<script>
+  (() => {
+    const root = document.documentElement;
+    const system = matchMedia('(prefers-color-scheme: dark)');
+    let mode = 'system';
+    try {
+      const stored = localStorage.getItem('bugu-theme');
+      if (stored === 'light' || stored === 'dark' || stored === 'system') {
+        mode = stored;
+      }
+    } catch {}
+    const theme =
+      mode === 'system' ? (system.matches ? 'dark' : 'light') : mode;
+    root.dataset.themeMode = mode;
+    root.dataset.theme = theme;
+    root.style.colorScheme = theme;
+  })();
+</script>

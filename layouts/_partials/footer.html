@@ -1,7 +1,71 @@
 <footer class="footer">
   <div class="footer-inner">
-    <p>{{ site.Params.footerText }}</p>
-    <a href="{{ "posts/" | relURL }}">所有文章</a>
-    <p>© {{ now.Year }} {{ site.Params.author }}</p>
+    <div class="footer-about">
+      <a class="footer-brand" href="{{ site.Home.RelPermalink }}">
+        <svg aria-hidden="true" viewBox="0 0 48 48" fill="none">
+          <path
+            d="M11 8v24c0 8 15 11 21 3 4-6 1-13-6-14h-6V8"
+            stroke="currentColor"
+            stroke-width="4"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            d="m32 22 10 4-9 4M11 32l-6 5"
+            stroke="currentColor"
+            stroke-width="3"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <circle cx="27" cy="26" r="1.8" fill="currentColor" />
+        </svg>
+        <span>{{ site.Title }}</span>
+      </a>
+      {{ with site.Params.description }}<p>{{ . }}</p>{{ end }}
+    </div>
+    <nav class="footer-links" aria-label="页脚浏览">
+      <h2>随处逛逛</h2>
+      {{ with site.GetPage "/posts" }}
+        <a href="{{ .RelPermalink }}">所有文章</a>
+      {{ end }}
+      {{- range site.Menus.main -}}
+        {{- $item := . -}}
+        {{- with .Page -}}
+          {{- if or (eq .Type "about") (eq .Type "friends") -}}
+            <a href="{{ .RelPermalink }}">{{ $item.Name }}</a>
+          {{- end -}}
+        {{- end -}}
+      {{- end }}
+    </nav>
+    {{- $github := strings.TrimSpace (site.Params.social.github | default "") -}}
+    {{- $twitter := strings.TrimSpace (site.Params.social.twitter | default "") -}}
+    {{- $email := strings.TrimSpace (site.Params.social.email | default "") -}}
+    {{- $githubURL := urls.Parse $github -}}
+    {{- $twitterURL := urls.Parse $twitter -}}
+    {{- $emailAddress := strings.TrimPrefix "mailto:" $email -}}
+    {{- $hasEmail := and (strings.Contains $emailAddress "@") (not (strings.Contains $emailAddress ":")) (not (strings.Contains $emailAddress "\n")) -}}
+    {{- if or (and (eq $githubURL.Scheme "https") $githubURL.Host) (and (eq $twitterURL.Scheme "https") $twitterURL.Host) $hasEmail site.Params.footerText }}
+      <div class="footer-links">
+        <h2>保持联系</h2>
+        {{- if and (eq $githubURL.Scheme "https") $githubURL.Host }}
+          <a href="{{ $github }}" rel="me noopener">GitHub</a>
+        {{- end }}
+        {{- if and (eq $twitterURL.Scheme "https") $twitterURL.Host }}
+          <a href="{{ $twitter }}" rel="me noopener">Twitter / X</a>
+        {{- end }}
+        {{- if $hasEmail }}
+          <a href="{{ printf "mailto:%s" $emailAddress | safeURL }}">Email</a>
+        {{- end }}
+        {{ with site.Params.footerText }}<span>{{ . }}</span>{{ end }}
+      </div>
+    {{- end }}
+    <div class="footer-bottom">
+      {{ with site.Params.author }}
+        <span>© {{ now.Year }} {{ . }}</span>
+      {{ end }}
+      {{ with site.Params.icp }}<span>{{ . }}</span>{{ end }}
+      <span>由 <a href="https://gohugo.io/">Hugo</a> 构建</span>
+      <a href="#main">回到内容开头</a>
+    </div>
   </div>
 </footer>

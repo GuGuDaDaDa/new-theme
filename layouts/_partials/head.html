@@ -1,5 +1,6 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+{{ partial "head/theme-init.html" . }}
 {{- $context := dict "page" . -}}
 {{- if or .IsHome (eq .Kind "section") (eq .Kind "term") -}}
   {{- $context = partial "list/context.html" . -}}

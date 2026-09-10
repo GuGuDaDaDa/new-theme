@@ -1,0 +1,14 @@
+{
+  "singleQuote": true,
+  "plugins": ["prettier-plugin-go-template", "prettier-plugin-toml"],
+  "overrides": [
+    {
+      "files": ["layouts/**/*.{html,json,xml}", "archetypes/**/*.md"],
+      "options": { "parser": "go-template" }
+    },
+    {
+      "files": ["*.toml"],
+      "options": { "parser": "toml" }
+    }
+  ]
+}

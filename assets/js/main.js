@@ -1,3 +1,5 @@
-/** Browser entry point. Feature modules are reserved for subsequent milestones. */
+/** Browser entry point for the global page shell. */
+
 import { init } from './core/lifecycle.js';
+
 init(document);
