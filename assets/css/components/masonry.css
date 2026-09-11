@@ -23,7 +23,7 @@
   stroke-linecap: round;
 }
 
-.section-title > h1 {
+.section-title > :is(h1, h2) {
   margin: 0;
   font-size: 16px;
   font-weight: 600;
@@ -239,7 +239,7 @@
     margin-bottom: 22px;
   }
 
-  .section-title > h1 {
+  .section-title > :is(h1, h2) {
     font-size: 15px;
   }
 

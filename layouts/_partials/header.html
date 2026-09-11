@@ -1,4 +1,13 @@
-<header class="header" data-header>
+{{- $overlay := false -}}
+{{- if .IsHome -}}
+  {{- $context := partial "list/context.html" . -}}
+  {{- $featured := where $context.pages "Params.featured" true | first 1 -}}
+  {{- $overlay = and (eq $context.pager.PageNumber 1) (gt (len $featured) 0) -}}
+{{- end -}}
+<header
+  class="{{ cond $overlay "header header-overlay" "header" }}"
+  data-header
+>
   <div class="header-inner">
     {{ partial "brand.html" . }}{{ partial "menu.html" . }}
   </div>

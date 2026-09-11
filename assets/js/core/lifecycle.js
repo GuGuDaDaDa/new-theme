@@ -45,6 +45,21 @@ export function init(root) {
       for (const dispose of listCleanups.reverse()) dispose();
     });
   }
+  if (root.querySelector('[data-hero]')) {
+    let disposed = false;
+    let heroCleanup = () => {};
+    import('../components/hero.js')
+      .then(({ initHero }) => {
+        if (!disposed) heroCleanup = initHero(root);
+      })
+      .catch((error) => {
+        console.error('Night Theme hero initialization failed.', error);
+      });
+    cleanups.push(() => {
+      disposed = true;
+      heroCleanup();
+    });
+  }
   root.documentElement.dataset.js = 'ready';
 
   const cleanup = () => {

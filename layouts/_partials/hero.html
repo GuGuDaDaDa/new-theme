@@ -1,1 +1,125 @@
-{{/* Scaffold: implement the corresponding docs/tech-spec.md component. */}}
+{{- $featured := where .pages "Params.featured" true | first 3 -}}
+{{- if gt (len $featured) 0 -}}
+  {{- $items := slice -}}
+  {{- range $featured -}}
+    {{- $view := partial "data/post-view.html" . -}}
+    {{- $cover := $view.cover -}}
+    {{- $items = $items | append (dict
+      "url" $view.url
+      "title" $view.title
+      "heroExcerpt" ($view.heroExcerpt | default "")
+      "displayDate" $view.displayDate
+      "displayDateISO" $view.displayDateISO
+      "displayDateKind" $view.displayDateKind
+      "readingMinutes" $view.readingMinutes
+      "cover" (dict
+      "url" ($cover.url | default "")
+      "srcset" ($cover.srcset | default (slice))
+      "width" ($cover.width | default 0)
+      "height" ($cover.height | default 0)
+      "position" ($cover.position | default "50% 50%")
+      "alt" ($cover.alt | default "")
+      )
+      )
+      -}}
+  {{- end -}}
+  {{- $active := index $items 0 -}}
+  {{- $activeCover := $active.cover -}}
+  <section class="hero" aria-label="推荐文章" data-hero>
+    <img
+      class="hero-cover"
+      data-hero-cover
+      alt=""
+      loading="eager"
+      decoding="async"
+      fetchpriority="high"
+      {{- if $activeCover.url }}
+        src="{{ $activeCover.url }}"
+        {{- with $activeCover.srcset }}
+          srcset="{{ delimit . ", " }}" sizes="100vw"
+        {{- end }}
+        {{- if and $activeCover.width $activeCover.height }}
+          width="{{ $activeCover.width }}" height="{{ $activeCover.height }}"
+        {{- end }}
+        style="object-position: {{ $activeCover.position }}"
+      {{- else }}
+        hidden
+      {{- end }}
+    />
+    <div class="hero-inner">
+      {{ if gt (len $items) 1 }}
+        <div class="hero-selection">
+          <h2>推荐阅读</h2>
+          <div class="hero-choices" aria-label="切换推荐文章">
+            {{ range $index, $item := $items }}
+              <button
+                type="button"
+                aria-pressed="{{ cond (eq $index 0) "true" "false" }}"
+                data-hero-choice="{{ $index }}"
+              >
+                <span class="hero-choice-thumb">
+                  {{ with $item.cover.url }}
+                    <img
+                      src="{{ . }}"
+                      {{- with $item.cover.srcset }}
+                        srcset="{{ delimit . ", " }}" sizes="(max-width: 360px)
+                        88px, (max-width: 768px) 100px, 84px"
+                      {{- end }}
+                      {{- if and $item.cover.width $item.cover.height }}
+                        width="{{ $item.cover.width }}"
+                        height="{{ $item.cover.height }}"
+                      {{- end }}
+                      alt=""
+                      loading="lazy"
+                      decoding="async"
+                      style="object-position: {{ $item.cover.position }}"
+                      data-hero-thumb
+                    />
+                  {{ end }}
+                </span>
+                <span class="choice-copy">
+                  <span>{{ $item.title }}</span>
+                  <small>{{ $item.displayDate }}</small>
+                </span>
+              </button>
+            {{ end }}
+          </div>
+        </div>
+      {{ end }}
+      <div class="hero-panel">
+        <div class="meta">
+          <time datetime="{{ $active.displayDateISO }}" data-hero-date>
+            {{- if eq $active.displayDateKind "updated" -}}
+              更新于&nbsp;
+            {{- end -}}
+            {{- $active.displayDate -}}
+          </time>
+          <span data-hero-time>{{ $active.readingMinutes }} 分钟</span>
+        </div>
+        <h1>
+          <a href="{{ $active.url }}" data-hero-link>{{ $active.title }}</a>
+        </h1>
+        {{ with $active.heroExcerpt }}
+          <p data-hero-description>{{ . }}</p>
+        {{ else }}
+          <p data-hero-description hidden></p>
+        {{ end }}
+        <a class="hero-read" href="{{ $active.url }}" data-hero-read
+          >阅读文章</a
+        >
+      </div>
+    </div>
+    {{ if gt (len $items) 1 }}
+      <noscript>
+        <nav class="hero-fallback" aria-label="其他推荐文章">
+          {{ range after 1 $items }}
+            <a href="{{ .url }}">{{ .title }}</a>
+          {{ end }}
+        </nav>
+      </noscript>
+    {{ end }}
+    <script type="application/json" data-hero-data>
+      {{- $items | jsonify | safeJS -}}
+    </script>
+  </section>
+{{- end -}}

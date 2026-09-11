@@ -1,5 +1,10 @@
 {{ define "main" }}
   {{ $context := partial "list/context.html" . }}
+  {{ $featured := where $context.pages "Params.featured" true | first 1 }}
+  {{ $hasHero := and (eq $context.pager.PageNumber 1) (gt (len $featured) 0) }}
+  {{ if $hasHero }}
+    {{ partial "hero.html" $context }}
+  {{ end }}
   <section
     class="latest"
     aria-labelledby="latest-title"
@@ -13,7 +18,11 @@
         <svg aria-hidden="true" viewBox="0 0 24 24">
           <path d="M5 5h8M5 11h14M5 17h11"></path>
         </svg>
-        <h1 id="latest-title">最新文章</h1>
+        {{ if $hasHero }}
+          <h2 id="latest-title">最新文章</h2>
+        {{ else }}
+          <h1 id="latest-title">最新文章</h1>
+        {{ end }}
         <span class="section-count">{{ $context.count }} 篇</span>
       </div>
     </header>
