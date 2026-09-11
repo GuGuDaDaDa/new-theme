@@ -5,8 +5,12 @@
     {{ end }}
     {{ with .pager.Next }}
       <a href="{{ .URL }}" rel="next" data-next>下一页</a>
+    {{ end }}
+    <button type="button" data-load-more hidden>加载更多</button>
+    {{ with .pager.Next }}
+      <span data-list-end hidden>已显示全部文章</span>
     {{ else }}
-      <span>已显示全部文章</span>
+      <span data-list-end>已显示全部文章</span>
     {{ end }}
   </nav>
 {{ end }}

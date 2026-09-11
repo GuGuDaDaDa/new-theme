@@ -23,26 +23,22 @@ export function init(root) {
       console.error('Night Theme component initialization failed.', error);
     }
   }
-  if (root.querySelector('[data-post-list]')) {
+  if (root.querySelector('[data-post-list], [data-article-back]')) {
     let disposed = false;
-    const listCleanups = [];
-    import('../components/card.js')
-      .then(({ initCards }) => {
-        if (!disposed) listCleanups.push(initCards(root));
+    let restoreCleanup = () => {};
+    import('../components/restore.js')
+      .then(({ initRestore }) => {
+        if (!disposed) restoreCleanup = initRestore(root);
       })
       .catch((error) => {
-        console.error('Night Theme card initialization failed.', error);
-      });
-    import('../components/masonry.js')
-      .then(({ initMasonry }) => {
-        if (!disposed) listCleanups.push(initMasonry(root));
-      })
-      .catch((error) => {
-        console.error('Night Theme masonry initialization failed.', error);
+        console.error(
+          'Night Theme list restoration initialization failed.',
+          error,
+        );
       });
     cleanups.push(() => {
       disposed = true;
-      for (const dispose of listCleanups.reverse()) dispose();
+      restoreCleanup();
     });
   }
   if (root.querySelector('[data-hero]')) {

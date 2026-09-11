@@ -48,6 +48,9 @@ function hasTextSelection(documentRoot) {
 function openCard(card) {
   const url = card.dataset.postUrl;
   if (!url) return;
+  card.dispatchEvent(
+    new CustomEvent('night:article-open', { bubbles: true, detail: { url } }),
+  );
   card.ownerDocument.defaultView.location.assign(url);
 }
 
@@ -97,6 +100,10 @@ function enhanceCard(card) {
     'keydown',
     (event) => {
       if (
+        event.metaKey ||
+        event.ctrlKey ||
+        event.shiftKey ||
+        event.altKey ||
         event.target !== card ||
         (event.key !== 'Enter' && event.key !== ' ')
       ) {
