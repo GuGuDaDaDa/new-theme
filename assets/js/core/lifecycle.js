@@ -23,6 +23,28 @@ export function init(root) {
       console.error('Night Theme component initialization failed.', error);
     }
   }
+  if (root.querySelector('[data-post-list]')) {
+    let disposed = false;
+    const listCleanups = [];
+    import('../components/card.js')
+      .then(({ initCards }) => {
+        if (!disposed) listCleanups.push(initCards(root));
+      })
+      .catch((error) => {
+        console.error('Night Theme card initialization failed.', error);
+      });
+    import('../components/masonry.js')
+      .then(({ initMasonry }) => {
+        if (!disposed) listCleanups.push(initMasonry(root));
+      })
+      .catch((error) => {
+        console.error('Night Theme masonry initialization failed.', error);
+      });
+    cleanups.push(() => {
+      disposed = true;
+      for (const dispose of listCleanups.reverse()) dispose();
+    });
+  }
   root.documentElement.dataset.js = 'ready';
 
   const cleanup = () => {

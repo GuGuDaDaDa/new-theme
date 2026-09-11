@@ -440,6 +440,9 @@ test('tags isolate drafts, distinguish case, support Chinese, and PostView handl
     assert.equal(bundleView.displayDateKind, 'published');
     assert.equal(bundleView.cover.width, 300);
     assert.equal(bundleView.cover.height, 200);
+    assert.deepEqual(bundleView.cover.srcset, [
+      '/posts/bundle-cover/bryce-canyon.jpg 300w',
+    ]);
     assert.equal(bundleView.cover.position, '20% 80%');
     assert.equal(bundleView.cover.alt, 'Bryce Canyon');
     assert.equal(bundleView.stableId, hash('/posts/bundle-cover/'));
@@ -465,6 +468,7 @@ test('tags isolate drafts, distinguish case, support Chinese, and PostView handl
       staticView.cover.originalURL,
       'http://localhost:4173/logo.svg',
     );
+    assert.deepEqual(staticView.cover.srcset, []);
 
     // 4. Missing static cover post
     const missingStaticView = viewsByUrl.get('/posts/missing-static-cover/');

@@ -1,8 +1,29 @@
 {{ define "main" }}
   {{ $context := partial "list/context.html" . }}
-  <section class="latest" data-post-list>
-    <h1>{{ if .IsHome }}最新文章{{ else }}{{ .Title }}{{ end }}</h1>
+  <section
+    class="latest"
+    aria-labelledby="latest-title"
+    data-post-list
+    data-list-id="{{ $context.listId }}"
+    data-build-id="{{ $context.buildId }}"
+    data-page="{{ $context.pager.PageNumber }}"
+  >
+    <header class="section-head">
+      <div class="section-title">
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="M5 5h8M5 11h14M5 17h11"></path>
+        </svg>
+        <h1 id="latest-title">全部文章</h1>
+        <span class="section-count">{{ $context.count }} 篇</span>
+      </div>
+    </header>
     {{ partial "list/cards.html" $context }}
     {{ partial "list/pagination.html" $context }}
+    <p
+      class="list-status"
+      role="status"
+      aria-live="polite"
+      data-list-status
+    ></p>
   </section>
 {{ end }}

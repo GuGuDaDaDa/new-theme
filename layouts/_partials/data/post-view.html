@@ -9,11 +9,9 @@
 {{- end -}}
 {{- $publishDate := time.Format "2006-01-02T15:04:05.999999999Z07:00" .PublishDate -}}
 {{- $lastmod := time.Format "2006-01-02T15:04:05.999999999Z07:00" .Lastmod -}}
-{{- $displayTime := .PublishDate -}}
-{{- if .Params._night.updated -}}
-  {{- $displayTime = .Lastmod -}}
-{{- end -}}
+{{- $displayTime := time.AsTime .Params._night.displayDate -}}
 {{- $displayDate := time.Format "2006 / 01 / 02" $displayTime.Local -}}
+{{- $displayDateISO := time.Format "2006-01-02T15:04:05.999999999Z07:00" $displayTime -}}
 {{- $view := dict
   "page" .
   "url" .RelPermalink
@@ -24,6 +22,7 @@
   "publishDate" $publishDate
   "lastmod" $lastmod
   "displayDate" $displayDate
+  "displayDateISO" $displayDateISO
   "displayDateKind" (cond .Params._night.updated "updated" "published")
   "summaryText" $text.summaryText
   "cardExcerpt" $text.cardExcerpt

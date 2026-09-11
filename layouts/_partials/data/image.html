@@ -48,15 +48,36 @@
     {{- else -}}
       {{- $resource := $page.Resources.GetMatch $value -}}
       {{- if and $resource (eq $resource.MediaType.MainType "image") -}}
-        {{- $cover = dict
-          "url" $resource.RelPermalink
-          "originalURL" $resource.Permalink
-          "width" $resource.Width
-          "height" $resource.Height
-          "srcset" (slice)
-          "position" $position
-          "alt" ($page.Params.cover_alt | default "")
-        -}}
+        {{- $raster := in (slice "jpeg" "png" "webp") $resource.MediaType.SubType -}}
+        {{- if $raster -}}
+          {{- $variants := slice -}}
+          {{- range (slice 480 768 960) -}}
+            {{- if gt $resource.Width . -}}
+              {{- $resized := $resource.Resize (printf "%dx" .) -}}
+              {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
+            {{- end -}}
+          {{- end -}}
+          {{- $variants = $variants | append (printf "%s %dw" $resource.RelPermalink $resource.Width) -}}
+          {{- $cover = dict
+            "url" $resource.RelPermalink
+            "originalURL" $resource.Permalink
+            "width" $resource.Width
+            "height" $resource.Height
+            "srcset" $variants
+            "position" $position
+            "alt" ($page.Params.cover_alt | default "")
+          -}}
+        {{- else -}}
+          {{- $cover = dict
+            "url" $resource.RelPermalink
+            "originalURL" $resource.Permalink
+            "width" 0
+            "height" 0
+            "srcset" (slice)
+            "position" $position
+            "alt" ($page.Params.cover_alt | default "")
+          -}}
+        {{- end -}}
       {{- else -}}
         {{- warnf "Cover %q for %s was not found in the page bundle; omitting it" $value $page.RelPermalink -}}
       {{- end -}}

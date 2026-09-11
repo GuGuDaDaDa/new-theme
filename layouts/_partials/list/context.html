@@ -3,13 +3,12 @@
   {{- $pages = partial "data/sort-posts.html" .RegularPages -}}
 {{- end -}}
 {{- $pager := .Paginate $pages 12 -}}
-{{- $key := printf "listContext-%d" $pager.PageNumber -}}
-{{- $cached := .Store.Get $key -}}
-{{- $context := $cached -}}
+{{- $key := printf "night-list-context-%d" $pager.PageNumber -}}
+{{- $context := .Store.Get $key -}}
 {{- if not $context -}}
   {{- $listId := "home" -}}
   {{- if eq .Kind "term" -}}
-    {{- $listId = .Data.Term -}}
+    {{- $listId = printf "tag:%s" .Data.Term -}}
   {{- else if eq .Kind "section" -}}
     {{- $listId = .Section -}}
   {{- end -}}
@@ -20,6 +19,7 @@
     "listId" $listId
     "buildId" (hugo.Data.night_build.buildId | default "")
     "count" (len $pages)
+    "currentURL" $pager.URL
   -}}
   {{- .Store.Set $key $context -}}
 {{- end -}}

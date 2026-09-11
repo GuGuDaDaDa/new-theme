@@ -1,12 +1,49 @@
-{{ $view := partial "data/post-view.html" . }}
-<article class="post" data-post-url="{{ .RelPermalink }}">
-  {{ partial "tags.html" . }}
-  <h2><a href="{{ .RelPermalink }}">{{ .Title }}</a></h2>
-  {{ with $view.text.cardExcerpt }}<p>{{ . }}</p>{{ end }}
-  <div class="meta">
-    {{ if .Params._night.updated }}更新于{{ end }}<time
-      datetime="{{ .Params._night.displayDate }}"
-      >{{ time.Format "2006 / 01 / 02" .Params._night.displayDate }}</time
-    >
+{{- $view := partial "data/post-view.html" . -}}
+{{- $cover := $view.cover -}}
+<article
+  class="{{ cond (not $cover.url) "post text-post" "post" }}"
+  id="post-{{ $view.stableId }}"
+  data-post-url="{{ $view.url }}"
+>
+  <div class="post-inner">
+    {{ with $cover.url }}
+      <a
+        class="post-cover-link"
+        href="{{ $view.url }}"
+        aria-hidden="true"
+        tabindex="-1"
+      >
+        <img
+          src="{{ . }}"
+          {{- with $cover.srcset }}
+            srcset="{{ delimit . ", " }}" sizes="(max-width: 768px) calc(100vw -
+            40px), (max-width: 1100px) calc((100vw - 116px) / 2), min(376px,
+            calc((100vw - 152px) / 3))"
+          {{- end }}
+          {{- if and $cover.width $cover.height }}
+            width="{{ $cover.width }}" height="{{ $cover.height }}"
+          {{- end }}
+          alt="{{ $cover.alt }}"
+          loading="lazy"
+          decoding="async"
+          style="object-position: {{ $cover.position }}"
+          data-post-cover
+        />
+      </a>
+    {{ end }}
+    <div class="post-copy">
+      {{ partial "tags.html" . }}
+      <h2><a href="{{ $view.url }}" data-post-title>{{ $view.title }}</a></h2>
+      {{ with $view.cardExcerpt }}<p>{{ . }}</p>{{ end }}
+      <div class="meta">
+        <span>
+          {{- if eq $view.displayDateKind "updated" }}更新于&nbsp;{{ end -}}
+          <time datetime="{{ $view.displayDateISO }}"
+            >{{ $view.displayDate }}</time
+          >
+        </span>
+        <span>{{ $view.readingMinutes }} 分钟</span>
+      </div>
+    </div>
   </div>
 </article>
