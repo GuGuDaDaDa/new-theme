@@ -1,1 +1,5 @@
-{{ printf "<h%d id=%q>%s</h%d>" .Level .Anchor .Text .Level | safeHTML }}
+{{- $marker := "" -}}
+{{- if or (eq .Level 2) (eq .Level 3) -}}
+  {{- $marker = " data-article-heading" -}}
+{{- end -}}
+{{- printf "<h%d id=%q%s>%s</h%d>" .Level .Anchor $marker .Text .Level | safeHTML -}}

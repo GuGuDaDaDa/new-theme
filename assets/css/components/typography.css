@@ -9,7 +9,6 @@ html {
 body {
   min-width: 320px;
   margin: 0;
-  overflow-x: hidden;
   background: var(--bg);
   color: var(--text);
   font: 16px/1.65 var(--font);
@@ -80,6 +79,7 @@ p {
 h1,
 h2,
 h3 {
+  overflow-wrap: anywhere;
   line-height: 1.3;
   text-wrap: pretty;
 }
@@ -111,18 +111,6 @@ p {
   overflow-wrap: anywhere;
   font-size: 17px;
   line-height: 1.72;
-}
-
-.prose a {
-  text-decoration: underline;
-}
-
-pre {
-  max-width: 100%;
-  padding: 16px;
-  overflow-x: auto;
-  background: var(--soft);
-  border-radius: 2px;
 }
 
 .skip {

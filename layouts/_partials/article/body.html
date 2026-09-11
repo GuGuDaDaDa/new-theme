@@ -1,1 +1,3 @@
-<div class="prose">{{ .Content }}</div>
+{{- $page := . -}}
+{{- if reflect.IsMap . }}{{ $page = .page }}{{ end -}}
+{{- return $page.Content -}}

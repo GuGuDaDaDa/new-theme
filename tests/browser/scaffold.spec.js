@@ -22,7 +22,7 @@ test('home renders compiled CSS and JavaScript and links to a readable post', as
 
   await page.goto('/');
   await expect(page.locator('html')).toHaveAttribute('data-js', 'ready');
-  await expect(page.locator('h1')).toHaveText('最新文章');
+  await expect(page.locator('#latest-title')).toHaveText('最新文章');
   await expect(page.locator('body')).toHaveCSS(
     'background-color',
     'rgb(247, 248, 250)',
@@ -162,7 +162,7 @@ test('isolated boundary fixture loads CSS, main entry, and dynamic ESM chunk ove
     await noJsPage.goto(`${baseURL}/posts/public/`);
     await expect(noJsPage.locator('.prose')).not.toBeEmpty();
     await expect(
-      noJsPage.getByRole('link', { name: '← 返回文章列表' }),
+      noJsPage.getByRole('link', { name: '返回文章列表' }),
     ).toHaveAttribute('href', '/posts/');
     await noJsContext.close();
   } finally {

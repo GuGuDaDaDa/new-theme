@@ -1,9 +1,42 @@
-{{ $src := .Destination }}
-{{ $resource := .Page.Resources.Get .Destination }}
-{{ with $resource }}{{ $src = .RelPermalink }}{{ end }}
-<img
-  src="{{ $src | safeURL }}"
-  alt="{{ .PlainText }}"
-  loading="lazy"
-  {{ with $resource }}width="{{ .Width }}" height="{{ .Height }}"{{ end }}
-/>
+{{- $src := .Destination -}}
+{{- $resource := .Page.Resources.GetMatch .Destination -}}
+{{- $allowed := false -}}
+{{- with $resource -}}
+  {{- if eq .MediaType.MainType "image" -}}
+    {{- $src = .RelPermalink -}}
+    {{- $allowed = true -}}
+  {{- end -}}
+{{- else -}}
+  {{- if strings.HasPrefix .Destination "https://" -}}
+    {{- $allowed = true -}}
+  {{- else if and (strings.HasPrefix .Destination "/") (not (strings.HasPrefix .Destination "//")) -}}
+    {{- $relative := strings.TrimPrefix "/" .Destination -}}
+    {{- $allowed = true -}}
+    {{- range split $relative "/" -}}
+      {{- if or (eq . "") (eq . ".") (eq . "..") -}}
+        {{- $allowed = false -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $allowed }}{{ $src = relURL .Destination }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- if $allowed -}}
+  <img
+    src="{{ $src }}"
+    alt="{{ .PlainText }}"
+    loading="lazy"
+    decoding="async"
+    {{- with $resource }}
+      {{- if and .Width .Height }}
+        width="{{ .Width }}" height="{{ .Height }}"
+      {{ end }}
+    {{- end }}
+    {{- with .Title }}title="{{ . }}"{{ end }}
+    data-article-image
+  />
+{{- else -}}
+  {{- warnf "Ignoring unsupported article image %q in %s" .Destination .Page.RelPermalink -}}
+  {{- with .PlainText }}
+    <span class="article-image-fallback">{{ . }}</span>
+  {{ end -}}
+{{- end -}}

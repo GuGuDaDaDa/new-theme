@@ -1,0 +1,229 @@
+{
+  "clock": "2026-09-10T00:00:00Z",
+  "cases": [
+    {
+      "slug": "complete-frontmatter",
+      "title": "完整文章头",
+      "path": "posts/complete-frontmatter/index.md",
+      "date": "2026-09-09T12:00:00+08:00",
+      "lastmod": "2026-09-09T12:00:00+08:00",
+      "description": "手写的文章摘要优先于正文自动摘要。",
+      "summary": "不应覆盖 description 的显式摘要。",
+      "cover": "horizontal",
+      "tags": ["文章详情", "正文"]
+    },
+    {
+      "slug": "default-frontmatter",
+      "title": "缺省文章头",
+      "path": "posts/default-frontmatter/index.md",
+      "date": "2026-09-09T11:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "lastmod-missing",
+      "title": "缺省更新日期",
+      "path": "posts/lastmod-missing/index.md",
+      "date": "2026-09-08T12:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "lastmod-equal",
+      "title": "更新日期相同",
+      "path": "posts/lastmod-equal/index.md",
+      "date": "2026-09-08T11:00:00+08:00",
+      "lastmod": "2026-09-08T11:00:00+08:00",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "lastmod-different",
+      "title": "更新日期不同",
+      "path": "posts/lastmod-different/index.md",
+      "date": "2026-09-08T10:00:00+08:00",
+      "lastmod": "2026-09-09T10:30:00+08:00",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "description-summary",
+      "title": "手写摘要",
+      "path": "posts/description-summary/index.md",
+      "date": "2026-09-07T12:00:00+08:00",
+      "lastmod": "missing",
+      "description": "这是只来自 description 的纯文本摘要。",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "more-summary",
+      "title": "More 摘要",
+      "path": "posts/more-summary/index.md",
+      "date": "2026-09-07T11:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "image-only",
+      "title": "纯图片正文",
+      "path": "posts/image-only/index.md",
+      "date": "2026-09-07T10:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "code-first",
+      "title": "代码开头正文",
+      "path": "posts/code-first/index.md",
+      "date": "2026-09-06T12:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "empty-body",
+      "title": "空正文",
+      "path": "posts/empty-body/index.md",
+      "date": "2026-09-06T11:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "headings-and-lists",
+      "title": "标题与嵌套列表",
+      "path": "posts/headings-and-lists/index.md",
+      "date": "2026-09-06T10:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "wide-content",
+      "title": "宽内容边界",
+      "path": "posts/wide-content/index.md",
+      "date": "2026-09-05T12:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    },
+    {
+      "slug": "horizontal-cover",
+      "title": "横向标题图",
+      "path": "posts/horizontal-cover/index.md",
+      "date": "2026-09-05T11:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "horizontal",
+      "tags": []
+    },
+    {
+      "slug": "vertical-cover",
+      "title": "竖向标题图",
+      "path": "posts/vertical-cover/index.md",
+      "date": "2026-09-05T10:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "vertical",
+      "tags": []
+    },
+    {
+      "slug": "long-header",
+      "title": "ArticleTitleWithoutAnyWhitespaceThatMustWrapAtThe320PixelBoundaryBeforeItCanOverflowTheReadingColumnAndRemainAccessible",
+      "path": "posts/long-header/index.md",
+      "date": "2026-09-04T12:00:00+08:00",
+      "lastmod": "missing",
+      "description": "DescriptionWithoutAnyWhitespaceThatMustWrapInsideTheArticleHeaderInsteadOfPushingThePageBeyondTheViewportAtTheSmallestSupportedWidth",
+      "cover": "none",
+      "tags": [
+        "tag-without-any-whitespace-that-must-wrap-inside-the-article-header-at-the-320px-viewport-boundary"
+      ]
+    },
+    {
+      "slug": "unsafe-image",
+      "title": "图片协议过滤",
+      "path": "posts/unsafe-image/index.md",
+      "date": "2026-09-04T11:00:00+08:00",
+      "lastmod": "missing",
+      "cover": "none",
+      "tags": []
+    }
+  ],
+  "content": [
+    {
+      "path": "_index.md",
+      "source": "---\ntitle: Article Fixture Home\n---\n"
+    },
+    {
+      "path": "posts/_index.md",
+      "source": "---\ntitle: Article Fixture Posts\n---\n"
+    },
+    {
+      "path": "posts/complete-frontmatter/index.md",
+      "source": "---\ntitle: 完整文章头\ndate: 2026-09-09T12:00:00+08:00\ncreated: 2026-09-09T11:00:00+08:00\npublishDate: 2026-09-09T12:00:00+08:00\nlastmod: 2026-09-09T12:00:00+08:00\ndescription: 手写的文章摘要优先于正文自动摘要。\nsummary: 不应覆盖 description 的显式摘要。\nfeatured: true\ntags: [文章详情, 正文]\ncover: https://images.example.test/article-horizontal.jpg\ncover_alt: 横向山谷标题图\ncover_position: 17% 83%\ntoc: true\ndraft: false\n---\n\n这是完整文章头的正文，用于确认标题、摘要、标签、日期、作者、阅读时长和标题图按照合同输出。\n"
+    },
+    {
+      "path": "posts/default-frontmatter/index.md",
+      "source": "---\ntitle: 缺省文章头\ndate: 2026-09-09T11:00:00+08:00\n---\n\n只有必填字段的文章，用于验证可选头部区域不会输出空占位。\n"
+    },
+    {
+      "path": "posts/lastmod-missing/index.md",
+      "source": "---\ntitle: 缺省更新日期\ndate: 2026-09-08T12:00:00+08:00\n---\n\n未设置 lastmod 时只显示发布日期。\n"
+    },
+    {
+      "path": "posts/lastmod-equal/index.md",
+      "source": "---\ntitle: 更新日期相同\ndate: 2026-09-08T11:00:00+08:00\nlastmod: 2026-09-08T11:00:00+08:00\n---\n\nlastmod 与 date 相同时仍然只显示一个发布日期。\n"
+    },
+    {
+      "path": "posts/lastmod-different/index.md",
+      "source": "---\ntitle: 更新日期不同\ndate: 2026-09-08T10:00:00+08:00\nlastmod: 2026-09-09T10:30:00+08:00\n---\n\n更新日期不同的文章只显示更新后的日期标签，不并列显示两个日期。\n"
+    },
+    {
+      "path": "posts/description-summary/index.md",
+      "source": "---\ntitle: 手写摘要\ndate: 2026-09-07T12:00:00+08:00\ndescription: 这是只来自 description 的纯文本摘要。\n---\n\n正文包含足够内容，但文章头摘要必须使用手写 description。\n\n第二段用于避免自动摘要与手写摘要混淆。\n"
+    },
+    {
+      "path": "posts/more-summary/index.md",
+      "source": "---\ntitle: More 摘要\ndate: 2026-09-07T11:00:00+08:00\n---\n\nmore 分隔符之前的正文会成为文章摘要。\n\n<!--more-->\n\n这里是 more 分隔符之后的正文，不能被误当作头部控件文本。\n"
+    },
+    {
+      "path": "posts/image-only/index.md",
+      "source": "---\ntitle: 纯图片正文\ndate: 2026-09-07T10:00:00+08:00\n---\n\n![正文中的一张远程照片](https://images.example.test/article-body-only.jpg)\n"
+    },
+    {
+      "path": "posts/code-first/index.md",
+      "source": "---\ntitle: 代码开头正文\ndate: 2026-09-06T12:00:00+08:00\n---\n\n```js\nconst firstBlock = '代码是正文的第一个可见节点';\nconsole.log(firstBlock);\n```\n\n代码之后仍有普通段落，代码不能成为摘要控件或标题图的替代物。\n"
+    },
+    {
+      "path": "posts/empty-body/index.md",
+      "source": "---\ntitle: 空正文\ndate: 2026-09-06T11:00:00+08:00\n---\n"
+    },
+    {
+      "path": "posts/headings-and-lists/index.md",
+      "source": "---\ntitle: 标题与嵌套列表\ndate: 2026-09-06T10:00:00+08:00\n---\n\n# 一级标题\n\n## 二级标题\n\n### 三级标题\n\n#### 四级标题\n\n##### 五级标题\n\n###### 六级标题\n\n每一级标题都保留语义层级和稳定锚点。\n\n- 一级无序项\n  - 二级无序项\n    - 三级无序项\n  - 另一个二级项\n- 第二个一级项\n\n1. 一级有序项\n   1. 二级有序项\n      1. 三级有序项\n   2. 另一个二级项\n2. 第二个一级项\n"
+    },
+    {
+      "path": "posts/wide-content/index.md",
+      "source": "---\ntitle: 宽内容边界\ndate: 2026-09-05T12:00:00+08:00\n---\n\n> 这是一段引用块，用于确认正文的左边界、背景和中文行高。\n>\n> 引用中的第二段仍然属于 blockquote。\n\n下面是一段包含极长 URL 的正文：[打开这个包含中文与英文混排的长链接](https://example.com/very-long-path/for-responsive-reading-boundary/with-a-second-segment/with-a-third-segment/query?article=wide-content&language=zh-CN&client=fixture)\n\n```text\n0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef\n```\n\n| 非常宽的列标题一 | 非常宽的列标题二 | 非常宽的列标题三 | 非常宽的列标题四 |\n| --- | --- | --- | --- |\n| 第一列包含一段很长的中文和 English words | 第二列包含更多不会被截断的内容 | 第三列用于测试局部横向滚动 | 第四列保留完整表格语义 |\n| 这一行继续扩大表格宽度以验证 320px 到桌面的布局边界 | 仍然允许横向滚动而不是撑破页面 | wide-table-cell-0123456789 | table-end |\n\n脚注引用出现在宽内容之后。[^wide-note]\n\n[^wide-note]: 这是原生 Markdown 脚注的正文，提供可回跳的脚注锚点。\n"
+    },
+    {
+      "path": "posts/horizontal-cover/index.md",
+      "source": "---\ntitle: 横向标题图\ndate: 2026-09-05T11:00:00+08:00\ncover: https://images.example.test/article-horizontal-wide.jpg\ncover_alt: 横向标题图\ncover_position: 0% 100%\n---\n\n这篇文章使用横向标题图，图像应按原比例显示而不沿用列表裁切位置。\n"
+    },
+    {
+      "path": "posts/vertical-cover/index.md",
+      "source": "---\ntitle: 竖向标题图\ndate: 2026-09-05T10:00:00+08:00\ncover: https://images.example.test/article-vertical-tall.jpg\ncover_alt: 竖向标题图\ncover_position: 100% 0%\n---\n\n这篇文章使用竖向标题图，图像主体应完整保留并在有高度限制时居中 contain。\n"
+    },
+    {
+      "path": "posts/long-header/index.md",
+      "source": "---\ntitle: ArticleTitleWithoutAnyWhitespaceThatMustWrapAtThe320PixelBoundaryBeforeItCanOverflowTheReadingColumnAndRemainAccessible\ndate: 2026-09-04T12:00:00+08:00\ndescription: DescriptionWithoutAnyWhitespaceThatMustWrapInsideTheArticleHeaderInsteadOfPushingThePageBeyondTheViewportAtTheSmallestSupportedWidth\ntags: [tag-without-any-whitespace-that-must-wrap-inside-the-article-header-at-the-320px-viewport-boundary]\n---\n\n这是用于 320px 边界检查的普通短正文。\n"
+    },
+    {
+      "path": "posts/unsafe-image/index.md",
+      "source": "---\ntitle: 图片协议过滤\ndate: 2026-09-04T11:00:00+08:00\n---\n\n安全图片与非允许协议图片的 alt 文本都应保留。\n\n![HTTPS 合法图片](https://images.example.test/safe-body-image.jpg)\n\n![非允许 scheme 图片](http://images.example.test/unsafe-body-image.jpg)\n"
+    }
+  ]
+}

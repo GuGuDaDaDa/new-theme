@@ -6,7 +6,15 @@
   <body class="{{ if .IsHome }}home-page{{ end }}">
     <a class="skip" href="#main">跳到正文</a>
     {{ partial "header.html" . }}
-    <main id="main" tabindex="-1">{{ block "main" . }}{{ end }}</main>
+    <main
+      id="main"
+      {{- if and .IsPage (eq .Section "posts") }}
+        class="article-layout"
+      {{- end }}
+      tabindex="-1"
+    >
+      {{- block "main" . }}{{ end -}}
+    </main>
     {{ partial "footer.html" . }}
   </body>
 </html>

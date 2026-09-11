@@ -1,0 +1,6 @@
+{{- $options := dict -}}
+{{- if not (transform.CanHighlight .Type) -}}
+  {{- $options = dict "type" "text" -}}
+{{- end -}}
+{{- $result := transform.HighlightCodeBlock . $options -}}
+{{- replace $result.Wrapped "<pre" "<pre tabindex=\"0\" data-article-code" 1 | safeHTML -}}

@@ -1,5 +1,38 @@
-<header class="article-head">
-  <a href="{{ "posts/" | relURL }}">← 返回文章列表</a
-  >{{ partial "tags.html" . }}
-  <h1>{{ .Title }}</h1>
+{{- $page := . -}}
+{{- $view := false -}}
+{{- if reflect.IsMap . -}}
+  {{- $page = .page -}}
+  {{- $view = .view -}}
+{{- end -}}
+{{- $posts := $page.Site.GetPage "/posts" -}}
+<header class="article-heading">
+  <a class="back-link" href="{{ $posts.RelPermalink }}" data-article-back
+    >返回文章列表</a
+  >
+  {{ if $view }}
+    {{ with $view.tags }}
+      <nav class="post-tags" aria-label="文章标签">
+        {{ range . }}
+          <a class="post-tag" href="{{ .url }}">{{ .label }}</a>
+        {{ end }}
+      </nav>
+    {{ end }}
+    <h1>{{ $view.title }}</h1>
+    {{ with $view.summaryText }}<p class="dek">{{ . }}</p>{{ end }}
+    <div class="meta">
+      {{ with $page.Site.Params.author }}
+        <span data-article-author>{{ . }}</span>
+      {{ end }}
+      <time datetime="{{ $view.displayDateISO }}" data-article-date>
+        {{- if eq $view.displayDateKind "updated" }}更新于&nbsp;{{ end -}}
+        {{- $view.displayDate -}}
+      </time>
+      {{ if gt $view.readingMinutes 0 }}
+        <span data-article-reading-time>{{ $view.readingMinutes }} 分钟</span>
+      {{ end }}
+    </div>
+  {{ else }}
+    {{ partial "tags.html" $page }}
+    <h1>{{ $page.Title }}</h1>
+  {{ end }}
 </header>
