@@ -90,6 +90,7 @@ export function initReferences(root) {
   preview.hidden = true;
   root.body.append(preview);
   let current = null;
+  let suppressedReference = null;
   let mobileTrigger = null;
   let timer = 0;
 
@@ -153,6 +154,10 @@ export function initReferences(root) {
    */
   function showPreview(reference) {
     if (mobile.matches || root.querySelector('dialog[open]')) return;
+    if (suppressedReference === reference) {
+      if (!reference.matches(':hover')) suppressedReference = null;
+      else return;
+    }
     cancelClose();
     if (current === reference) return;
     closePreview();
@@ -186,7 +191,14 @@ export function initReferences(root) {
     reference.addEventListener('pointerenter', () => showPreview(reference), {
       signal,
     });
-    reference.addEventListener('pointerleave', delayClose, { signal });
+    reference.addEventListener(
+      'pointerleave',
+      () => {
+        if (suppressedReference === reference) suppressedReference = null;
+        delayClose();
+      },
+      { signal },
+    );
     reference.addEventListener('focus', () => showPreview(reference), {
       signal,
     });
@@ -267,7 +279,9 @@ export function initReferences(root) {
         event.altKey
       )
         return;
-      const note = noteFor(current);
+      const reference = current;
+      const note = noteFor(reference);
+      suppressedReference = reference;
       closePreview();
       focusNote(note);
     },
