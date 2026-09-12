@@ -1,7 +1,7 @@
 {{- $body := .Content -}}
 {{- $refs := .Store.GetSortedMapValues "night-refs" -}}
 {{- $notes := .Store.GetSortedMapValues "night-notes" -}}
-{{- $containers := .Store.GetSortedMapValues "night-refers" -}}
+{{- $containers := .Store.GetSortedMapValues "night-refers" | default (slice) -}}
 {{- if gt (len $containers) 1 -}}
   {{- errorf "Only one refers container is allowed (%s)" .File.Path -}}
 {{- end -}}
