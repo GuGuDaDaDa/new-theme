@@ -3,6 +3,11 @@
   container-type: inline-size;
 }
 
+/* Restoring a lightbox trigger after pointer input should not show a keyboard ring. */
+html[data-input-mode='pointer'] a[data-lightbox]:focus {
+  outline: none;
+}
+
 .opening-image > .image-open {
   display: block;
   width: 100%;
