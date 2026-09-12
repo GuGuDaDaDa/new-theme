@@ -104,6 +104,11 @@ async function setTheme(page, theme) {
   await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
 }
 
+/** Wait for the required first-load entry animation, whose transform and opacity invalidate geometry and color measurements while running. @param {import('@playwright/test').Page} page - Active page. @returns {Promise<void>} Completion. */
+async function waitForEntry(page) {
+  await expect(page.locator('main')).toHaveCSS('opacity', '1');
+}
+
 test.beforeAll(async () => {
   const fixture = await createBoundarySite({
     name: 'browser-article',
@@ -140,6 +145,7 @@ test('article matches desktop and mobile reading geometry in both themes', async
     for (const theme of ['light', 'dark']) {
       await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
       await setTheme(page, theme);
+      await waitForEntry(page);
       await expect(page.locator('[data-article-cover]')).toHaveJSProperty(
         'complete',
         true,
@@ -287,6 +293,7 @@ test('horizontal raster and vertical cover remain complete and centered', async 
     ['vertical-cover', 420 / 1100],
   ]) {
     await page.goto(`${fixtureBaseURL}/posts/${slug}/`);
+    await waitForEntry(page);
     const image = page.locator('[data-article-cover]');
     await expect(image).toHaveJSProperty('complete', true);
     const state = await image.evaluate((element) => {
@@ -368,6 +375,7 @@ test('article content has no automated accessibility violations', async ({
   page,
 }) => {
   await page.goto(`${fixtureBaseURL}/posts/wide-content/`);
+  await waitForEntry(page);
   const axeSource = await readFile(
     path.join(projectRoot, 'node_modules/axe-core/axe.min.js'),
     'utf8',
