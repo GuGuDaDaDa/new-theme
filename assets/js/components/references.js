@@ -68,7 +68,7 @@ function copyContent(source, prefix) {
 }
 
 /**
- * Bind desktop hover/focus previews and mobile modal source panels.
+ * Bind desktop mouse previews and mobile modal source panels.
  * @param {Document} root - Current document.
  * @returns {() => void} Cleanup callback.
  */
@@ -90,19 +90,16 @@ export function initReferences(root) {
   preview.hidden = true;
   root.body.append(preview);
   let current = null;
-  let suppressedReference = null;
   let mobileTrigger = null;
   let timer = 0;
 
-  /** Cancel a pending pointer/focus dismissal. @returns {void} */
+  /** Cancel a pending pointer dismissal. @returns {void} */
   function cancelClose() {
     clearTimeout(timer);
   }
-  /** Hide the desktop preview without stranding keyboard focus. @returns {void} */
+  /** Hide the desktop preview. @returns {void} */
   function closePreview() {
     cancelClose();
-    if (preview.contains(root.activeElement))
-      current?.focus({ preventScroll: true });
     preview.hidden = true;
     preview.replaceChildren();
     current?.setAttribute('aria-expanded', 'false');
@@ -112,12 +109,7 @@ export function initReferences(root) {
   function delayClose() {
     cancelClose();
     timer = setTimeout(() => {
-      if (
-        preview.contains(root.activeElement) ||
-        preview.matches(':hover') ||
-        current?.matches(':hover') ||
-        current?.matches(':focus-visible')
-      )
+      if (preview.matches(':hover') || current?.matches(':hover'))
         return;
       closePreview();
     }, 150);
@@ -149,15 +141,11 @@ export function initReferences(root) {
   }
   /**
    * Reveal an interactive desktop source copy.
-   * @param {HTMLAnchorElement} reference - Hovered or focused marker.
+   * @param {HTMLAnchorElement} reference - Hovered marker.
    * @returns {void}
    */
   function showPreview(reference) {
     if (mobile.matches || root.querySelector('dialog[open]')) return;
-    if (suppressedReference === reference) {
-      if (!reference.matches(':hover')) suppressedReference = null;
-      else return;
-    }
     cancelClose();
     if (current === reference) return;
     closePreview();
@@ -188,32 +176,14 @@ export function initReferences(root) {
   }
   for (const reference of references) {
     reference.setAttribute('aria-expanded', 'false');
-    reference.addEventListener('pointerenter', () => showPreview(reference), {
-      signal,
-    });
     reference.addEventListener(
-      'pointerleave',
-      () => {
-        if (suppressedReference === reference) suppressedReference = null;
-        delayClose();
-      },
-      { signal },
-    );
-    reference.addEventListener('focus', () => showPreview(reference), {
-      signal,
-    });
-    reference.addEventListener('blur', delayClose, { signal });
-    reference.addEventListener(
-      'keydown',
+      'pointermove',
       (event) => {
-        if (event.key === 'Tab' && !event.shiftKey && current === reference) {
-          const first = preview.querySelector('a[href]');
-          event.preventDefault();
-          first.focus();
-        }
+        if (event.pointerType === 'mouse') showPreview(reference);
       },
       { signal },
     );
+    reference.addEventListener('pointerleave', delayClose, { signal });
     reference.addEventListener(
       'click',
       (event) => {
@@ -247,41 +217,8 @@ export function initReferences(root) {
       { signal },
     );
   }
-  for (const backref of root.querySelectorAll('.fn-backref')) {
-    const suppressTargetPreview = () => {
-      const reference = root.getElementById(backref.hash.slice(1));
-      if (!reference) return;
-      suppressedReference = reference;
-      closePreview();
-    };
-    backref.addEventListener('pointerdown', suppressTargetPreview, { signal });
-    backref.addEventListener(
-      'keydown',
-      (event) => {
-        if (event.key === 'Enter' || event.key === ' ') suppressTargetPreview();
-      },
-      { signal },
-    );
-  }
   preview.addEventListener('pointerenter', cancelClose, { signal });
   preview.addEventListener('pointerleave', delayClose, { signal });
-  preview.addEventListener('focusin', cancelClose, { signal });
-  preview.addEventListener('focusout', delayClose, { signal });
-  preview.addEventListener(
-    'keydown',
-    (event) => {
-      if (event.key !== 'Tab') return;
-      const links = [...preview.querySelectorAll('a[href]')];
-      if (event.shiftKey && root.activeElement === links[0]) {
-        event.preventDefault();
-        current.focus({ preventScroll: true });
-      } else if (!event.shiftKey && root.activeElement === links.at(-1)) {
-        // The browser continues Tab from the original marker in article order.
-        closePreview();
-      }
-    },
-    { signal },
-  );
   preview.addEventListener(
     'click',
     (event) => {
@@ -297,7 +234,6 @@ export function initReferences(root) {
         return;
       const reference = current;
       const note = noteFor(reference);
-      suppressedReference = reference;
       closePreview();
       focusNote(note);
     },
@@ -329,16 +265,6 @@ export function initReferences(root) {
       dialog
         .querySelector('[data-reference-preview-content]')
         .replaceChildren();
-    },
-    { signal },
-  );
-  root.addEventListener(
-    'keydown',
-    (event) => {
-      if (event.key === 'Escape' && current) {
-        event.preventDefault();
-        closePreview();
-      }
     },
     { signal },
   );
