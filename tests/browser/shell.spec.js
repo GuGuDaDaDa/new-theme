@@ -1,4 +1,4 @@
-/** Browser coverage for the global shell, theme menu, navigation, and footer. */
+/** Browser coverage for the global shell, theme button, navigation, and footer. */
 
 import { test, expect } from '@playwright/test';
 import { readFile } from 'node:fs/promises';
@@ -77,7 +77,7 @@ test('head synchronously resolves first-paint theme modes without the main modul
   }
 });
 
-test('theme menu persists manual choices and system mode follows media changes', async ({
+test('theme button cycles manual choices and system mode follows media changes', async ({
   page,
 }) => {
   await page.emulateMedia({ colorScheme: 'dark' });
@@ -86,12 +86,14 @@ test('theme menu persists manual choices and system mode follows media changes',
 
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await trigger.click();
-  await page.getByRole('menuitemradio', { name: '浅色' }).click();
   await expect(page.locator('html')).toHaveAttribute(
     'data-theme-mode',
     'light',
   );
-  await expect(trigger).toHaveAttribute('aria-label', '主题：浅色，当前浅色');
+  await expect(trigger).toHaveAttribute(
+    'aria-label',
+    '主题：浅色，当前浅色；点击切换为深色',
+  );
   expect(await page.evaluate(() => localStorage.getItem('bugu-theme'))).toBe(
     'light',
   );
@@ -99,7 +101,7 @@ test('theme menu persists manual choices and system mode follows media changes',
   await page.emulateMedia({ colorScheme: 'dark' });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
   await trigger.click();
-  await page.getByRole('menuitemradio', { name: '跟随系统' }).click();
+  await trigger.click();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
   await page.emulateMedia({ colorScheme: 'light' });
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'light');
@@ -133,7 +135,7 @@ test('storage failures do not interrupt current-page theme changes', async ({
     }, failure);
     await page.goto('/');
     await page.locator('[data-theme-trigger]').click();
-    await page.getByRole('menuitemradio', { name: '深色' }).click();
+    await page.locator('[data-theme-trigger]').click();
     await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
     await expect(page.getByRole('heading', { name: '最新文章' })).toBeVisible();
     expect(errors).toEqual([]);
@@ -141,56 +143,32 @@ test('storage failures do not interrupt current-page theme changes', async ({
   }
 });
 
-test('theme menu supports radio keyboard navigation, Escape, and natural Tab exit', async ({
+test('theme button supports keyboard cycling and natural Tab exit', async ({
   page,
 }) => {
   await page.goto('/');
   const trigger = page.locator('[data-theme-trigger]');
-  const menu = page.getByRole('menu');
+  await expect(page.getByRole('menu')).toHaveCount(0);
   await trigger.focus();
   await page.keyboard.press('Enter');
-  await expect(
-    page.getByRole('menuitemradio', { name: '跟随系统' }),
-  ).toBeFocused();
-  await page.keyboard.press('ArrowUp');
-  await expect(page.getByRole('menuitemradio', { name: '深色' })).toBeFocused();
-  await page.keyboard.press('Enter');
-  await expect(menu).toBeHidden();
-  await expect(trigger).toBeFocused();
-
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('Escape');
-  await expect(menu).toBeHidden();
-  await expect(trigger).toBeFocused();
-
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('Home');
-  await expect(page.getByRole('menuitemradio', { name: '浅色' })).toBeFocused();
-  await page.keyboard.press('Space');
-  await expect(menu).toBeHidden();
   await expect(page.locator('html')).toHaveAttribute(
     'data-theme-mode',
     'light',
   );
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('End');
-  await expect(
-    page.getByRole('menuitemradio', { name: '跟随系统' }),
-  ).toBeFocused();
-  await page.keyboard.press('Escape');
+  await expect(trigger).toBeFocused();
+
+  await page.keyboard.press('Space');
+  await expect(page.locator('html')).toHaveAttribute('data-theme-mode', 'dark');
+  await expect(trigger).toBeFocused();
 
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab');
-  await expect(menu).toBeHidden();
-
-  await trigger.click();
-  await page.getByRole('heading', { name: '最新文章' }).click();
-  await expect(menu).toBeHidden();
-
-  await trigger.focus();
-  await page.keyboard.press('Enter');
-  await page.keyboard.press('Shift+Tab');
-  await expect(menu).toBeHidden();
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-theme-mode',
+    'system',
+  );
+  await expect(trigger).not.toBeFocused();
+  await expect(page.getByRole('menu')).toHaveCount(0);
 });
 
 test('header uses the scroll threshold and remains visible during header interaction', async ({
@@ -270,7 +248,7 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
           .getBoundingClientRect().width,
         targets: [
           ...globalThis.document.querySelectorAll(
-            '.brand, .header nav > a, [data-theme-trigger], .footer a',
+            '.brand, .header nav > a, [data-theme-trigger]',
           ),
         ].map((element) => {
           const box = element.getBoundingClientRect();
@@ -288,6 +266,15 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
         expect(target.width).toBeGreaterThanOrEqual(44);
         expect(target.height).toBeGreaterThanOrEqual(44);
       }
+      for (const link of await page.locator('.footer-links > a').all()) {
+        await expect(link).toHaveCSS('padding', '0px');
+        await expect(link).toHaveCSS('margin', '0px');
+      }
+      for (const link of await page.locator('.footer-bottom a').all()) {
+        await expect(link).toHaveCSS('padding', '0px');
+        await expect(link).toHaveCSS('margin-top', '0px');
+        await expect(link).toHaveCSS('margin-bottom', '0px');
+      }
     }
   }
 
@@ -302,7 +289,6 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
       theme,
     );
     await page.reload();
-    await page.locator('[data-theme-trigger]').click();
     await page.addScriptTag({ content: axeSource });
     const violations = await page.evaluate(async () => {
       const result = await globalThis.axe.run(globalThis.document, {
@@ -359,7 +345,10 @@ test('reduced motion and repeated pageshow retain a single usable enhancement', 
   });
   await expect(page.locator('.header')).toHaveCSS('transition-duration', '0s');
   await page.locator('[data-theme-trigger]').click();
-  await expect(page.getByRole('menu')).toBeVisible();
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-theme-mode',
+    'light',
+  );
 });
 
 test('configuration hides unresolved pages and unsafe social links', async () => {

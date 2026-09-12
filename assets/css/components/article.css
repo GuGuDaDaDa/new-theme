@@ -17,15 +17,15 @@ main.article-layout {
 }
 
 .article-heading {
+  display: flex;
+  flex-direction: column;
   min-width: 0;
   padding: 14px 0 30px;
   overflow-wrap: anywhere;
 }
 
 .back-link {
-  display: inline-flex;
-  min-height: 44px;
-  align-items: center;
+  align-self: flex-start;
   color: var(--muted);
   font-size: 12px;
 }
@@ -33,7 +33,7 @@ main.article-layout {
 .article-heading .post-tags {
   min-width: 0;
   max-width: 100%;
-  margin-top: 8px;
+  margin-top: 20px;
   font-size: 12px;
 }
 
@@ -151,7 +151,23 @@ main.article-layout {
 
 .prose :is(ul, ol) {
   margin: 18px 0;
-  padding-left: 1.45em;
+  padding-left: 1.3em;
+}
+
+.prose ul {
+  list-style-type: disc;
+}
+
+.prose ol {
+  list-style-type: decimal;
+}
+
+.prose ul ul {
+  list-style-type: circle;
+}
+
+.prose ul ul ul {
+  list-style-type: square;
 }
 
 .prose :is(ul, ol) :is(ul, ol) {
@@ -206,6 +222,14 @@ main.article-layout {
 
 .prose .highlight pre {
   margin: 0;
+}
+
+.prose .highlight {
+  margin: 24px 0;
+}
+
+.prose pre code {
+  font: inherit;
 }
 
 .prose table {
@@ -287,6 +311,10 @@ main.article-layout {
     font-size: 31px;
   }
 
+  .article-heading .back-link + h1 {
+    margin-top: 19px;
+  }
+
   .dek {
     font-size: 15px;
     line-height: 1.6;
@@ -309,6 +337,7 @@ main.article-layout {
   .prose {
     font-size: 16px;
     line-height: 1.65;
+    letter-spacing: 0;
   }
 
   .prose h1 {

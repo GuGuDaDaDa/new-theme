@@ -40,7 +40,7 @@ async function rebuild() {
         '--port',
         '1313',
         '--bind',
-        '127.0.0.1',
+        '0.0.0.0',
         '--watch=false',
         '--disableFastRender',
         '--destination',

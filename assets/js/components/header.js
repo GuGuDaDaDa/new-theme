@@ -28,10 +28,8 @@ export function initHeader(root) {
       Boolean(root.querySelector('.hero')),
   );
 
-  /** Return whether interaction state requires the header to stay visible. */
-  const isLocked = () =>
-    header.contains(root.activeElement) ||
-    Boolean(header.querySelector('[aria-expanded="true"]'));
+  /** Keep keyboard-focused navigation visible without locking pointer focus. */
+  const isLocked = () => Boolean(header.querySelector(':focus-visible'));
 
   /** Apply one frame of scroll-derived header state. */
   const update = () => {
@@ -68,6 +66,7 @@ export function initHeader(root) {
   };
 
   window.addEventListener('scroll', schedule, { passive: true, signal });
+  header.addEventListener('keydown', schedule, { signal });
   header.addEventListener(
     'focusin',
     () => {

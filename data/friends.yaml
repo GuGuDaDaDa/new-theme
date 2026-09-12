@@ -1,1 +1,16 @@
-[]
+- name: DIYgod
+  url: https://diygod.cc
+  avatar: https://diygod.cc/favicon.ico
+  description: 写代码是热爱，写到世界充满爱。
+- name: Randy's Blog
+  url: https://lutaonan.com
+  avatar: https://lutaonan.com/favicon.ico
+  description: 前端工程师，热爱设计、写作与创造。
+- name: 张洪 Heo
+  url: https://zhheo.com
+  avatar: https://zhheo.com/favicon.ico
+  description: 分享设计、产品与有趣的前端交互。
+- name: 椒盐豆豉
+  url: https://blog.douchi.space
+  avatar: https://blog.douchi.space/favicon.ico
+  description: 记录生活的技术随笔与个人观察。

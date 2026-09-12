@@ -335,8 +335,9 @@ test('card enhancement preserves tag links, native title actions, selection, and
     '-1',
   );
   const tagBox = await firstCard.locator('.post-tag').first().boundingBox();
-  expect(tagBox.width).toBeGreaterThanOrEqual(44);
-  expect(tagBox.height).toBeGreaterThanOrEqual(44);
+  expect(tagBox.height).toBeCloseTo(17.6, 1);
+  const tagsBox = await firstCard.locator('.post-tags').boundingBox();
+  expect(tagBox.x).toBeCloseTo(tagsBox.x, 1);
 
   await firstCard.focus();
   await page.keyboard.press('Tab');

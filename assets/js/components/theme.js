@@ -7,7 +7,7 @@ const MODES = ['light', 'dark', 'system'];
 const MODE_LABELS = {
   light: '浅色',
   dark: '深色',
-  system: '跟随系统',
+  system: '自动（跟随系统）',
 };
 const THEME_LABELS = { light: '浅色', dark: '深色' };
 const instances = new WeakMap();
@@ -32,7 +32,7 @@ function resolveTheme(mode, system) {
 }
 
 /**
- * Initialize the theme menu once for a document.
+ * Initialize the cycling theme button once for a document.
  * @param {Document} root - Current document.
  * @returns {() => void} Cleanup callback.
  */
@@ -43,8 +43,6 @@ export function initTheme(root) {
   const control = root.querySelector('[data-theme-control]');
   if (!control) return () => {};
   const trigger = control.querySelector('[data-theme-trigger]');
-  const menu = control.querySelector('[data-theme-menu]');
-  const options = [...control.querySelectorAll('[data-theme-option]')];
   const system = matchMedia('(prefers-color-scheme: dark)');
   const controller = new AbortController();
   const { signal } = controller;
@@ -64,87 +62,18 @@ export function initTheme(root) {
     root.documentElement.dataset.themeMode = mode;
     root.documentElement.dataset.theme = theme;
     root.documentElement.style.colorScheme = theme;
-    trigger.setAttribute(
-      'aria-label',
-      `主题：${MODE_LABELS[mode]}，当前${THEME_LABELS[theme]}`,
-    );
-    for (const option of options) {
-      option.setAttribute(
-        'aria-checked',
-        String(option.dataset.themeOption === mode),
-      );
-    }
-  };
-
-  /**
-   * Close the menu.
-   * @param {boolean} restoreFocus - Whether to focus the trigger afterward.
-   */
-  const close = (restoreFocus = false) => {
-    menu.hidden = true;
-    trigger.setAttribute('aria-expanded', 'false');
-    if (restoreFocus) trigger.focus();
-  };
-
-  /** Open the menu and focus the selected option. */
-  const open = () => {
-    menu.hidden = false;
-    trigger.setAttribute('aria-expanded', 'true');
-    const selected = options.find(
-      (option) => option.dataset.themeOption === mode,
-    );
-    selected.focus();
+    const nextMode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+    const label = `主题：${MODE_LABELS[mode]}，当前${THEME_LABELS[theme]}；点击切换为${MODE_LABELS[nextMode]}`;
+    trigger.setAttribute('aria-label', label);
+    trigger.title = label;
   };
 
   trigger.addEventListener(
     'click',
     () => {
-      if (menu.hidden) open();
-      else close(true);
-    },
-    { signal },
-  );
-
-  for (const option of options) {
-    option.addEventListener(
-      'click',
-      () => {
-        mode = normalizeMode(option.dataset.themeOption);
-        writeStorage(storage, THEME_KEY, mode);
-        render();
-        close(true);
-      },
-      { signal },
-    );
-  }
-
-  menu.addEventListener(
-    'keydown',
-    (event) => {
-      const current = options.indexOf(root.activeElement);
-      let target = -1;
-      if (event.key === 'ArrowDown') target = (current + 1) % options.length;
-      if (event.key === 'ArrowUp')
-        target = (current - 1 + options.length) % options.length;
-      if (event.key === 'Home') target = 0;
-      if (event.key === 'End') target = options.length - 1;
-      if (target >= 0) {
-        event.preventDefault();
-        options[target].focus();
-      } else if (event.key === 'Escape') {
-        event.preventDefault();
-        close(true);
-      } else if (event.key === 'Tab') {
-        close();
-      }
-    },
-    { signal },
-  );
-
-  root.addEventListener(
-    'pointerdown',
-    (event) => {
-      if (!menu.hidden && !control.contains(event.target)) close();
+      mode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
+      writeStorage(storage, THEME_KEY, mode);
+      render();
     },
     { signal },
   );

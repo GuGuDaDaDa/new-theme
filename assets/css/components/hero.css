@@ -74,6 +74,7 @@
   border-radius: 2px;
   color: #fff;
   text-align: left;
+  line-height: 1.5;
 }
 
 .hero-choices button[aria-pressed='true'] {
@@ -109,6 +110,7 @@
 .choice-copy {
   display: block;
   min-width: 0;
+  font-size: 14px;
 }
 
 .choice-copy > span {
@@ -166,17 +168,27 @@
 }
 
 .hero-read {
+  position: relative;
   display: inline-flex;
   min-width: 44px;
-  min-height: 44px;
+  min-height: 40px;
   align-items: center;
   justify-content: center;
-  margin-top: 21px;
+  margin-top: 25px;
   padding: 8px 18px;
   background: rgb(255 255 255 / 13%);
   border-radius: 2px;
   color: #fff;
   font-size: 13px;
+}
+
+.hero-read::after {
+  position: absolute;
+  inset: 50% 0 auto;
+  min-height: 44px;
+  height: 100%;
+  transform: translateY(-50%);
+  content: '';
 }
 
 .hero-read:hover {
@@ -273,7 +285,9 @@
   }
 
   .hero-read {
-    margin-top: 14px;
+    min-height: 38px;
+    padding: 7px 15px;
+    margin-top: 18px;
     font-size: 12px;
   }
 

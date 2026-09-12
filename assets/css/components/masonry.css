@@ -124,11 +124,7 @@
 }
 
 .post-tag {
-  display: inline-flex;
-  min-width: 44px;
-  min-height: 44px;
-  align-items: center;
-  justify-content: center;
+  display: inline-block;
 }
 
 .post-tag::before {
@@ -182,6 +178,10 @@
 .text-post p {
   font-size: 15px;
   line-height: 1.8;
+}
+
+.text-post .post-tags + h2 {
+  margin-top: 7px;
 }
 
 .text-post .meta {
@@ -267,7 +267,8 @@
     font-size: 20px;
   }
 
-  .post p {
+  .post p,
+  .text-post p {
     font-size: 14px;
     line-height: 1.7;
   }
@@ -289,6 +290,10 @@
 
   .post-tags {
     margin-top: 13px;
+  }
+
+  .text-post .post-tags + h2 {
+    margin-top: 7px;
   }
 
   .list-pagination {

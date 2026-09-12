@@ -26,7 +26,6 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  min-height: 44px;
   color: #f0f5fa;
   font-family: 'Trebuchet MS', var(--font);
   font-size: 25px;
@@ -62,15 +61,6 @@
   font-weight: 600;
 }
 
-.footer-links > a {
-  display: inline-flex;
-  align-items: center;
-  min-width: 44px;
-  min-height: 44px;
-  margin-block: -7px;
-  padding-block: 7px;
-}
-
 .footer-links > span {
   margin-top: 3px;
   color: #9eb1c5;
@@ -87,16 +77,6 @@
   border-top: 1px solid #ffffff1a;
   color: #aebfd0;
   font-size: 11px;
-}
-
-.footer-bottom a {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 44px;
-  min-height: 44px;
-  margin-block: -14px;
-  padding-block: 14px;
 }
 
 .footer-bottom > a:last-child {

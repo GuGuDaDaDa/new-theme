@@ -174,6 +174,24 @@ test('article matches desktop and mobile reading geometry in both themes', async
       expect(geometry.titleSize).toBe(width > 768 ? '42px' : '31px');
       expect(geometry.proseSize).toBe(width > 768 ? '17px' : '16px');
       expect(geometry.proseLineHeight).toBe(width > 768 ? '29.24px' : '26.4px');
+      const headingGaps = await page
+        .locator('.article-heading')
+        .evaluate((heading) => {
+          const boxes = [...heading.children].map((element) =>
+            element.getBoundingClientRect(),
+          );
+          return boxes
+            .slice(1)
+            .map((box, index) => box.top - boxes[index].bottom);
+        });
+      for (const [index, gap] of [
+        20,
+        10,
+        width > 768 ? 17 : 12,
+        width > 768 ? 22 : 18,
+      ].entries()) {
+        expect(headingGaps[index]).toBeCloseTo(gap, 1);
+      }
       await page.screenshot({
         path: path.join(
           projectRoot,
@@ -192,6 +210,10 @@ test('wide code and tables scroll locally without hiding page overflow', async (
   for (const width of [320, 360, 768, 1024, 1920]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`${fixtureBaseURL}/posts/wide-content/`);
+    await expect(page.locator('.prose pre code').first()).toHaveCSS(
+      'font-size',
+      width > 768 ? '14px' : '12px',
+    );
     const widths = await page.evaluate(() => ({
       viewport: globalThis.innerWidth,
       documentWidth: globalThis.document.documentElement.scrollWidth,

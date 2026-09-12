@@ -1,0 +1,22 @@
+node_modules/
+.npm-cache/
+.generated/
+.build/
+public/
+resources/_gen/
+.hugo_build.lock
+.env
+.env.*
+!.env.example
+*.log
+coverage/
+playwright-report/
+test-results/
+.DS_Store
+
+## codex
+docs/
+.agent/
+.codex/
+AGENTS.md
+

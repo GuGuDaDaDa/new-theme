@@ -302,6 +302,13 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
   await page.goto(fixtureBaseURL);
   await waitForHero(page);
   await expect(page.locator('[data-hero]')).toHaveCSS('height', '440px');
+  await expect(page.locator('.hero-read')).toHaveCSS('padding', '8px 18px');
+  await expect(page.locator('.hero-read')).toHaveCSS('height', '40px');
+  await expect(page.locator('.hero-read')).toHaveCSS('margin-top', '25px');
+  await expect(page.locator('.choice-copy small').first()).toHaveCSS(
+    'line-height',
+    '16.5px',
+  );
   await expect(page.locator('[data-header]')).toHaveClass(/header-overlay/);
   await expect(page.locator('[data-header]')).not.toHaveClass(
     /header-scrolled/,
@@ -332,6 +339,9 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
     await page.setViewportSize({ width, height });
     await page.goto(fixtureBaseURL);
     await waitForHero(page);
+    await expect(page.locator('[data-hero]')).toHaveCSS('padding-top', '72px');
+    await expect(page.locator('.hero-read')).toHaveCSS('padding', '7px 15px');
+    await expect(page.locator('.hero-read')).toHaveCSS('height', '38px');
     await expect(page.locator('[data-hero]')).toHaveCSS(
       'height',
       `${expectedHero}px`,
