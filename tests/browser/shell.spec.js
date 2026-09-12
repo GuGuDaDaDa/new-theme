@@ -479,3 +479,24 @@ test('search dialog hides the automatic focus ring for pointer and touch opens',
     await touchContext.close();
   }
 });
+
+test('logo markup keeps the styled size before the stylesheet arrives', async ({
+  page,
+}) => {
+  // Simulate the slow-network first frame: no compiled stylesheet at all.
+  await page.route('**/compiled*.css', (route) => route.abort());
+  await page.goto('/');
+  const brand = page.locator('.brand svg');
+  await expect(brand).toHaveAttribute('width', '47');
+  await expect(brand).toHaveAttribute('height', '47');
+  await expect(brand).toHaveCSS('width', '47px');
+  await expect(page.locator('.footer-brand svg')).toHaveCSS('width', '40px');
+
+  // With the stylesheet applied the responsive rules still win.
+  await page.unroute('**/compiled*.css');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/');
+  await expect(brand).toHaveCSS('width', '47px');
+  await page.setViewportSize({ width: 390, height: 844 });
+  await expect(brand).toHaveCSS('width', '35px');
+});
