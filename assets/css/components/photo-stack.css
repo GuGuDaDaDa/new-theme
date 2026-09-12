@@ -290,6 +290,14 @@
     z-index 0s 0.7s step-end;
 }
 
+/* The incoming photo leads the stack from the first frame of its flight. */
+.photo-stack.is-enhanced .stack-card.animating-in {
+  z-index: 10 !important;
+  transition:
+    transform 0.7s cubic-bezier(0.5, 0, 0.3, 1),
+    opacity 0.55s ease;
+}
+
 .photo-stack.is-enhanced .stack-nav {
   position: absolute;
   top: 50%;

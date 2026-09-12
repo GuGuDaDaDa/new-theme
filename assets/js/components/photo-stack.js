@@ -35,6 +35,7 @@ export function initPhotoStack(root) {
     isAnimating: false,
     animation: null,
     animatedCard: null,
+    pendingCommit: null,
     suppressClickUntil: 0,
     cleanup,
   };
@@ -59,10 +60,26 @@ export function initPhotoStack(root) {
     );
   }
 
-  /** Finish an animation even when reduced motion changes mid-flip. @returns {void} */
+  /** Apply the withheld index, layout and focus changes of one flip. @returns {void} */
+  function commit() {
+    const pending = state.pendingCommit;
+    if (!pending) return;
+    state.pendingCommit = null;
+    state.index = pending.next;
+    if (pending.moveFocus) root.focus({ preventScroll: true });
+    render();
+    if (pending.moveFocus) links[pending.next].focus({ preventScroll: true });
+  }
+
+  /**
+   * Finish an animation, committing a withheld flip first so the outgoing photo
+   * leaves before the next one reaches the top layer.
+   * @returns {void}
+   */
   function finishAnimation() {
+    commit();
     state.animation?.cancel();
-    state.animatedCard?.classList.remove('animating-out');
+    state.animatedCard?.classList.remove('animating-out', 'animating-in');
     state.animation = null;
     state.animatedCard = null;
     state.isAnimating = false;
@@ -81,17 +98,17 @@ export function initPhotoStack(root) {
     const moveFocus = cards[previous].contains(
       root.ownerDocument.activeElement,
     );
-    state.index = next;
-    if (moveFocus) root.focus({ preventScroll: true });
-    render();
-    if (moveFocus) links[next].focus({ preventScroll: true });
-    if (reducedMotion.matches) return;
+    state.pendingCommit = { next, moveFocus };
+    if (reducedMotion.matches) {
+      commit();
+      return;
+    }
 
     const forward = requested > previous;
     const card = cards[forward ? previous : next];
     state.isAnimating = true;
     state.animatedCard = card;
-    card.classList.add('animating-out');
+    card.classList.add(forward ? 'animating-out' : 'animating-in');
     const resting = {
       transform: 'translate(0, 0) rotate(0deg) scale(1)',
       opacity: 1,
@@ -280,6 +297,7 @@ export function initPhotoStack(root) {
   /** Restore the HTML baseline for navigation or disposal. @returns {void} */
   function cleanup() {
     cancelGesture();
+    state.pendingCommit = null;
     finishAnimation();
     controller.abort();
     root.classList.remove('is-enhanced', 'touch-active');
