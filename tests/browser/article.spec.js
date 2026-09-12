@@ -604,3 +604,159 @@ test('spoiler cover keeps the reading column in both themes and viewports', asyn
     }
   }
 });
+
+test('AI notices use the reference card shape, round controls, and both themes', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.setViewportSize({ width: 1440, height: 1000 });
+  await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+
+  const summary = page.locator('details.ai-summary');
+  await expect(summary).not.toHaveAttribute('open', '');
+  await expect(page.locator('.ai-summary-label')).toHaveText('AI 摘要');
+  await expect(page.locator('.ai-warning-label')).toHaveText('warning');
+
+  const geometry = await page.evaluate(() => {
+    const toggle = globalThis.document.querySelector('.ai-summary-toggle');
+    const close = globalThis.document.querySelector('.ai-warning-close');
+    const summaryLabel = globalThis.document.querySelector('.ai-summary-label');
+    const card = globalThis.document.querySelector('.ai-summary');
+    const summaryHeader = card.querySelector('summary');
+    const rowBoxes = [...summaryHeader.children].map((element) =>
+      element.getBoundingClientRect(),
+    );
+    const cardStyle = globalThis.getComputedStyle(card);
+    return {
+      toggleRadius: globalThis.getComputedStyle(toggle).borderRadius,
+      closeRadius: globalThis.getComputedStyle(close).borderRadius,
+      labelSize: globalThis.getComputedStyle(summaryLabel).fontSize,
+      labelSpacing: globalThis.getComputedStyle(summaryLabel).letterSpacing,
+      cardBackground: cardStyle.backgroundColor,
+      cardBorderWidth: cardStyle.borderTopWidth,
+      headerHeight: summaryHeader.getBoundingClientRect().height,
+      rowHeight:
+        Math.max(...rowBoxes.map((box) => box.bottom)) -
+        Math.min(...rowBoxes.map((box) => box.top)),
+      documentWidth: globalThis.document.documentElement.scrollWidth,
+      viewport: globalThis.innerWidth,
+    };
+  });
+  expect(geometry.toggleRadius).toBe('50%');
+  expect(geometry.closeRadius).toBe('50%');
+  expect(geometry.labelSize).toBe('11.52px');
+  expect(geometry.labelSpacing).toBe('1.3824px');
+  expect(geometry.cardBackground).not.toBe('rgba(0, 0, 0, 0)');
+  expect(geometry.cardBorderWidth).toBe('1px');
+  expect(geometry.rowHeight).toBeLessThan(30);
+  expect(geometry.headerHeight).toBeGreaterThan(geometry.rowHeight);
+  expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
+
+  const chevronStyle = () =>
+    page
+      .locator('.ai-summary-toggle')
+      .evaluate((element) =>
+        globalThis
+          .getComputedStyle(element, '::before')
+          .transform.replace(/\s+/g, ' '),
+      );
+  const collapsedChevron = await chevronStyle();
+  await summary.locator('summary').click();
+  await expect(summary).toHaveAttribute('open', '');
+  const expandedChevron = await chevronStyle();
+  expect(expandedChevron).not.toBe(collapsedChevron);
+  expect(expandedChevron).not.toBe('none');
+  await summary.locator('summary').click();
+  await expect(summary).not.toHaveAttribute('open', '');
+  expect(await chevronStyle()).toBe(collapsedChevron);
+
+  const lightBackground = geometry.cardBackground;
+  await setTheme(page, 'dark');
+  const darkBackground = await page
+    .locator('.ai-summary')
+    .evaluate(
+      (element) => globalThis.getComputedStyle(element).backgroundColor,
+    );
+  expect(darkBackground).not.toBe(lightBackground);
+  await setTheme(page, 'light');
+
+  const closeButton = page.locator('.ai-warning-close');
+  await expect(closeButton).toBeVisible();
+  await closeButton.click();
+  await expect(page.locator('aside.ai-warning')).toBeHidden();
+  await expect(page.locator('[data-article-body]')).toBeFocused();
+  await page.reload();
+  await expect(page.locator('aside.ai-warning')).toBeVisible();
+  const stored = await page.evaluate(() =>
+    Object.keys(globalThis.localStorage),
+  );
+  expect(stored.filter((key) => /notice|ai/i.test(key))).toEqual([]);
+
+  const axeSource = await readFile(
+    path.join(projectRoot, 'node_modules/axe-core/axe.min.js'),
+    'utf8',
+  );
+  await page.addScriptTag({ content: axeSource });
+  const violations = await page.evaluate(async () => {
+    const result = await globalThis.axe.run(
+      globalThis.document.querySelector('[data-article-body]'),
+      { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa'] } },
+    );
+    return result.violations;
+  });
+  expect(violations).toEqual([]);
+});
+
+test('AI notices keep the reference card without scripting and capture screenshots', async ({
+  page,
+  browser,
+}) => {
+  const screenshotDir = path.join(
+    projectRoot,
+    'docs/agent-work/ai-notices/screenshots',
+  );
+  await mkdir(screenshotDir, { recursive: true });
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  for (const [width, height, size] of [
+    [1440, 1000, 'desktop'],
+    [390, 844, 'mobile'],
+  ]) {
+    await page.setViewportSize({ width, height });
+    for (const theme of ['light', 'dark']) {
+      await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+      await setTheme(page, theme);
+      for (const [block, selector] of [
+        ['summary', 'details.ai-summary'],
+        ['warning', 'aside.ai-warning'],
+      ]) {
+        await page.locator(selector).screenshot({
+          path: path.join(screenshotDir, `ai-${block}-${size}-${theme}.png`),
+        });
+      }
+    }
+  }
+
+  const noScriptContext = await browser.newContext({
+    javaScriptEnabled: false,
+    reducedMotion: 'reduce',
+    viewport: { width: 390, height: 844 },
+  });
+  const noScriptPage = await noScriptContext.newPage();
+  await noScriptPage.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+  await noScriptPage.waitForLoadState('load');
+  await expect(noScriptPage.locator('.ai-summary-label')).toHaveText('AI 摘要');
+  await expect(noScriptPage.locator('.ai-warning-close')).toBeHidden();
+  await expect(noScriptPage.locator('.ai-warning-content')).toContainText(
+    '本文部分内容在 AI 辅助下完成',
+  );
+  await expect(noScriptPage.locator('details.ai-summary')).not.toHaveAttribute(
+    'open',
+    '',
+  );
+  await noScriptPage.locator('.ai-summary summary').click();
+  await expect(noScriptPage.locator('details.ai-summary')).toHaveAttribute(
+    'open',
+    '',
+  );
+  await noScriptContext.close();
+});

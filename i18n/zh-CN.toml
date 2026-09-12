@@ -211,6 +211,8 @@ other = "社交链接"
 other = "AI 摘要"
 [shortcode.aiWarning]
 other = "AI 辅助声明"
+[shortcode.aiWarningLabel]
+other = "warning"
 [shortcode.aiWarningClose]
 other = "关闭 AI 声明"
 [shortcode.references]

@@ -394,3 +394,55 @@ test('a lone public article keeps the footer and omits the navigation', async ()
     await removeBoundarySite(soloSite.projectRoot);
   }
 });
+
+test('AI notices follow the frozen header contract and stay searchable', async () => {
+  const { $ } = await readArticle('complete-frontmatter');
+  const summary = $('details.ai-summary[data-ai-summary]');
+  assert.equal(summary.length, 1);
+  assert.equal(summary.attr('open'), undefined);
+  assert.equal(summary.children('summary').attr('data-search-exclude'), '');
+  assert.deepEqual(
+    summary
+      .children('summary')
+      .children()
+      .map((_, element) => $(element).attr('class'))
+      .get(),
+    ['ai-summary-icon', 'ai-summary-label', 'ai-summary-toggle'],
+  );
+  assert.equal(summary.find('.ai-summary-label').text().trim(), 'AI 摘要');
+  assert.equal(summary.find('.ai-summary-icon').attr('aria-hidden'), 'true');
+  assert.equal(summary.find('.ai-summary-toggle').attr('aria-hidden'), 'true');
+  assert.match(
+    summary.find('.ai-summary-content').text(),
+    /这是作者手写的内容提要/,
+  );
+
+  const warning = $('aside.ai-warning[data-ai-warning]');
+  assert.equal(warning.length, 1);
+  assert.equal(warning.attr('aria-label'), 'AI 辅助声明');
+  assert.equal(warning.find('.ai-warning-icon').text(), '!');
+  assert.equal(warning.find('.ai-warning-label').text().trim(), 'warning');
+  assert.equal(
+    warning.find('.ai-warning-label').attr('data-search-exclude'),
+    '',
+  );
+  assert.equal(
+    warning.find('.ai-warning-content > :first-child').attr('class'),
+    'ai-warning-title',
+  );
+  assert.equal(warning.find('.ai-warning-title').text().trim(), '透明声明');
+  assert.ok(warning.find('[data-notice-close]').is('[hidden]'));
+  assert.match(
+    warning.find('.ai-warning-content').text(),
+    /本文部分内容在 AI 辅助下完成/,
+  );
+
+  const index = await readJson(path.join(site.build.publicDir, 'index.json'));
+  const entry = index.posts.find(
+    (post) => post.url === '/posts/complete-frontmatter/',
+  );
+  assert.ok(entry);
+  assert.match(entry.content, /这是作者手写的内容提要/);
+  assert.match(entry.content, /本文部分内容在 AI 辅助下完成/);
+  assert.doesNotMatch(entry.content, /AI 摘要|warning/);
+});

@@ -3,20 +3,26 @@
   data-ai-warning
   aria-label="{{ i18n "shortcode.aiWarning" }}"
 >
-  {{ with .Get "title" }}<p class="ai-warning-title">{{ . }}</p>{{ end }}
+  <div class="ai-warning-header">
+    <span class="ai-warning-icon" aria-hidden="true">!</span>
+    <span class="ai-warning-label" data-search-exclude
+      >{{ i18n "shortcode.aiWarningLabel" }}</span
+    >
+    <button
+      type="button"
+      class="icon close-dialog ai-warning-close"
+      data-notice-close
+      data-search-exclude
+      aria-label="{{ i18n "shortcode.aiWarningClose" }}"
+      hidden
+    >
+      <svg aria-hidden="true" viewBox="0 0 24 24">
+        <path d="m7 7 10 10M17 7 7 17" />
+      </svg>
+    </button>
+  </div>
   <div class="ai-warning-content">
+    {{ with .Get "title" }}<p class="ai-warning-title">{{ . }}</p>{{ end }}
     {{ .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML }}
   </div>
-  <button
-    type="button"
-    class="icon close-dialog ai-warning-close"
-    data-notice-close
-    data-search-exclude
-    aria-label="{{ i18n "shortcode.aiWarningClose" }}"
-    hidden
-  >
-    <svg aria-hidden="true" viewBox="0 0 24 24">
-      <path d="m7 7 10 10M17 7 7 17" />
-    </svg>
-  </button>
 </aside>

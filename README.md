@@ -190,6 +190,8 @@ hugo new content posts/my-note/index.md
 
 约束：`photo.src` 必须是 bundle 内资源或 HTTPS 地址，`photos` 为空时省略并给出构建警告；`fnref` 为正整数，`refer.num` 必填且同页唯一，`url` 只接受 HTTPS，编号重复、缺少被引用条目或非 `noref` 条目无人引用都会构建报错。
 
+`ai-summary` 与 `ai-warning` 共用同一套卡片样式：标签行带前置装饰标志、小型字距标签，折叠箭头与关闭按钮为圆形，正文使用比散文更小的字号。`ai-warning` 的标签固定为 `warning`，可选 `title` 渲染为正文首行的加粗引言；标签行不进入搜索索引，正文区仍可被搜索。
+
 `spoiler` 位于正文行内，桌面悬停显示、点击固定显示／隐藏，移动端点击切换；无 JS 时文字直接可读，遮罩文字不进入搜索索引与卡片摘要。
 
 ## 8. 界面功能

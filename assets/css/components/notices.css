@@ -1,13 +1,14 @@
-/* AI reading notices keep their text visible without enhancement. */
+/* AI reading notices follow the reference AI cards on theme tokens. */
 .prose .ai-summary,
 .prose .ai-warning {
+  position: relative;
   margin: 26px 0;
-  padding: 16px 20px;
-  background: var(--soft);
-  border-radius: 2px;
+  background: var(--surface);
+  border: 1px solid var(--line);
   color: var(--text);
-  font-size: 17px;
-  line-height: 1.72;
+  transition:
+    background-color 0.4s ease,
+    border-color 0.4s ease;
 }
 
 .prose .ai-summary > :last-child,
@@ -17,10 +18,46 @@
   margin-bottom: 0;
 }
 
+/* Angled corner marks are decoration taken from the reference summary card. */
+.prose .ai-summary::before,
+.prose .ai-summary::after {
+  position: absolute;
+  z-index: 2;
+  width: 20px;
+  height: 20px;
+  border-color: var(--accent);
+  content: '';
+  opacity: 0.7;
+  pointer-events: none;
+  transition: all 0.35s ease;
+}
+
+.prose .ai-summary::before {
+  top: 0;
+  left: 0;
+  border-top: 2px solid;
+  border-left: 2px solid;
+}
+
+.prose .ai-summary::after {
+  right: 0;
+  bottom: 0;
+  border-right: 2px solid;
+  border-bottom: 2px solid;
+}
+
 .prose .ai-summary > summary {
-  display: list-item;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+  list-style: none;
   cursor: pointer;
-  font-weight: 650;
+  user-select: none;
+}
+
+.prose .ai-summary > summary::-webkit-details-marker {
+  display: none;
 }
 
 .prose .ai-summary > summary:focus-visible {
@@ -28,9 +65,108 @@
   outline-offset: 4px;
 }
 
+.prose .ai-summary-icon {
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  background: var(--accent);
+  opacity: 0.8;
+  transform: rotate(45deg);
+  transition: opacity 0.3s ease;
+}
+
+.prose .ai-summary-label,
+.prose .ai-warning-label {
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+}
+
+.prose .ai-summary-label {
+  transition: color 0.3s ease;
+}
+
+.prose .ai-summary-toggle {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  min-width: 28px;
+  height: 28px;
+  margin-left: auto;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  color: var(--muted);
+  transition: all 0.25s ease;
+}
+
+.prose .ai-summary-toggle::before {
+  display: block;
+  width: 8px;
+  height: 8px;
+  margin-top: -3px;
+  border-right: 1.5px solid;
+  border-bottom: 1.5px solid;
+  content: '';
+  transform: rotate(45deg);
+  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.prose .ai-summary[open] .ai-summary-toggle::before {
+  margin-top: 2px;
+  transform: rotate(-135deg);
+}
+
 .prose .ai-summary-content,
 .prose .ai-warning-content {
-  margin-top: 10px;
+  padding: 0 20px 20px;
+  font-size: 0.92rem;
+  line-height: 1.65;
+}
+
+.prose .ai-summary-content {
+  color: var(--text);
+}
+
+.prose .ai-summary-content p {
+  margin-bottom: 0.7em;
+}
+
+.prose .ai-warning-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 20px;
+}
+
+.prose .ai-warning-icon {
+  display: grid;
+  place-items: center;
+  width: 20px;
+  min-width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  border: 1.5px solid var(--accent);
+  border-radius: 50%;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+  line-height: 1;
+  opacity: 0.75;
+  transition: opacity 0.3s ease;
+}
+
+.prose .ai-warning-content {
+  color: var(--muted);
+}
+
+.prose .ai-warning-title {
+  margin: 0 0 8px;
+  color: var(--text);
+  font-size: 0.92rem;
+  font-weight: 600;
+  letter-spacing: 0;
 }
 
 .prose .ai-summary-content > :first-child,
@@ -38,30 +174,16 @@
   margin-top: 0;
 }
 
-.prose .ai-warning {
-  position: relative;
-  padding-right: 58px;
-}
-
-.prose .ai-warning-title {
-  margin: 0 0 8px;
-  color: var(--accent);
-  font-size: 13px;
-  font-weight: 650;
-  letter-spacing: 0;
-}
-
 .prose .ai-warning-close.close-dialog {
-  position: absolute;
-  top: 12px;
-  right: 12px;
   width: 32px;
   min-width: 32px;
   height: 32px;
   min-height: 32px;
+  margin-left: auto;
   padding: 0;
-  border: 0;
-  border-radius: 3px;
+  flex-shrink: 0;
+  border: 1px solid transparent;
+  border-radius: 50%;
   background: transparent;
   color: var(--muted);
   box-shadow: none;
@@ -69,11 +191,6 @@
 
 .prose .ai-warning-close[hidden] {
   display: none;
-}
-
-.prose .ai-warning-close.close-dialog:hover {
-  background: transparent;
-  color: var(--accent);
 }
 
 .prose .ai-warning-close.close-dialog svg {
@@ -92,21 +209,64 @@
   outline-offset: 4px;
 }
 
+@media (hover: hover) {
+  .prose .ai-summary:hover::before,
+  .prose .ai-summary:hover::after {
+    width: 24px;
+    height: 24px;
+    opacity: 1;
+  }
+
+  .prose .ai-summary > summary:hover .ai-summary-icon,
+  .prose .ai-warning:hover .ai-warning-icon {
+    opacity: 1;
+  }
+
+  .prose .ai-summary > summary:hover .ai-summary-toggle,
+  .prose .ai-warning-close.close-dialog:hover {
+    border-color: var(--accent);
+    background: var(--soft);
+    color: var(--accent);
+  }
+}
+
+.prose .ai-warning-close.close-dialog:active {
+  transform: scale(0.94);
+}
+
+.prose .ai-summary > summary:active .ai-summary-toggle {
+  transform: scale(0.94);
+}
+
 @media (max-width: 768px) {
+  .prose .ai-summary::before,
+  .prose .ai-summary::after {
+    width: 14px;
+    height: 14px;
+    border-width: 1.5px;
+  }
+
+  .prose .ai-summary > summary,
+  .prose .ai-warning-header {
+    padding: 14px 16px;
+  }
+
+  .prose .ai-summary-content,
+  .prose .ai-warning-content {
+    padding: 0 16px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
   .prose .ai-summary,
-  .prose .ai-warning {
-    margin: 22px 0;
-    padding: 15px 16px;
-    font-size: 16px;
-    line-height: 1.65;
-  }
-
-  .prose .ai-warning {
-    padding-right: 52px;
-  }
-
-  .prose .ai-warning-close.close-dialog {
-    top: 10px;
-    right: 10px;
+  .prose .ai-summary::before,
+  .prose .ai-summary::after,
+  .prose .ai-summary-icon,
+  .prose .ai-summary-label,
+  .prose .ai-summary-toggle,
+  .prose .ai-summary-toggle::before,
+  .prose .ai-warning-icon {
+    transition: none;
   }
 }
