@@ -65,7 +65,8 @@ test('mobile and no-JS basic browsing remain available', async ({
     .getByRole('navigation', { name: '主导航' })
     .getByRole('link', { name: '关于' })
     .click();
-  await expect(page.locator('h1')).toHaveText('关于');
+  await expect(page).toHaveURL('/about/');
+  await expect(page.locator('.about-page h1')).toHaveText('BuGuLog');
   await context.close();
 });
 
