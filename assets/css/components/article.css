@@ -1,6 +1,6 @@
 main.article-layout {
   max-width: 1280px;
-  margin-block: 20px 64px;
+  margin-block: 20px 0;
 }
 
 .reading {
@@ -299,7 +299,7 @@ main.article-layout {
 
 @media (max-width: 768px) {
   main.article-layout {
-    margin-block: 0 42px;
+    margin-block: 0;
   }
 
   .article-heading {
