@@ -1,6 +1,6 @@
 /** Structural smoke validation of a completed static build. */
 import assert from 'node:assert/strict';
-import { access, readFile } from 'node:fs/promises';
+import { access, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { load } from 'cheerio';
@@ -115,7 +115,102 @@ export async function validateOutput(destination, options = {}) {
     }
   }
 
-  // 5. Forbidden markers scan (privacy leakage prevention)
+  // 5. Internal link, anchor and canonical targets
+  const htmlFiles = output.filter((file) => file.endsWith('.html'));
+  const idCache = new Map();
+
+  /**
+   * List the element ids of an emitted HTML file.
+   * @param {string} file - Absolute HTML path.
+   * @returns {Promise<Set<string>>} Id attributes in the document.
+   */
+  async function elementIds(file) {
+    if (!idCache.has(file)) {
+      const $ = load(await readFile(file, 'utf8'));
+      idCache.set(
+        file,
+        new Set(
+          $('[id]')
+            .toArray()
+            .map((element) => $(element).attr('id')),
+        ),
+      );
+    }
+    return idCache.get(file);
+  }
+
+  /**
+   * Resolve an emitted URL to its file inside the output directory.
+   * @param {string} file - Source HTML file.
+   * @param {string} url - Link href.
+   * @returns {Promise<string|null>} Target file, or null for non-site URLs.
+   */
+  async function resolveLink(file, url) {
+    if (!url || /^(https?:|mailto:|tel:|data:|javascript:|\/\/)/.test(url))
+      return null;
+    const pathname = url.split('#')[0].split('?')[0];
+    if (!pathname) return file;
+    let decoded;
+    try {
+      decoded = decodeURIComponent(pathname);
+    } catch {
+      throw new Error(`Invalid encoded link target "${url}" in ${file}`);
+    }
+    const target = path.resolve(
+      decoded.startsWith('/') ? destination : path.dirname(file),
+      decoded.startsWith('/') ? `.${decoded}` : decoded,
+    );
+    if (
+      target !== destination &&
+      !target.startsWith(`${destination}${path.sep}`)
+    )
+      throw new Error(`Link target escapes the output directory: "${url}"`);
+    const info = await stat(target).catch(() => null);
+    return info?.isDirectory() ? path.join(target, 'index.html') : target;
+  }
+
+  for (const file of htmlFiles) {
+    const $ = load(await readFile(file, 'utf8'));
+    for (const element of $('a[href]').toArray()) {
+      const href = $(element).attr('href');
+      const target = await resolveLink(file, href);
+      if (!target) continue;
+      try {
+        await access(target);
+      } catch {
+        throw new Error(`Broken internal link "${href}" in ${file}`);
+      }
+      const fragment = href.includes('#')
+        ? href.slice(href.indexOf('#') + 1)
+        : '';
+      if (!fragment || !target.endsWith('.html')) continue;
+      let id;
+      try {
+        id = decodeURIComponent(fragment);
+      } catch {
+        throw new Error(`Invalid encoded anchor "${href}" in ${file}`);
+      }
+      if (!(await elementIds(target)).has(id)) {
+        throw new Error(
+          `Missing anchor "#${fragment}" linked from ${file} to ${target}`,
+        );
+      }
+    }
+    for (const element of $('link[rel="canonical"]').toArray()) {
+      const href = $(element).attr('href');
+      if (!URL.canParse(href)) {
+        throw new Error(`Canonical target must be an absolute URL: "${href}"`);
+      }
+      const target = await resolveLink(file, new URL(href).pathname);
+      try {
+        await access(target);
+      } catch {
+        throw new Error(`Canonical target missing: "${href}" in ${file}`);
+      }
+    }
+  }
+
+  // 6. Forbidden markers scan (privacy leakage prevention)
   if (
     Array.isArray(options.forbiddenMarkers) &&
     options.forbiddenMarkers.length > 0

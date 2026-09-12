@@ -1,0 +1,101 @@
+/* Theme-consistent 404 prompt with a real home link and the shared search entry. */
+.not-found {
+  max-width: 640px;
+  margin-inline: auto;
+  padding: 18px 0 48px;
+}
+
+.not-found-code {
+  margin: 0 0 18px;
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+}
+
+.not-found h1 {
+  margin-bottom: 16px;
+}
+
+.not-found-text {
+  max-width: 34em;
+  margin: 0;
+  color: var(--muted);
+  font-size: 17px;
+  line-height: 1.72;
+}
+
+.not-found-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.not-found-home,
+.not-found-search {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  justify-content: center;
+  gap: 9px;
+  padding: 0 22px;
+  border-radius: 3px;
+  font-size: 14px;
+  transition:
+    color 0.2s ease,
+    background-color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.not-found-home {
+  background: var(--accent);
+  color: var(--bg);
+}
+
+.not-found-search {
+  background: var(--soft);
+  border: 1px solid var(--line);
+  color: var(--text);
+}
+
+.not-found-search svg {
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+@media (hover: hover) {
+  .not-found-home:hover {
+    background: var(--text);
+    color: var(--bg);
+  }
+
+  .not-found-search:hover {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+}
+
+.not-found-note {
+  max-width: 36em;
+  margin: 24px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+
+.not-found-note a {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .not-found-home,
+  .not-found-search {
+    transition: none;
+  }
+}

@@ -1,0 +1,18 @@
+{{- $id := strings.TrimSpace (site.Params.googleAnalytics | default "") -}}
+{{- $validID := gt (len (findRE `^(G-[A-Z0-9]{6,}|UA-[0-9]{4,}-[0-9]+)$` $id)) 0 -}}
+{{- $production := and hugo.IsProduction (not (site.Params.localPreview | default false)) -}}
+{{- $loopback := in (slice "localhost" "127.0.0.1" "::1") (urls.Parse site.BaseURL).Hostname -}}
+{{- if and $validID $production (not $loopback) }}
+  <script
+    async
+    src="https://www.googletagmanager.com/gtag/js?id={{ $id }}"
+  ></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag() {
+    dataLayer.push(arguments);
+  }
+  gtag('js', new Date());
+  gtag('config', '{{ $id }}');
+</script>
+{{- end }}

@@ -1,15 +1,60 @@
-{{- $page := . -}}
-{{- $pager := false -}}
-{{- if reflect.IsMap . -}}
-  {{- $page = .page -}}
-  {{- with .pager }}{{ $pager = . }}{{ end -}}
+{{- $page := .page -}}
+{{- $pager := .pager -}}
+{{- $title := .title -}}
+{{- $is404 := eq $page.Kind "404" -}}
+{{- $description := trim ($page.Description | default "") " \n\t" -}}
+{{- if and (not $description) (eq $page.Kind "page") -}}
+  {{- $summary := partial "data/summary.html" $page -}}
+  {{- $description = trim $summary.summaryText " \n\t" -}}
 {{- end -}}
-{{- if eq $page.Kind "404" -}}
-  <meta name="robots" content="noindex" />
-{{- else -}}
-  {{- $canonical := $page.Permalink -}}
-  {{- if $pager -}}
-    {{- $canonical = $pager.URL | absURL -}}
+{{- if not $description -}}
+  {{- $description = trim (site.Params.description | default "") " \n\t" -}}
+{{- end -}}
+{{- $description = replaceRE `\s+` " " $description -}}
+{{- if $is404 -}}
+  {{- $description = "页面未找到，可返回首页或使用站内搜索继续浏览。" -}}
+{{- end -}}
+{{- $image := "" -}}
+{{- $canonical := $page.Permalink -}}
+{{- with $pager }}{{ $canonical = .URL | absURL }}{{ end -}}
+{{- if not $is404 -}}
+  {{- with (partial "data/image.html" $page).originalURL }}
+    {{ $image = . }}
+  {{ end -}}
+  {{- if not $image -}}
+    {{- $fallback := strings.TrimSpace (site.Params.defaultSocialImage | default "") -}}
+    {{- if or (hasPrefix $fallback "https://") (hasPrefix $fallback "http://") -}}
+      {{- $image = $fallback -}}
+    {{- else if and (hasPrefix $fallback "/") (not (hasPrefix $fallback "//")) -}}
+      {{- $image = $fallback | absURL -}}
+    {{- end -}}
   {{- end -}}
-  <link rel="canonical" href="{{ $canonical }}" />
 {{- end -}}
+<meta name="description" content="{{ $description }}" />
+{{- if $is404 }}
+  <meta name="robots" content="noindex" />
+{{- else }}
+  <link rel="canonical" href="{{ $canonical }}" />
+  <meta
+    property="og:type"
+    content="{{ cond (and (eq $page.Kind "page") (eq $page.Section "posts")) "article" "website" }}"
+  />
+  <meta property="og:site_name" content="{{ site.Title }}" />
+  <meta property="og:locale" content="zh_CN" />
+  <meta property="og:title" content="{{ $title }}" />
+  <meta property="og:description" content="{{ $description }}" />
+  <meta property="og:url" content="{{ $canonical }}" />
+  {{- with $image }}
+    <meta property="og:image" content="{{ . }}" />
+  {{- end }}
+  <meta
+    name="twitter:card"
+    content="{{ cond $image "summary_large_image" "summary" }}"
+  />
+  <meta name="twitter:title" content="{{ $title }}" />
+  <meta name="twitter:description" content="{{ $description }}" />
+  {{- with $image }}
+    <meta name="twitter:image" content="{{ . }}" />
+  {{- end }}
+  {{ partial "head/json-ld.html" (dict "page" $page "canonical" $canonical "title" $title "description" $description "image" $image) }}
+{{- end }}

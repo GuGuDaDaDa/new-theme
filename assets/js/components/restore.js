@@ -107,6 +107,7 @@ function initList(list, marker) {
     candidate.listId === list.dataset.listId
       ? candidate
       : null;
+  if (saved) list.ownerDocument.documentElement.dataset.entry = 'restore';
   const entryId =
     saved && previous?.window === marker && previous.entryId === saved.entryId
       ? saved.entryId

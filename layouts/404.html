@@ -1,4 +1,27 @@
 {{ define "main" }}
-  <h1>页面未找到</h1>
-  <a href="{{ site.Home.RelPermalink }}">返回首页</a>
+  <section class="not-found" aria-labelledby="not-found-title">
+    <p class="not-found-code" aria-hidden="true">404</p>
+    <h1 id="not-found-title">页面未找到</h1>
+    <p class="not-found-text">这个地址下没有内容，它可能已被移动或删除。</p>
+    <div class="not-found-actions">
+      <a class="not-found-home" href="{{ site.Home.RelPermalink }}">返回首页</a>
+      <button class="not-found-search" type="button" data-search-trigger>
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <circle cx="10.8" cy="10.8" r="6.3" />
+          <path d="m16 16 5 5" />
+        </svg>
+        搜索文章
+      </button>
+    </div>
+    <noscript>
+      <p class="not-found-note">
+        当前浏览器未启用 JavaScript，站内搜索不可用；请返回首页，或浏览
+        {{ with site.GetPage "/posts" }}
+          <a href="{{ .RelPermalink }}">全部文章</a>
+        {{ else }}
+          文章列表
+        {{ end }}。
+      </p>
+    </noscript>
+  </section>
 {{ end }}

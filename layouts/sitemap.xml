@@ -1,6 +1,10 @@
 {{ printf "<?xml version=\"1.0\" encoding=\"utf-8\" standalone=\"yes\"?>" | safeHTML }}
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   >{{ range .Pages }}
-    {{ if ne .Kind "taxonomy" }}<url><loc>{{ .Permalink }}</loc></url>{{ end }}
+    {{- if and .Permalink (ne .Kind "404") (ne .Kind "taxonomy") }}
+      <url>
+        <loc>{{ .Permalink }}</loc>
+      </url>
+    {{ end }}
   {{ end }}</urlset
 >

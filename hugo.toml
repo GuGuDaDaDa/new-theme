@@ -45,6 +45,8 @@ extended = true
 description = '记录技术实践、游戏体验与个人观察。'
 footerText = '海雾深处，字字为灯'
 author = 'GuGuDaDa'
+defaultSocialImage = ''
+googleAnalytics = ''
 [menus]
 [[menus.main]]
 name = '关于'

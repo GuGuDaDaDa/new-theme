@@ -1,24 +1,25 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 {{ partial "head/theme-init.html" . }}
-{{- $context := dict "page" . -}}
-{{- if or .IsHome (eq .Kind "section") (eq .Kind "term") -}}
-  {{- $context = partial "list/context.html" . -}}
-{{- end -}}
+{{- $page := . -}}
 {{- $pager := false -}}
-{{- with $context.pager }}{{ $pager = . }}{{ end -}}
-<title>
-  {{ if not .IsHome }}
-    {{ .Title }} ·
-  {{ end }}{{ if and $pager (gt $pager.PageNumber 1) }}
-    第 {{ $pager.PageNumber }} 页 ·
-  {{ end }}{{ site.Title }}
-</title>
-<meta
-  name="description"
-  content="{{ .Description | default site.Params.description }}"
-/>
+{{- if or .IsHome (eq .Kind "section") (eq .Kind "term") -}}
+  {{- $context := partial "list/context.html" . -}}
+  {{- with $context.pager }}{{ $pager = . }}{{ end -}}
+{{- end -}}
+{{- $parts := slice -}}
+{{- if eq $page.Kind "404" -}}
+  {{- $parts = $parts | append "页面未找到" -}}
+{{- else if not $page.IsHome -}}
+  {{- $parts = $parts | append $page.Title -}}
+{{- end -}}
+{{- if and $pager (gt $pager.PageNumber 1) -}}
+  {{- $parts = $parts | append (printf "第 %d 页" $pager.PageNumber) -}}
+{{- end -}}
+{{- $parts = $parts | append site.Title -}}
+<title>{{ delimit $parts " · " }}</title>
 <link rel="icon" href="{{ "favicon.svg" | relURL }}" type="image/svg+xml" />
-{{ partial "head/metadata.html" $context }}
+{{ partial "head/metadata.html" (dict "page" $page "pager" $pager "title" (delimit $parts " · ")) }}
+{{ partial "head/analytics.html" . }}
 {{ partial "head/css.html" . }}
 {{ partial "head/js.html" . }}

@@ -14,5 +14,13 @@
     root.dataset.themeMode = mode;
     root.dataset.theme = theme;
     root.style.colorScheme = theme;
+    let entry = 'on';
+    try {
+      const night = history.state && history.state.night;
+      if ((night && night.listId) || sessionStorage.getItem('night:return')) {
+        entry = 'restore';
+      }
+    } catch {}
+    root.dataset.entry = entry;
   })();
 </script>
