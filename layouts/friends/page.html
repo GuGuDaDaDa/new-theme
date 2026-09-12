@@ -1,10 +1,42 @@
 {{ define "main" }}
-  <div class="prose">
-    <h1>{{ .Title }}</h1>
-    {{ .Content }}{{ range hugo.Data.friends }}
-      <p><a href="{{ .url }}">{{ .name }}</a></p>
+  <article class="standalone-page friends-page">
+    <header class="page-heading">
+      <div>
+        <h1>{{ .Title }}</h1>
+        {{ with .Params.description }}
+          <p class="page-description">{{ . }}</p>
+        {{ end }}
+      </div>
+    </header>
+    <div class="prose">{{ partial "article/body.html" . }}</div>
+    {{ $friends := hugo.Data.friends }}
+    {{ if not $friends }}
+      <p class="friends-empty">友链整理中。</p>
     {{ else }}
-      <p>友链整理中。</p>
+      <div class="friends-grid">
+        {{ range $friend := $friends }}
+          <a
+            class="friend-card"
+            href="{{ $friend.url }}"
+            rel="noopener noreferrer"
+          >
+            {{ with $friend.avatar }}
+              <img
+                src="{{ . | relURL }}"
+                alt=""
+                width="56"
+                height="56"
+                loading="lazy"
+              />
+            {{ end }}
+            <span
+              ><strong>{{ $friend.name }}</strong>{{ with $friend.description }}
+                <small>{{ . }}</small>
+              {{ end }}</span
+            >
+          </a>
+        {{ end }}
+      </div>
     {{ end }}
-  </div>
+  </article>
 {{ end }}

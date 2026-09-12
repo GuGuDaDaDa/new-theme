@@ -1,5 +1,51 @@
 {{ define "main" }}
-  <article>
-    {{ partial "article/header.html" . }}{{ partial "article/body.html" . }}
+  {{- $avatar := "" -}}
+  {{- with .Params.avatar -}}
+    {{- with $.Resources.GetMatch . -}}{{ $avatar = .RelPermalink }}{{ end -}}
+  {{- end -}}
+  {{- $social := site.Params.social | default dict -}}
+  {{- $links := slice -}}
+  {{- range $key := slice "github" "twitter" "email" -}}
+    {{- $value := index $social $key | default "" -}}
+    {{- if isset $.Params $key }}{{ $value = index $.Params $key }}{{ end -}}
+    {{- if eq (printf "%T" $value) "string" -}}
+      {{- $value = strings.TrimSpace $value -}}
+      {{- if eq $key "email" -}}
+        {{- $address := strings.TrimPrefix "mailto:" $value -}}
+        {{- if gt (len (findRE `^[^\s@:?&#]+@[^\s@:?&#]+$` $address)) 0 -}}
+          {{- $links = $links | append (dict "label" "Email" "url" (printf "mailto:%s" $address)) -}}
+        {{- end -}}
+      {{- else if gt (len (findRE `^https://[^/\s?#]+` $value)) 0 -}}
+        {{- $links = $links | append (dict "label" (cond (eq $key "github") "GitHub" "Twitter / X") "url" $value) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+  <article class="standalone-page about-page">
+    <header class="page-heading">
+      {{ with $avatar }}
+        <img
+          class="about-avatar"
+          src="{{ . }}"
+          alt="{{ $.Title }}"
+          loading="lazy"
+        />
+      {{ end }}
+      <div>
+        <h1>{{ site.Title }}</h1>
+        {{ with .Params.description }}
+          <p class="page-description">{{ . }}</p>
+        {{ end }}
+      </div>
+    </header>
+    <div class="prose">{{ partial "article/body.html" . }}</div>
+    {{ with $links }}
+      <nav class="page-social" aria-label="社交链接">
+        {{ range . }}
+          <a href="{{ .url | safeURL }}" rel="me noopener noreferrer"
+            >{{ .label }}</a
+          >
+        {{ end }}
+      </nav>
+    {{ end }}
   </article>
 {{ end }}

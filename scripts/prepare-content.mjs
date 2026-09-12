@@ -485,6 +485,36 @@ export function selectPublicPages(pages) {
 /** Prepare generated content without touching source files. @param {string} generated - Output directory. @param {Date} clock - Build time. @param {string} projectRoot - Project root containing author content. @returns {Promise<object>} Build metadata. */
 export async function prepareContent(generated, clock, projectRoot = root) {
   const sourceRoot = resolveProjectRoot(projectRoot);
+  const friendsFile = path.join(sourceRoot, 'data', 'friends.yaml');
+  const dataFiles = await files(path.join(sourceRoot, 'data'));
+  if (dataFiles.includes(friendsFile)) {
+    const friends = YAML.parse(await readFile(friendsFile, 'utf8'));
+    if (!Array.isArray(friends))
+      throw new Error('data/friends.yaml: expected an array');
+    for (const [index, friend] of friends.entries()) {
+      const label = `data/friends.yaml entry ${index + 1}`;
+      if (!friend || typeof friend !== 'object' || Array.isArray(friend))
+        throw new Error(`${label}: expected an object`);
+      for (const field of ['name', 'url', 'avatar', 'description']) {
+        const required = field === 'name' || field === 'url';
+        if (!required && !hasOwn(friend, field)) continue;
+        const value = friend[field];
+        if (typeof value !== 'string' || (required && !value.trim()))
+          throw new Error(
+            `${label}: ${field} must be ${required ? 'a non-empty' : 'a'} string`,
+          );
+        if (field !== 'url' && field !== 'avatar') continue;
+        if (field === 'avatar' && (!value || /^\/(?!\/)/.test(value))) continue;
+        if (
+          !URL.canParse(value) ||
+          !['http:', 'https:'].includes(new URL(value).protocol)
+        )
+          throw new Error(
+            `${label}: ${field} must use http or https${field === 'avatar' ? ' or a site-root path' : ''}`,
+          );
+      }
+    }
+  }
   const source = path.join(sourceRoot, 'content');
   const allFiles = await files(source);
   const pages = [];
