@@ -395,7 +395,7 @@ test('a lone public article keeps the footer and omits the navigation', async ()
   }
 });
 
-test('AI notices follow the frozen header contract and stay searchable', async () => {
+test('AI notices follow the frozen notice contract and stay searchable', async () => {
   const { $ } = await readArticle('complete-frontmatter');
   const summary = $('details.ai-summary[data-ai-summary]');
   assert.equal(summary.length, 1);
@@ -420,21 +420,42 @@ test('AI notices follow the frozen header contract and stay searchable', async (
   const warning = $('aside.ai-warning[data-ai-warning]');
   assert.equal(warning.length, 1);
   assert.equal(warning.attr('aria-label'), 'AI 辅助声明');
+  assert.deepEqual(
+    warning
+      .children()
+      .map((_, element) => $(element).attr('class'))
+      .get(),
+    [
+      'ai-warning-icon',
+      'ai-warning-body',
+      'icon close-dialog ai-warning-close',
+    ],
+  );
   assert.equal(warning.find('.ai-warning-icon').text(), '!');
-  assert.equal(warning.find('.ai-warning-label').text().trim(), 'warning');
   assert.equal(
-    warning.find('.ai-warning-label').attr('data-search-exclude'),
+    warning.find('.ai-warning-icon').attr('data-search-exclude'),
     '',
   );
-  assert.equal(
-    warning.find('.ai-warning-content > :first-child').attr('class'),
-    'ai-warning-title',
-  );
+  assert.equal(warning.find('.ai-warning-label').length, 0);
+  assert.equal(warning.find('.ai-warning-header').length, 0);
+  assert.equal(warning.find('.ai-warning-content').length, 0);
+  assert.equal(warning.find('.ai-warning-title').prop('tagName'), 'STRONG');
   assert.equal(warning.find('.ai-warning-title').text().trim(), '透明声明');
+  assert.equal(warning.find('.ai-warning-sep').text().trim(), '·');
   assert.ok(warning.find('[data-notice-close]').is('[hidden]'));
   assert.match(
-    warning.find('.ai-warning-content').text(),
+    warning.find('.ai-warning-body').text(),
     /本文部分内容在 AI 辅助下完成/,
+  );
+
+  const untitled = await readArticle('default-frontmatter');
+  const untitledWarning = untitled.$('aside.ai-warning[data-ai-warning]');
+  assert.equal(untitledWarning.length, 1);
+  assert.equal(untitledWarning.find('.ai-warning-title').length, 0);
+  assert.equal(untitledWarning.find('.ai-warning-sep').length, 0);
+  assert.match(
+    untitledWarning.find('.ai-warning-body').text(),
+    /本页不包含 AI 辅助内容/,
   );
 
   const index = await readJson(path.join(site.build.publicDir, 'index.json'));
@@ -444,5 +465,6 @@ test('AI notices follow the frozen header contract and stay searchable', async (
   assert.ok(entry);
   assert.match(entry.content, /这是作者手写的内容提要/);
   assert.match(entry.content, /本文部分内容在 AI 辅助下完成/);
-  assert.doesNotMatch(entry.content, /AI 摘要|warning/);
+  assert.match(entry.content, /透明声明/);
+  assert.doesNotMatch(entry.content, /AI 摘要|warning|!/);
 });

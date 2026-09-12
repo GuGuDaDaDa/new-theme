@@ -171,7 +171,7 @@
     },
     {
       "path": "posts/default-frontmatter/index.md",
-      "source": "---\ntitle: 缺省文章头\ndate: 2026-09-09T11:00:00+08:00\n---\n\n只有必填字段的文章，用于验证可选头部区域不会输出空占位。\n"
+      "source": "---\ntitle: 缺省文章头\ndate: 2026-09-09T11:00:00+08:00\n---\n\n只有必填字段的文章，用于验证可选头部区域不会输出空占位。\n\n{{< ai-warning >}}\n本页不包含 AI 辅助内容，仅用于确认无标题声明的一行排版。\n{{< /ai-warning >}}\n"
     },
     {
       "path": "posts/lastmod-missing/index.md",

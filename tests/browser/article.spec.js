@@ -605,7 +605,7 @@ test('spoiler cover keeps the reading column in both themes and viewports', asyn
   }
 });
 
-test('AI notices use the reference card shape, round controls, and both themes', async ({
+test('AI notices keep the theme block shape, round controls, and both themes', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -615,13 +615,18 @@ test('AI notices use the reference card shape, round controls, and both themes',
   const summary = page.locator('details.ai-summary');
   await expect(summary).not.toHaveAttribute('open', '');
   await expect(page.locator('.ai-summary-label')).toHaveText('AI 摘要');
-  await expect(page.locator('.ai-warning-label')).toHaveText('warning');
+  await expect(page.locator('.ai-warning-title')).toHaveText('透明声明');
+  await expect(page.locator('.ai-warning-label')).toHaveCount(0);
 
   const geometry = await page.evaluate(() => {
     const toggle = globalThis.document.querySelector('.ai-summary-toggle');
     const close = globalThis.document.querySelector('.ai-warning-close');
     const summaryLabel = globalThis.document.querySelector('.ai-summary-label');
     const card = globalThis.document.querySelector('.ai-summary');
+    const warning = globalThis.document.querySelector('.ai-warning');
+    const warningBody = warning.querySelector('.ai-warning-body');
+    const warningTitle = warning.querySelector('.ai-warning-title');
+    const warningIcon = warning.querySelector('.ai-warning-icon');
     const summaryHeader = card.querySelector('summary');
     const rowBoxes = [...summaryHeader.children].map((element) =>
       element.getBoundingClientRect(),
@@ -630,26 +635,51 @@ test('AI notices use the reference card shape, round controls, and both themes',
     return {
       toggleRadius: globalThis.getComputedStyle(toggle).borderRadius,
       closeRadius: globalThis.getComputedStyle(close).borderRadius,
+      cardRadius: cardStyle.borderRadius,
+      warningRadius: globalThis.getComputedStyle(warning).borderRadius,
       labelSize: globalThis.getComputedStyle(summaryLabel).fontSize,
       labelSpacing: globalThis.getComputedStyle(summaryLabel).letterSpacing,
+      summaryContentSize: globalThis.getComputedStyle(
+        globalThis.document.querySelector('.ai-summary-content'),
+      ).fontSize,
+      warningSize: globalThis.getComputedStyle(warning).fontSize,
+      warningDisplay: globalThis.getComputedStyle(warning).display,
       cardBackground: cardStyle.backgroundColor,
       cardBorderWidth: cardStyle.borderTopWidth,
       headerHeight: summaryHeader.getBoundingClientRect().height,
       rowHeight:
         Math.max(...rowBoxes.map((box) => box.bottom)) -
         Math.min(...rowBoxes.map((box) => box.top)),
+      warningHeight: warning.getBoundingClientRect().height,
+      warningBodyHeight: warningBody.getBoundingClientRect().height,
+      titleIconDelta: Math.abs(
+        (warningTitle.getBoundingClientRect().top +
+          warningTitle.getBoundingClientRect().bottom) /
+          2 -
+          (warningIcon.getBoundingClientRect().top +
+            warningIcon.getBoundingClientRect().bottom) /
+            2,
+      ),
       documentWidth: globalThis.document.documentElement.scrollWidth,
       viewport: globalThis.innerWidth,
     };
   });
   expect(geometry.toggleRadius).toBe('50%');
   expect(geometry.closeRadius).toBe('50%');
-  expect(geometry.labelSize).toBe('11.52px');
-  expect(geometry.labelSpacing).toBe('1.3824px');
+  expect(geometry.cardRadius).toBe('2px');
+  expect(geometry.warningRadius).toBe('2px');
+  expect(geometry.labelSize).toBe('11px');
+  expect(geometry.labelSpacing).toBe('1.32px');
+  expect(geometry.summaryContentSize).toBe('13px');
+  expect(geometry.warningSize).toBe('12px');
+  expect(geometry.warningDisplay).toBe('flex');
   expect(geometry.cardBackground).not.toBe('rgba(0, 0, 0, 0)');
   expect(geometry.cardBorderWidth).toBe('1px');
   expect(geometry.rowHeight).toBeLessThan(30);
   expect(geometry.headerHeight).toBeGreaterThan(geometry.rowHeight);
+  expect(geometry.warningHeight).toBeLessThanOrEqual(60);
+  expect(geometry.warningBodyHeight).toBeLessThan(20);
+  expect(geometry.titleIconDelta).toBeLessThan(4);
   expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
 
   const chevronStyle = () =>
@@ -707,13 +737,13 @@ test('AI notices use the reference card shape, round controls, and both themes',
   expect(violations).toEqual([]);
 });
 
-test('AI notices keep the reference card without scripting and capture screenshots', async ({
+test('AI notices keep the reference layout without scripting and capture screenshots', async ({
   page,
   browser,
 }) => {
   const screenshotDir = path.join(
     projectRoot,
-    'docs/agent-work/ai-notices/screenshots',
+    'docs/agent-work/ai-notices-refine/screenshots',
   );
   await mkdir(screenshotDir, { recursive: true });
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -746,8 +776,11 @@ test('AI notices keep the reference card without scripting and capture screensho
   await noScriptPage.waitForLoadState('load');
   await expect(noScriptPage.locator('.ai-summary-label')).toHaveText('AI 摘要');
   await expect(noScriptPage.locator('.ai-warning-close')).toBeHidden();
-  await expect(noScriptPage.locator('.ai-warning-content')).toContainText(
+  await expect(noScriptPage.locator('.ai-warning-body')).toContainText(
     '本文部分内容在 AI 辅助下完成',
+  );
+  await expect(noScriptPage.locator('.ai-warning-title')).toHaveText(
+    '透明声明',
   );
   await expect(noScriptPage.locator('details.ai-summary')).not.toHaveAttribute(
     'open',
