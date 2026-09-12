@@ -551,3 +551,45 @@ test('list visuals retain reference spacing in desktop/mobile and light/dark mod
     fullPage: true,
   });
 });
+
+test('restored list focus hides the ring for pointer input and keeps it for keyboard', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1101, height: 900 });
+  await page.goto(fixtureBaseURL);
+  await waitForMasonry(page);
+  const card = page.locator('.post').nth(2);
+  const url = await card.getAttribute('data-post-url');
+  await card.click();
+  await expect(page).toHaveURL(`${fixtureBaseURL}${url}`);
+  await page.goBack();
+  await expect(page.locator('html')).toHaveAttribute('data-entry', 'restore');
+  await expect(page.locator(`.post[data-post-url="${url}"]`)).toBeFocused();
+  const restored = await page.evaluate(() => {
+    const active = globalThis.document.activeElement;
+    return {
+      outlineStyle: globalThis.getComputedStyle(active).outlineStyle,
+      focusVisible: active.matches(':focus-visible'),
+    };
+  });
+  expect(restored.outlineStyle).toBe('none');
+  expect(restored.focusVisible).toBe(true);
+
+  await page.keyboard.press('Tab');
+  await expect(card.locator('.post-tag').first()).toBeFocused();
+  const keyboard = await page.evaluate(() => ({
+    outlineStyle: globalThis.getComputedStyle(globalThis.document.activeElement)
+      .outlineStyle,
+    inputMode: globalThis.document.documentElement.dataset.inputMode,
+  }));
+  expect(keyboard.outlineStyle).toBe('solid');
+  expect(keyboard.inputMode).toBe('keyboard');
+
+  await page.keyboard.press('Shift+Tab');
+  await expect(card).toBeFocused();
+  const shifted = await page.evaluate(() => ({
+    outlineStyle: globalThis.getComputedStyle(globalThis.document.activeElement)
+      .outlineStyle,
+  }));
+  expect(shifted.outlineStyle).toBe('solid');
+});

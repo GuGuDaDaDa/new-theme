@@ -193,6 +193,11 @@
   outline-offset: 8px;
 }
 
+/* Pointer or restored focus keeps the ring for keyboard input only. */
+html:not([data-input-mode='keyboard']) .post:focus {
+  outline: none;
+}
+
 .list-empty {
   grid-column: 1 / -1;
   padding: 48px 0;
