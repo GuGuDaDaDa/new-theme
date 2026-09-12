@@ -31,6 +31,8 @@
       </figure>
     {{ end }}
     {{ with $body }}<div class="prose" data-article-body>{{ . }}</div>{{ end }}
+    {{ partial "article/copyright.html" $context }}
+    {{ partial "article/nav.html" . }}
   </article>
   {{ partial "article/toc.html" (dict "page" . "body" $body) }}
 {{ end }}

@@ -1,0 +1,15 @@
+# 文章页脚：作者版权与上下篇
+
+[article]
+[article.byline]
+other = "文/{{ . }}"
+[article.copyright]
+other = "商业转载请联系站长获得授权；非商业转载请注明来源及链接。"
+[article.prev]
+other = "← 上一篇"
+[article.next]
+other = "下一篇 →"
+[article.noPrev]
+other = "已经是第一篇了"
+[article.noNext]
+other = "已经是最后一篇了"

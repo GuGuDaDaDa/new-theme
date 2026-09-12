@@ -384,3 +384,83 @@ test('article content has no automated accessibility violations', async ({
   });
   expect(violations).toEqual([]);
 });
+
+test('article footer and navigation keep the reading column and stack on mobile', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const screenshotDir = path.join(
+    projectRoot,
+    'docs/agent-work/article-footer/screenshots',
+  );
+  await mkdir(screenshotDir, { recursive: true });
+  for (const [width, height, size] of [
+    [1440, 1000, 'desktop'],
+    [390, 844, 'mobile'],
+  ]) {
+    await page.setViewportSize({ width, height });
+    for (const theme of ['light', 'dark']) {
+      await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+      await setTheme(page, theme);
+      const geometry = await page.evaluate(() => {
+        const box = (selector) => {
+          const element = globalThis.document.querySelector(selector);
+          return element ? element.getBoundingClientRect() : null;
+        };
+        const nav = globalThis.document.querySelector('.article-nav');
+        const item = nav.querySelector('.article-nav-item');
+        const link = nav.querySelector('a');
+        const prev = nav.querySelector('.prev').getBoundingClientRect();
+        const next = nav.querySelector('.next').getBoundingClientRect();
+        const navBox = nav.getBoundingClientRect();
+        return {
+          documentWidth: globalThis.document.documentElement.scrollWidth,
+          viewport: globalThis.innerWidth,
+          prose: box('.prose'),
+          footer: box('.article-footer'),
+          nav: navBox,
+          navOverflow: nav.scrollWidth - nav.clientWidth,
+          linkHeight: link.getBoundingClientRect().height,
+          borderColor: globalThis.getComputedStyle(item).borderTopColor,
+          prevRight: prev.right,
+          prevBottom: prev.bottom,
+          nextLeft: next.left,
+          nextTop: next.top,
+        };
+      });
+      expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
+      expect(geometry.navOverflow).toBeLessThanOrEqual(0);
+      expect(geometry.footer.width).toBeCloseTo(geometry.prose.width, 1);
+      expect(geometry.nav.width).toBeCloseTo(geometry.prose.width, 1);
+      expect(geometry.footer.left).toBeCloseTo(geometry.prose.left, 1);
+      expect(geometry.nav.left).toBeCloseTo(geometry.prose.left, 1);
+      expect(geometry.linkHeight).toBeGreaterThanOrEqual(44);
+      expect(geometry.borderColor).not.toBe('rgba(0, 0, 0, 0)');
+      if (width > 768)
+        expect(geometry.prevRight).toBeLessThanOrEqual(geometry.nextLeft);
+      else expect(geometry.prevBottom).toBeLessThanOrEqual(geometry.nextTop);
+      await page.screenshot({
+        path: path.join(screenshotDir, `article-footer-${size}-${theme}.png`),
+        fullPage: true,
+      });
+    }
+  }
+
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.goto(`${fixtureBaseURL}/posts/long-header/`);
+  const narrow = await page.evaluate(() => {
+    const nav = globalThis.document.querySelector('.article-nav');
+    const title = nav.querySelector('.article-nav-title');
+    return {
+      documentWidth: globalThis.document.documentElement.scrollWidth,
+      viewport: globalThis.innerWidth,
+      navOverflow: nav.scrollWidth - nav.clientWidth,
+      titleInsideCard:
+        title.getBoundingClientRect().right <=
+        title.closest('.article-nav-item').getBoundingClientRect().right,
+    };
+  });
+  expect(narrow.documentWidth).toBeLessThanOrEqual(narrow.viewport);
+  expect(narrow.navOverflow).toBeLessThanOrEqual(0);
+  expect(narrow.titleInsideCard).toBe(true);
+});

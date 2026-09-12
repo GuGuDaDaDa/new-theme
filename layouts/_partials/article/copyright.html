@@ -1,0 +1,19 @@
+{{- $view := .view -}}
+{{- $about := site.GetPage "/about" -}}
+<footer class="article-footer">
+  {{- with site.Params.author }}
+    <div class="author-row">
+      {{- $byline := i18n "article.byline" . -}}
+      {{- with $about }}
+        <a href="{{ .RelPermalink }}">{{ $byline }}</a>
+      {{- else }}
+        {{ $byline }}
+      {{- end }}，<time datetime="{{ $view.displayDateISO }}"
+        >{{ if eq $view.displayDateKind "updated" }}
+          {{ i18n "meta.updated" }}&nbsp;
+        {{ end }}{{ $view.displayDate }}</time
+      >
+    </div>
+  {{- end }}
+  <div class="copyright-row">{{ i18n "article.copyright" }}</div>
+</footer>

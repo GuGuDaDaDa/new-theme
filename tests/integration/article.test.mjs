@@ -263,3 +263,134 @@ test('cached article body evaluates once and stays isolated by page', async () =
     await removeBoundarySite(cachedSite.projectRoot);
   }
 });
+
+test('article footer carries the byline, one display date, and the copyright notice', async () => {
+  const { $ } = await readArticle('complete-frontmatter');
+  const article = $('main.article-layout > article.reading[data-article]');
+  assert.deepEqual(
+    article
+      .children()
+      .map((_, element) => $(element).attr('class'))
+      .get(),
+    [
+      'article-heading',
+      'wide opening-image',
+      'prose',
+      'article-footer',
+      'article-nav',
+    ],
+  );
+  const footer = $('.article-footer');
+  assert.equal(footer.find('.author-row a').attr('href'), '/about/');
+  assert.equal(footer.find('.author-row a').text().trim(), '文/GuGuDaDa');
+  assert.equal(
+    footer.find('.copyright-row').text().trim(),
+    '商业转载请联系站长获得授权；非商业转载请注明来源及链接。',
+  );
+  const headerTime = $('.article-heading time');
+  const footerTime = footer.find('time');
+  assert.equal(footerTime.length, 1);
+  assert.equal(footerTime.attr('datetime'), headerTime.attr('datetime'));
+  assert.equal(
+    footerTime.text().replace(/\s+/g, ' ').trim(),
+    headerTime.text().replace(/\s+/g, ' ').trim(),
+  );
+
+  for (const slug of ['lastmod-equal', 'lastmod-different']) {
+    const variant = await readArticle(slug);
+    assert.equal(
+      variant.$('.article-footer time').text().replace(/\s+/g, ' ').trim(),
+      variant.$('.article-heading time').text().replace(/\s+/g, ' ').trim(),
+      slug,
+    );
+  }
+});
+
+test('article navigation follows rank adjacency with boundary placeholders', async () => {
+  const newest = await readArticle('complete-frontmatter');
+  assert.equal(newest.$('.article-nav').attr('aria-label'), '文章导航');
+  assert.equal(
+    newest.$('.article-nav .prev a').attr('href'),
+    '/posts/default-frontmatter/',
+  );
+  assert.equal(
+    newest.$('.article-nav .prev .article-nav-label').text().trim(),
+    '← 上一篇',
+  );
+  assert.equal(newest.$('.article-nav .next a').length, 0);
+  assert.equal(
+    newest
+      .$('.article-nav .next .article-nav-empty .article-nav-title')
+      .text()
+      .trim(),
+    '已经是最后一篇了',
+  );
+
+  const oldest = await readArticle('unsafe-image');
+  assert.equal(oldest.$('.article-nav .prev a').length, 0);
+  assert.equal(
+    oldest
+      .$('.article-nav .prev .article-nav-empty .article-nav-title')
+      .text()
+      .trim(),
+    '已经是第一篇了',
+  );
+  assert.equal(oldest.$('.article-nav .prev .article-nav-empty a').length, 0);
+  assert.equal(
+    oldest.$('.article-nav .next a').attr('href'),
+    '/posts/long-header/',
+  );
+  assert.equal(
+    oldest.$('.article-nav .next .article-nav-label').text().trim(),
+    '下一篇 →',
+  );
+
+  const middle = await readArticle('lastmod-equal');
+  assert.equal(
+    middle.$('.article-nav .prev a').attr('href'),
+    '/posts/lastmod-different/',
+  );
+  assert.equal(
+    middle.$('.article-nav .next a').attr('href'),
+    '/posts/lastmod-missing/',
+  );
+
+  for (const page of ['index.html', 'posts/index.html']) {
+    const $ = load(
+      await readFile(path.join(site.build.publicDir, page), 'utf8'),
+    );
+    assert.equal($('.article-footer').length, 0, page);
+    assert.equal($('.article-nav').length, 0, page);
+  }
+});
+
+test('a lone public article keeps the footer and omits the navigation', async () => {
+  const definition = {
+    clock: fixture.clock,
+    content: [
+      { path: '_index.md', source: '---\ntitle: Solo Home\n---\n' },
+      { path: 'posts/_index.md', source: '---\ntitle: Solo Posts\n---\n' },
+      {
+        path: 'posts/solo/index.md',
+        source:
+          '---\ntitle: 独一篇\ndate: 2026-09-09T12:00:00+08:00\n---\n\n只有一篇文章。\n',
+      },
+    ],
+  };
+  const soloSite = await buildBoundarySite({
+    name: 'article-solo-footer',
+    definition,
+  });
+  try {
+    const $ = load(
+      await readFile(
+        path.join(soloSite.build.publicDir, 'posts', 'solo', 'index.html'),
+        'utf8',
+      ),
+    );
+    assert.equal($('.article-footer').length, 1);
+    assert.equal($('.article-nav').length, 0);
+  } finally {
+    await removeBoundarySite(soloSite.projectRoot);
+  }
+});

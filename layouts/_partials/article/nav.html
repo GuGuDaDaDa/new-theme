@@ -1,0 +1,38 @@
+{{- $rank := .Params._night.rank -}}
+{{- $posts := partial "data/public-posts.html" . -}}
+{{- if gt (len $posts) 1 -}}
+  {{- $prev := false -}}
+  {{- $next := false -}}
+  {{- if lt $rank (sub (len $posts) 1) }}
+    {{ $prev = index $posts (add $rank 1) }}
+  {{- end }}
+  {{- if gt $rank 0 }}{{ $next = index $posts (sub $rank 1) }}{{ end -}}
+  <nav class="article-nav" aria-label="{{ i18n "article.nav" }}">
+    <div class="article-nav-item prev">
+      {{- with $prev }}
+        <a href="{{ .RelPermalink }}">
+          <span class="article-nav-label">{{ i18n "article.prev" }}</span>
+          <span class="article-nav-title">{{ .Title }}</span>
+        </a>
+      {{- else }}
+        <span class="article-nav-empty">
+          <span class="article-nav-label">{{ i18n "article.prev" }}</span>
+          <span class="article-nav-title">{{ i18n "article.noPrev" }}</span>
+        </span>
+      {{- end }}
+    </div>
+    <div class="article-nav-item next">
+      {{- with $next }}
+        <a href="{{ .RelPermalink }}">
+          <span class="article-nav-label">{{ i18n "article.next" }}</span>
+          <span class="article-nav-title">{{ .Title }}</span>
+        </a>
+      {{- else }}
+        <span class="article-nav-empty">
+          <span class="article-nav-label">{{ i18n "article.next" }}</span>
+          <span class="article-nav-title">{{ i18n "article.noNext" }}</span>
+        </span>
+      {{- end }}
+    </div>
+  </nav>
+{{- end -}}
