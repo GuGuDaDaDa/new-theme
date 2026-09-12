@@ -45,6 +45,13 @@
   color: var(--accent);
 }
 
+.brand img {
+  display: block;
+  width: 47px;
+  height: 47px;
+  object-fit: contain;
+}
+
 .brand > span {
   font-family: 'Trebuchet MS', var(--font);
   font-size: 27px;
@@ -156,6 +163,11 @@
     height: 35px;
   }
 
+  .brand img {
+    width: 35px;
+    height: 35px;
+  }
+
   .brand > span {
     font-size: 23px;
   }
@@ -184,6 +196,10 @@
   }
 
   .brand svg {
+    width: 30px;
+  }
+
+  .brand img {
     width: 30px;
   }
 

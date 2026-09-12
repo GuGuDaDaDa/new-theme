@@ -100,15 +100,18 @@ npm run preview       # 本地提供 public，http://localhost:4173/
 
 `params`：
 
-| 参数                                                | 作用                                              |
-| --------------------------------------------------- | ------------------------------------------------- |
-| `author`                                            | Footer 版权署名与文章落款作者                     |
-| `description`                                       | Footer 简介，同时作为站点默认描述                 |
-| `footerText`                                        | Footer 标语                                       |
-| `icp`                                               | 备案号，可选，缺省隐藏                            |
-| `social.github` / `social.twitter` / `social.email` | Footer 与关于页社交链接；未配置或格式不合法即隐藏 |
-| `defaultSocialImage`                                | 缺封面时的社交分享图，未配置则省略图片标签        |
-| `googleAnalytics`                                   | GA ID；仅非本地生产环境且 ID 有效时加载           |
+| 参数                                                | 作用                                                |
+| --------------------------------------------------- | --------------------------------------------------- |
+| `author`                                            | Footer 版权署名与文章落款作者                       |
+| `description`                                       | Footer 简介，同时作为站点默认描述                   |
+| `footerText`                                        | Footer 标语                                         |
+| `icp`                                               | 备案号，可选，缺省隐藏                              |
+| `logo`                                              | header 与 Footer 品牌标志图片；未配置用内置单色标记 |
+| `social.github` / `social.twitter` / `social.email` | Footer 与关于页社交链接；未配置或格式不合法即隐藏   |
+| `defaultSocialImage`                                | 缺封面时的社交分享图，未配置则省略图片标签          |
+| `googleAnalytics`                                   | GA ID；仅非本地生产环境且 ID 有效时加载             |
+| `avatar`                                            | 关于页头像缺省值；页内 `avatar` 优先，均缺省则隐藏  |
+| `favicon`                                           | 标签页图标；未配置用主题自带 `favicon.svg`          |
 
 配置示例：
 
@@ -120,11 +123,16 @@ description = '记录技术实践、游戏体验与个人观察。'
 author = 'GuGuDaDa'
 footerText = '海雾深处，字字为灯'
 defaultSocialImage = ''
+logo = '/images/logo.svg'
+avatar = '/images/avatar.jpg'
+favicon = '/images/favicon.png'
 
 [params.social]
 github = 'https://github.com/example'
 email = 'mailto:you@example.com'
 ```
+
+`logo`、`avatar`、`favicon` 的取值是站内根路径（`/images/logo.svg`，文件放在使用者站点的 `static/`）或 `http(s)`／`//` 绝对地址。自定义 logo 按原图渲染、保留自身配色：主题内置标记是跟随主题色与导航透明态变化的单色 SVG，换成图片后不再变色，请自行选择在浅色、深色与首页封面背景上都清晰的文件。
 
 ## 6. 写文章
 
@@ -206,11 +214,12 @@ hugo new content posts/my-note/index.md
 - **剧透**：`{{< spoiler >}}` 包裹的行内文字默认被黑色方块遮盖，桌面悬停显示、点击固定或隐藏，移动端点击切换，键盘 Enter／Space 切换。
 - **搜索**：导航按钮打开弹窗并聚焦输入框，按需加载 Fuse.js 与 `/index.json`，150ms 防抖，每批 20 条，Escape 与关闭按钮退出并把焦点交回入口。
 - **主题**：单按钮循环「浅色 → 深色 → 跟随系统」，手动选择存入 localStorage，首次绘制前确定主题避免闪色。
-- **其他**：关于页（`content/about/index.md`，支持 `avatar`、`description` 与页内覆盖社交字段）、友链页（`data/friends.yaml`，`name` 与 `url` 为必填字符串，`url` 只接受 http/https，`avatar` 可选 http/https 或站内根路径，另有可选 `description`）、404 页含搜索入口、文章页 SEO（canonical、OG、Twitter Card、JSON-LD、sitemap）。
+- **其他**：关于页（`content/about/index.md`，头像取页内 `avatar` 页面资源，缺省回退 `params.avatar`；另有 `description` 与页内覆盖社交字段）、友链页（`data/friends.yaml`，`name` 与 `url` 为必填字符串，`url` 只接受 http/https，`avatar` 可选 http/https 或站内根路径，另有可选 `description`）、404 页含搜索入口、文章页 SEO（canonical、OG、Twitter Card、JSON-LD、sitemap）。
 
 ## 9. 定制主题
 
 - **文案**：全部外壳文案在 `i18n/zh-CN.toml`，文件名必须与 `hugo.toml` 的 `locale` 一致。模板与浏览器脚本共用同一份译文（构建时生成内联载荷），新增文案时两处同时生效；缺失 key 会让对应位置留空。
+- **品牌与头像**：`params.logo` 同时替换 header（47px 尺寸链，≤768px 35px、≤360px 30px）与 Footer（40px）标志，`params.avatar` 作为关于页头像缺省值（页内 `avatar` 优先），`params.favicon` 替换标签页图标；三者缺省时完全使用主题内置资源。自定义 logo 不参与主题色与透明态着色，尺寸由主题 CSS 固定，请提供正方形图片以避免留白。
 - **样式**：设计令牌集中在 `assets/css/components/tokens.css`（颜色、字体、间距），组件样式一文件一组件，`assets/css/main.css` 的 `@import` 顺序决定打包顺序。
 - **脚本**：`assets/js/core/` 放基础工具，`assets/js/components/` 放功能模块，入口为 `assets/js/main.js`，按需 `import()` 的模块由 esbuild 拆分。
 - 站点参数、菜单、友链数据与正文属于作者内容，不放在 `i18n/` 中。

@@ -38,6 +38,13 @@
   color: #d3e5f3;
 }
 
+.footer-brand img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
 .footer-about p {
   max-width: 34em;
   margin: 18px 0 0;

@@ -3,6 +3,9 @@
   {{- with .Params.avatar -}}
     {{- with $.Resources.GetMatch . -}}{{ $avatar = .RelPermalink }}{{ end -}}
   {{- end -}}
+  {{- if not $avatar -}}
+    {{- with site.Params.avatar -}}{{ $avatar = . | relURL }}{{ end -}}
+  {{- end -}}
   {{- $social := site.Params.social | default dict -}}
   {{- $links := slice -}}
   {{- range $key := slice "github" "twitter" "email" -}}
@@ -27,6 +30,8 @@
           class="about-avatar"
           src="{{ . }}"
           alt="{{ $.Title }}"
+          width="112"
+          height="112"
           loading="lazy"
         />
       {{ end }}

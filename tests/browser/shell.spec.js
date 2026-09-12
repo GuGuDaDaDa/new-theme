@@ -1,10 +1,16 @@
 /** Browser coverage for the global shell, theme button, navigation, and footer. */
 
 import { test, expect } from '@playwright/test';
-import { readFile } from 'node:fs/promises';
+import { createServer } from 'node:http';
+import { cp, readFile, stat } from 'node:fs/promises';
 import path from 'node:path';
 import { load } from 'cheerio';
-import { buildBoundarySite, removeBoundarySite } from '../helpers/site.mjs';
+import {
+  buildBoundarySite,
+  createBoundarySite,
+  removeBoundarySite,
+} from '../helpers/site.mjs';
+import { buildSite } from '../../scripts/build.mjs';
 
 const projectRoot = process.cwd();
 
@@ -499,4 +505,140 @@ test('logo markup keeps the styled size before the stylesheet arrives', async ({
   await expect(brand).toHaveCSS('width', '47px');
   await page.setViewportSize({ width: 390, height: 844 });
   await expect(brand).toHaveCSS('width', '35px');
+});
+
+test('custom brand assets replace the built-in marks and keep the shell sizes', async ({
+  browser,
+}) => {
+  const fixtureDefinition = JSON.parse(
+    await readFile(
+      path.join(projectRoot, 'tests/fixtures/boundaries/site.json'),
+      'utf8',
+    ),
+  );
+  const title = 'BuGuLog';
+  const config = (
+    await readFile(path.join(projectRoot, 'exampleSite/hugo.toml'), 'utf8')
+  ).replace(
+    '[params]',
+    `[params]
+logo = '/brand/logo.svg'
+avatar = '/brand/avatar.jpg'
+favicon = '/brand/favicon.png'`,
+  );
+  const definition = {
+    ...fixtureDefinition,
+    templates: [
+      { path: 'hugo.toml', source: config },
+      {
+        path: 'static/brand/logo.svg',
+        source:
+          '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8"><rect width="8" height="8" fill="#355e85"/></svg>',
+      },
+      { path: 'static/brand/favicon.png', source: 'FAVICON' },
+    ],
+  };
+  const fixture = await createBoundarySite({
+    name: 'shell-brand-spec',
+    definition,
+  });
+  let server;
+  try {
+    await cp(
+      path.join(projectRoot, 'exampleSite/content/about/avatar.jpg'),
+      path.join(fixture.projectRoot, 'static/brand/avatar.jpg'),
+    );
+    const build = await buildSite({
+      projectRoot: fixture.projectRoot,
+      clock: fixture.clock,
+    });
+    const directory = build.publicDir;
+    const types = {
+      '.html': 'text/html; charset=utf-8',
+      '.css': 'text/css',
+      '.js': 'text/javascript',
+      '.json': 'application/json',
+      '.svg': 'image/svg+xml',
+      '.webp': 'image/webp',
+    };
+
+    server = createServer(async (req, response) => {
+      try {
+        let file = path.resolve(directory, `.${req.url}`);
+        if ((await stat(file)).isDirectory())
+          file = path.join(file, 'index.html');
+        const body = await readFile(file);
+        response.writeHead(200, {
+          'Content-Type':
+            types[path.extname(file)] ?? 'application/octet-stream',
+        });
+        response.end(body);
+      } catch {
+        response.writeHead(404, {
+          'Content-Type': 'text/plain; charset=utf-8',
+        });
+        response.end('Not found');
+      }
+    });
+
+    await new Promise((resolve) => server.listen(0, '127.0.0.1', resolve));
+    const port = server.address().port;
+    const baseURL = `http://127.0.0.1:${port}`;
+
+    const context = await browser.newContext({
+      viewport: { width: 1440, height: 900 },
+    });
+    const page = await context.newPage();
+    try {
+      await page.goto(baseURL);
+      const brandImage = page.locator('.brand img');
+      await expect(brandImage).toHaveCount(1);
+      await expect(brandImage).toHaveAttribute('width', '47');
+      await expect(brandImage).toHaveAttribute('height', '47');
+      await expect(brandImage).toHaveAttribute('alt', '');
+      await expect(brandImage).toHaveAttribute('src', /\/brand\/logo\.svg$/);
+      await expect(page.locator('.brand svg')).toHaveCount(0);
+      await expect(page.locator('.brand')).toHaveAttribute(
+        'aria-label',
+        new RegExp(title),
+      );
+      await expect(brandImage).toHaveCSS('width', '47px');
+      await expect(brandImage).toHaveCSS('height', '47px');
+      await expect(page.locator('.footer-brand img')).toHaveCSS(
+        'width',
+        '40px',
+      );
+      await expect(page.locator('.footer-brand img')).toHaveCSS(
+        'height',
+        '40px',
+      );
+      await expect(page.locator('.footer-brand svg')).toHaveCount(0);
+      await expect(page.locator('.footer-brand > span')).toHaveText(title);
+      await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
+        'href',
+        /\/brand\/favicon\.png$/,
+      );
+      expect(
+        await page.locator('link[rel="icon"]').getAttribute('type'),
+      ).toBeNull();
+
+      await page.goto(`${baseURL}/about/`);
+      const avatar = page.locator('.about-avatar');
+      await expect(avatar).toHaveAttribute('src', /\/brand\/avatar\.jpg$/);
+      await expect(avatar).toHaveCSS('width', '112px');
+      await expect(avatar).toHaveCSS('height', '112px');
+
+      await page.setViewportSize({ width: 390, height: 844 });
+      await expect(page.locator('.brand img')).toHaveCSS('width', '35px');
+      await expect(avatar).toHaveCSS('width', '88px');
+
+      await page.setViewportSize({ width: 360, height: 800 });
+      await expect(page.locator('.brand img')).toHaveCSS('width', '30px');
+    } finally {
+      await context.close();
+    }
+  } finally {
+    if (server) await new Promise((resolve) => server.close(resolve));
+    await removeBoundarySite(fixture.projectRoot);
+  }
 });
