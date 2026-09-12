@@ -109,8 +109,7 @@ export function initReferences(root) {
   function delayClose() {
     cancelClose();
     timer = setTimeout(() => {
-      if (preview.matches(':hover') || current?.matches(':hover'))
-        return;
+      if (preview.matches(':hover') || current?.matches(':hover')) return;
       closePreview();
     }, 150);
   }

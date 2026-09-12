@@ -15,8 +15,8 @@
           <img
             src="{{ . }}"
             {{- with $view.cover.srcset }}
-              srcset="{{ delimit . ", " }}" sizes="(max-width: 360px) calc(100vw -
-              32px), (max-width: 768px) calc(100vw - 40px), 960px"
+              srcset="{{ delimit . ", " }}" sizes="(max-width: 360px) calc(100vw
+              - 32px), (max-width: 768px) calc(100vw - 40px), 960px"
             {{- end }}
             {{- if and $view.cover.width $view.cover.height }}
               width="{{ $view.cover.width }}" height="{{ $view.cover.height }}"

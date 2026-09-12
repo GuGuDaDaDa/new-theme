@@ -18,7 +18,12 @@ export function init(root) {
   if (existing) return existing;
 
   const cleanups = [];
-  for (const initializer of [initInputMode, initTheme, initHeader, initSearch]) {
+  for (const initializer of [
+    initInputMode,
+    initTheme,
+    initHeader,
+    initSearch,
+  ]) {
     try {
       cleanups.push(initializer(root));
     } catch (error) {
