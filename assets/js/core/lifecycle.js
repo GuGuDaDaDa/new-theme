@@ -3,6 +3,7 @@
 import { initHeader } from '../components/header.js';
 import { initTheme } from '../components/theme.js';
 import { initInputMode } from './input-mode.js';
+import { initReadingMedia } from '../components/reading-media.js';
 
 const instances = new WeakMap();
 
@@ -22,6 +23,31 @@ export function init(root) {
     } catch (error) {
       console.error('Night Theme component initialization failed.', error);
     }
+  }
+  if (root.querySelector('[data-lightbox]')) {
+    try {
+      cleanups.push(initReadingMedia(root));
+    } catch (error) {
+      console.error('Night Theme image initialization failed.', error);
+    }
+  }
+  if (root.querySelector('[data-toc]')) {
+    let disposed = false;
+    let tocCleanup = () => {};
+    import('../components/toc.js')
+      .then(({ initToc }) => {
+        if (!disposed) tocCleanup = initToc(root);
+      })
+      .catch((error) => {
+        console.error(
+          'Night Theme table of contents initialization failed.',
+          error,
+        );
+      });
+    cleanups.push(() => {
+      disposed = true;
+      tocCleanup();
+    });
   }
   if (root.querySelector('[data-post-list], [data-article-back]')) {
     let disposed = false;

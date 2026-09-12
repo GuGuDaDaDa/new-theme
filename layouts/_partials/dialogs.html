@@ -1,1 +1,24 @@
-{{/* Scaffold: implement the corresponding docs/tech-spec.md component. */}}
+<dialog id="image-dialog" aria-label="图片预览" data-lightbox-dialog>
+  <button
+    type="button"
+    class="icon close-dialog"
+    aria-label="关闭图片预览"
+    data-dialog-close
+    autofocus
+  >
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      stroke-linecap="round"
+      stroke-width="1.6"
+    >
+      <path d="m7 7 10 10M17 7 7 17" />
+    </svg>
+  </button>
+  <div data-lightbox-content></div>
+  <p data-lightbox-caption hidden></p>
+  <p role="status" data-lightbox-status></p>
+  <a data-lightbox-original>查看原图</a>
+</dialog>

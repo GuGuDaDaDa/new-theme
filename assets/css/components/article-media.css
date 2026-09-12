@@ -1,0 +1,97 @@
+/* Keep the reading container as the reference box for images that exceed the text column. */
+.reading {
+  container-type: inline-size;
+}
+
+.opening-image > .image-open {
+  display: block;
+  width: 100%;
+  cursor: zoom-in;
+  border-radius: 3px;
+}
+
+.prose > figure.wide {
+  width: min(960px, 100cqw);
+  margin-top: 24px;
+  margin-right: calc((100% - min(960px, 100cqw)) / 2);
+  margin-bottom: 36px;
+  margin-left: calc((100% - min(960px, 100cqw)) / 2);
+}
+
+.prose > figure.wide > a.image-open {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  cursor: zoom-in;
+  text-decoration: none;
+}
+
+.prose > figure.wide > a.image-open > img[data-article-image] {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  max-height: min(400px, 48vh);
+  height: auto;
+  margin: 0 auto;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+.prose > figure.wide > figcaption {
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+/* Inline images stay in the paragraph's line box instead of becoming a block. */
+.prose a.image-inline {
+  display: inline;
+  text-decoration: none;
+}
+
+.prose img.image-inline[data-article-image] {
+  display: inline;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  margin: 0;
+  border-radius: 3px;
+  vertical-align: middle;
+}
+
+@keyframes image-fade-in {
+  from {
+    opacity: 0.01;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .image-loaded {
+    animation: image-fade-in 220ms ease both;
+  }
+}
+
+@media (max-width: 768px) {
+  .prose > figure.wide {
+    width: 100%;
+    margin: 20px 0 27px;
+  }
+
+  .prose > figure.wide > a.image-open > img[data-article-image] {
+    max-height: none;
+  }
+
+  .prose > figure.wide > figcaption {
+    margin-top: 10px;
+    font-size: 11px;
+  }
+}

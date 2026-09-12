@@ -1,1 +1,131 @@
-/** dialog: scaffold reserved for tech-spec implementation. */
+html:has(dialog[open]) {
+  overflow: hidden;
+}
+
+dialog {
+  margin: auto;
+  width: min(600px, calc(100% - 32px));
+  max-width: calc(100% - 32px);
+  max-height: 85dvh;
+  padding: 24px;
+  border: 0;
+  border-radius: 3px;
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: 0 24px 100px #0004;
+}
+
+dialog::backdrop {
+  background: #0c162c70;
+  backdrop-filter: blur(4px);
+}
+
+.close-dialog {
+  position: relative;
+  z-index: 1;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  box-shadow: none;
+  outline-offset: 4px;
+}
+
+.close-dialog::after {
+  position: absolute;
+  inset: -6px;
+  content: '';
+}
+
+.close-dialog:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.close-dialog svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+#image-dialog[data-lightbox-dialog] {
+  position: fixed;
+  width: min(1200px, 95vw);
+  max-width: 95vw;
+  padding: 10px;
+  overflow: auto;
+  background: var(--bg);
+}
+
+#image-dialog[data-lightbox-dialog] > .close-dialog {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-content] {
+  display: grid;
+  min-width: 0;
+  min-height: 32px;
+  place-items: center;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
+  display: block;
+  max-width: 100%;
+  max-height: 85vh;
+  width: auto;
+  height: auto;
+  margin: auto;
+  border-radius: 3px;
+  object-fit: contain;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-caption],
+#image-dialog[data-lightbox-dialog] [data-lightbox-status] {
+  margin: 10px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.6;
+  text-align: center;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-original] {
+  display: table;
+  margin: 10px auto 0;
+  color: var(--accent);
+  font-size: 11px;
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  #image-dialog[data-lightbox-dialog] {
+    width: 95vw;
+    max-width: 95vw;
+  }
+
+  #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
+    max-height: 78vh;
+  }
+}
+
+/* Pointer-opened dialogs hide the automatic focus ring while preserving keyboard focus. */
+html[data-input-mode='pointer'] .close-dialog:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+html[data-input-mode='pointer'] .close-dialog:active {
+  outline: 1px solid var(--focus);
+  outline-offset: 3px;
+}

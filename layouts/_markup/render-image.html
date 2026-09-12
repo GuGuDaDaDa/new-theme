@@ -21,22 +21,35 @@
   {{- end -}}
 {{- end -}}
 {{- if $allowed -}}
-  <img
-    src="{{ $src }}"
-    alt="{{ .PlainText }}"
-    loading="lazy"
-    decoding="async"
-    {{- with $resource }}
-      {{- if and .Width .Height }}
-        width="{{ .Width }}" height="{{ .Height }}"
-      {{ end }}
-    {{- end }}
-    {{- with .Title }}title="{{ . }}"{{ end }}
-    data-article-image
-  />
+  {{- $variants := slice -}}
+  {{- $width := 0 -}}
+  {{- $height := 0 -}}
+  {{- with $resource -}}
+    {{- if in (slice "jpeg" "png" "webp" "gif" "tiff" "bmp") .MediaType.SubType -}}
+      {{- $width = .Width -}}
+      {{- $height = .Height -}}
+      {{- range (slice 480 768 960) -}}
+        {{- if gt $resource.Width . -}}
+          {{- $resized := $resource.Resize (printf "%dx" .) -}}
+          {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
+        {{- end -}}
+      {{- end -}}
+      {{- $variants = $variants | append (printf "%s %dw" .RelPermalink .Width) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if .IsBlock }}<figure class="wide">{{ end -}}
+  <a href="{{ $src }}" class="{{ if .IsBlock }}image-open{{ else }}image-inline{{ end }}" data-lightbox data-caption="{{ .Title }}" aria-label="放大图片{{ with .PlainText }}：{{ . }}{{ end }}">
+    <img src="{{ $src }}" alt="{{ .PlainText }}" loading="lazy" decoding="async"
+      {{- if not .IsBlock }} class="image-inline"{{ end }}
+      {{- if $width }} width="{{ $width }}" height="{{ $height }}"{{ end }}
+      {{- with $variants }} srcset="{{ delimit . ", " }}" sizes="(max-width: 360px) calc(100vw - 32px), (max-width: 768px) calc(100vw - 40px), 960px"{{ end }}
+      {{- with .Title }} title="{{ . }}"{{ end }} data-article-image />
+  </a>
+  {{- if .IsBlock -}}
+    {{- with .Title }}<figcaption>{{ . }}</figcaption>{{ end -}}
+    </figure>
+  {{- end -}}
 {{- else -}}
   {{- warnf "Ignoring unsupported article image %q in %s" .Destination .Page.RelPermalink -}}
-  {{- with .PlainText }}
-    <span class="article-image-fallback">{{ . }}</span>
-  {{ end -}}
+  {{- with .PlainText }}<span class="article-image-fallback">{{ . }}</span>{{ end -}}
 {{- end -}}

@@ -1,0 +1,7 @@
+{{- /* A linked Markdown image keeps its author's destination without nested anchors. */ -}}
+{{- $text := replaceRE `<a\s[^>]*data-lightbox[^>]*>([\s\S]*?)</a>` "$1" .Text -}}
+<a
+  href="{{ .Destination }}"
+  {{ with .Title }}title="{{ . }}"{{ end }}
+  >{{ $text | safeHTML }}</a
+>

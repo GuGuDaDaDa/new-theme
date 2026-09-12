@@ -6,23 +6,31 @@
     {{ partial "article/header.html" $context }}
     {{ with $view.cover.url }}
       <figure class="wide opening-image">
-        <img
-          src="{{ . }}"
-          {{- with $view.cover.srcset }}
-            srcset="{{ delimit . ", " }}" sizes="(max-width: 360px) calc(100vw -
-            32px), (max-width: 768px) calc(100vw - 40px), 960px"
-          {{- end }}
-          {{- if and $view.cover.width $view.cover.height }}
-            width="{{ $view.cover.width }}" height="{{ $view.cover.height }}"
-          {{- end }}
-          alt="{{ $view.cover.alt }}"
-          loading="eager"
-          decoding="async"
-          fetchpriority="high"
-          data-article-cover
-        />
+        <a
+          class="image-open"
+          href="{{ $view.cover.originalURL }}"
+          data-lightbox
+          aria-label="放大标题图片"
+        >
+          <img
+            src="{{ . }}"
+            {{- with $view.cover.srcset }}
+              srcset="{{ delimit . ", " }}" sizes="(max-width: 360px) calc(100vw
+              - 32px), (max-width: 768px) calc(100vw - 40px), 960px"
+            {{- end }}
+            {{- if and $view.cover.width $view.cover.height }}
+              width="{{ $view.cover.width }}" height="{{ $view.cover.height }}"
+            {{- end }}
+            alt="{{ $view.cover.alt }}"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+            data-article-cover
+          />
+        </a>
       </figure>
     {{ end }}
     {{ with $body }}<div class="prose" data-article-body>{{ . }}</div>{{ end }}
   </article>
+  {{ partial "article/toc.html" (dict "page" . "body" $body) }}
 {{ end }}
