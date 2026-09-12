@@ -1088,3 +1088,64 @@ test('validateOutput verifies schema, sitemap cross-check, missing targets, and 
     await removeBoundarySite(fixture.projectRoot);
   }
 });
+
+// 6. Deployment base URL injection drives every absolute URL in the output
+test('injected baseURL drives canonical, Open Graph, structured data, and sitemap URLs', async () => {
+  const clock = new Date('2026-09-10T00:00:00Z');
+  const fixture = await createBoundarySite({
+    name: 'injected-base-url',
+    definition: {
+      clock,
+      content: [
+        { path: '_index.md', source: '---\ntitle: Home\n---\n' },
+        { path: 'posts/_index.md', source: '---\ntitle: Posts\n---\n' },
+        {
+          path: 'posts/hello/index.md',
+          source: '---\ntitle: Hello\ndate: 2026-09-09T00:00:00Z\n---\nBody\n',
+        },
+      ],
+    },
+  });
+  try {
+    const res = await buildSite({
+      projectRoot: fixture.projectRoot,
+      clock: fixture.clock,
+      baseURL: 'https://example.com',
+    });
+    const $ = load(
+      await readFile(path.join(res.publicDir, 'index.html'), 'utf8'),
+    );
+    assert.equal(
+      $('link[rel="canonical"]').attr('href'),
+      'https://example.com/',
+    );
+    assert.equal(
+      $('meta[property="og:url"]').attr('content'),
+      'https://example.com/',
+    );
+    const structuredData = JSON.parse(
+      $('script[type="application/ld+json"]').first().text(),
+    );
+    assert.equal(structuredData[0].url, 'https://example.com/');
+
+    const post = load(
+      await readFile(
+        path.join(res.publicDir, 'posts/hello/index.html'),
+        'utf8',
+      ),
+    );
+    assert.equal(
+      post('link[rel="canonical"]').attr('href'),
+      'https://example.com/posts/hello/',
+    );
+
+    const sitemap = await readFile(
+      path.join(res.publicDir, 'sitemap.xml'),
+      'utf8',
+    );
+    assert.ok(sitemap.includes('<loc>https://example.com/</loc>'));
+    assert.equal(sitemap.includes('localhost'), false);
+  } finally {
+    await removeBoundarySite(fixture.projectRoot);
+  }
+});
