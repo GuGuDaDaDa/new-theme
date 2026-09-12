@@ -247,6 +247,22 @@ export function initReferences(root) {
       { signal },
     );
   }
+  for (const backref of root.querySelectorAll('.fn-backref')) {
+    const suppressTargetPreview = () => {
+      const reference = root.getElementById(backref.hash.slice(1));
+      if (!reference) return;
+      suppressedReference = reference;
+      closePreview();
+    };
+    backref.addEventListener('pointerdown', suppressTargetPreview, { signal });
+    backref.addEventListener(
+      'keydown',
+      (event) => {
+        if (event.key === 'Enter' || event.key === ' ') suppressTargetPreview();
+      },
+      { signal },
+    );
+  }
   preview.addEventListener('pointerenter', cancelClose, { signal });
   preview.addEventListener('pointerleave', delayClose, { signal });
   preview.addEventListener('focusin', cancelClose, { signal });
