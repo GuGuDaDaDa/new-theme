@@ -71,6 +71,7 @@ async function serve(directory) {
     '.js': 'text/javascript',
     '.json': 'application/json',
     '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
   };
   server = createServer(async (request, response) => {
     try {
@@ -433,7 +434,7 @@ test('failed HTTPS covers become readable text cards and do not overlap', async 
 test('delayed covers trigger a stable relayout without overlap', async ({
   page,
 }) => {
-  await page.route('**/posts/card-00/*.jpg', async (route) => {
+  await page.route('**/posts/card-00/*.webp', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, 400));
     await route.continue();
   });

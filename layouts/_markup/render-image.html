@@ -7,7 +7,7 @@
   {{- if .IsBlock -}}
     <figure class="wide">
       <a
-        href="{{ $src }}"
+        href="{{ $image.originalURL }}"
         class="image-open"
         data-lightbox
         data-caption="{{ .Title }}"
@@ -31,7 +31,7 @@
     </figure>
   {{- else -}}
     <a
-      href="{{ $src }}"
+      href="{{ $image.originalURL }}"
       class="image-inline"
       data-lightbox
       data-caption="{{ .Title }}"

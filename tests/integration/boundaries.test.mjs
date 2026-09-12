@@ -581,9 +581,13 @@ test('tags isolate drafts, distinguish case, support Chinese, and PostView handl
     assert.equal(bundleView.displayDateKind, 'published');
     assert.equal(bundleView.cover.width, 300);
     assert.equal(bundleView.cover.height, 200);
-    assert.deepEqual(bundleView.cover.srcset, [
-      '/posts/bundle-cover/bryce-canyon.jpg 300w',
-    ]);
+    assert.match(
+      bundleView.cover.url,
+      /^\/posts\/bundle-cover\/bryce-canyon_.*\.webp$/,
+    );
+    assert.equal(bundleView.cover.srcset.length, 1);
+    assert.match(bundleView.cover.srcset[0], /\.webp 300w$/);
+    assert.match(bundleView.cover.originalURL, /bryce-canyon\.jpg$/);
     assert.equal(bundleView.cover.position, '20% 80%');
     assert.equal(bundleView.cover.alt, 'Bryce Canyon');
     assert.equal(bundleView.stableId, hash('/posts/bundle-cover/'));

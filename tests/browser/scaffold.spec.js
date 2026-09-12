@@ -87,6 +87,7 @@ test('isolated boundary fixture loads CSS, main entry, and dynamic ESM chunk ove
       '.js': 'text/javascript',
       '.json': 'application/json',
       '.svg': 'image/svg+xml',
+      '.webp': 'image/webp',
     };
 
     server = createServer(async (req, response) => {

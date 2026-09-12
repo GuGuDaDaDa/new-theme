@@ -93,6 +93,7 @@ async function serve(directory) {
     '.js': 'text/javascript',
     '.json': 'application/json',
     '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
   };
   server = createServer(async (request, response) => {
     try {
@@ -228,7 +229,7 @@ test('manual selection updates every field, aria state, and never auto-plays', a
   await expect(page.locator('[data-hero-cover]')).toBeVisible();
   await expect(page.locator('[data-hero-cover]')).toHaveAttribute(
     'src',
-    /\/posts\/hero-two\/cover-two\.jpg$/,
+    /\/posts\/hero-two\/cover-two_.*\.webp$/,
   );
   await expect(page.locator('[data-hero-cover]')).toHaveAttribute(
     'srcset',

@@ -53,13 +53,14 @@
           {{- $variants := slice -}}
           {{- range (slice 480 768 960) -}}
             {{- if gt $resource.Width . -}}
-              {{- $resized := $resource.Resize (printf "%dx" .) -}}
+              {{- $resized := $resource.Resize (printf "%dx webp" .) -}}
               {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
             {{- end -}}
           {{- end -}}
-          {{- $variants = $variants | append (printf "%s %dw" $resource.RelPermalink $resource.Width) -}}
+          {{- $native := $resource.Resize (printf "%dx webp" $resource.Width) -}}
+          {{- $variants = $variants | append (printf "%s %dw" $native.RelPermalink $native.Width) -}}
           {{- $cover = dict
-            "url" $resource.RelPermalink
+            "url" $native.RelPermalink
             "originalURL" $resource.Permalink
             "width" $resource.Width
             "height" $resource.Height

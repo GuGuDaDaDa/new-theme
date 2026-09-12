@@ -72,6 +72,7 @@ async function serve(directory) {
     '.js': 'text/javascript',
     '.json': 'application/json',
     '.svg': 'image/svg+xml',
+    '.webp': 'image/webp',
   };
   server = createServer(async (request, response) => {
     try {
