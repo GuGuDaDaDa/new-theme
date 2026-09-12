@@ -1,4 +1,6 @@
 /** Original image rendering, imported only after a lightbox request. */
+import { t } from '../core/i18n.js';
+
 const instances = new WeakMap();
 
 /**
@@ -25,7 +27,7 @@ export function initLightbox(root, image) {
   img.addEventListener(
     'error',
     () => {
-      status.textContent = '图片加载失败，可通过下方链接查看原图。';
+      status.textContent = t('lightbox.failed');
     },
     { signal },
   );

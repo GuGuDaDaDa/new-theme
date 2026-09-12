@@ -3,6 +3,7 @@ import { internalPath, listRoute, nextListPath } from '../core/url.js';
 import { readSession, writeSession, saveList } from '../core/storage.js';
 import { initPagination } from './pagination.js';
 import { initMasonry } from './masonry.js';
+import { t } from '../core/i18n.js';
 
 /**
  * Merge theme metadata without overwriting other history namespaces.
@@ -182,7 +183,7 @@ function initList(list, marker) {
     let complete = true;
     try {
       if (restoreTarget.buildId !== list.dataset.buildId) {
-        status.textContent = '内容已更新，已保留当前列表，请刷新后继续浏览。';
+        status.textContent = t('restore.stale');
       } else {
         for (const page of restoreTarget.pages.slice(pagination.pages.length)) {
           if (disposed || generation !== restoreGeneration) break;

@@ -1,4 +1,8 @@
-<aside class="ai-warning" data-ai-warning aria-label="AI 辅助声明">
+<aside
+  class="ai-warning"
+  data-ai-warning
+  aria-label="{{ i18n "shortcode.aiWarning" }}"
+>
   {{ with .Get "title" }}<p class="ai-warning-title">{{ . }}</p>{{ end }}
   <div class="ai-warning-content">
     {{ .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML }}
@@ -8,7 +12,7 @@
     class="icon close-dialog ai-warning-close"
     data-notice-close
     data-search-exclude
-    aria-label="关闭 AI 声明"
+    aria-label="{{ i18n "shortcode.aiWarningClose" }}"
     hidden
   >
     <svg aria-hidden="true" viewBox="0 0 24 24">

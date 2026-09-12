@@ -1,5 +1,7 @@
 /** Same-origin URLs and collection boundaries for HTML pagination. */
 
+import { t } from './i18n.js';
+
 /**
  * Normalize an internal URL without query strings or fragments.
  * @param {string} value - URL to inspect.
@@ -58,7 +60,7 @@ export function nextListPath(value, current, base) {
     from.root !== next.root ||
     next.page !== from.page + 1
   ) {
-    throw new Error('分页地址无效，请直接访问下一页或刷新列表。');
+    throw new Error(t('pagination.error.route'));
   }
   return internalPath(value, base);
 }

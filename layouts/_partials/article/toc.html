@@ -4,8 +4,8 @@
   {{- if eq (index . 1) "2" }}{{ $count = add $count 1 }}{{ end -}}
 {{- end -}}
 {{- if and (ne .page.Params.toc false) (ge $count 3) -}}
-  <aside class="toc" aria-label="文章目录" data-toc>
-    <span>这篇手记</span>
+  <aside class="toc" aria-label="{{ i18n "toc.region" }}" data-toc>
+    <span>{{ i18n "toc.heading" }}</span>
     {{- range $headings }}
       <a
         href="#{{ index . 2 | htmlUnescape }}"

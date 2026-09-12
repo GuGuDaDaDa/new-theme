@@ -1,4 +1,5 @@
 import { initDialog } from '../core/dialog.js';
+import { t } from '../core/i18n.js';
 let indexPromise;
 /** Initialize the search dialog. @param {Document} root @returns {() => void} */
 export function initSearch(root) {
@@ -59,10 +60,10 @@ export function initSearch(root) {
       results.append(li);
     });
     status.textContent = !value
-      ? '请输入搜索关键词'
+      ? t('search.empty')
       : matches.length
-        ? `找到 ${matches.length} 条结果`
-        : '未找到相关内容';
+        ? t('search.results', { Count: matches.length })
+        : t('search.noResults');
     more.hidden = shown >= matches.length;
   }
 
@@ -79,7 +80,7 @@ export function initSearch(root) {
       paint('');
       return;
     }
-    status.textContent = '正在搜索…';
+    status.textContent = t('search.searching');
     try {
       const { Fuse, data } = await loadIndex();
       if (token !== sequence) return;
@@ -108,7 +109,7 @@ export function initSearch(root) {
       paint(value);
     } catch {
       if (token === sequence) {
-        status.textContent = '搜索失败，请重试';
+        status.textContent = t('search.failed');
         more.hidden = true;
       }
     }

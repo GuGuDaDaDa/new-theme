@@ -612,6 +612,7 @@ export async function prepareContent(generated, clock, projectRoot = root) {
     'assets',
     'static',
     'data',
+    'i18n',
     'scripts',
   ]) {
     for (const file of await files(path.join(sourceRoot, dir)))

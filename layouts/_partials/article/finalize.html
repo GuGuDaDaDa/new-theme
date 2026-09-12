@@ -15,7 +15,9 @@
   {{- $num := .num -}}
   {{- range $refs -}}
     {{- if eq .num $num -}}
-      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="返回引用 %s，第 %d 处" data-search-exclude>↩%d</a>` .id $num (add (len $links) 1) (add (len $links) 1)) -}}
+      {{- $index := add (len $links) 1 -}}
+      {{- $label := i18n "references.backref" (dict "Num" $num "Index" $index) -}}
+      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="%s" data-search-exclude>↩%d</a>` .id $label $index) -}}
     {{- end -}}
   {{- end -}}
   {{- if and (not .noref) (not $links) -}}

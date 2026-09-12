@@ -1,3 +1,167 @@
+# 主题外壳文案。文件名必须与 hugo.toml 的 locale 一致（zh-CN）。
+
+[nav]
+[nav.main]
+other = "主导航"
+[nav.skipToContent]
+other = "跳到正文"
+[nav.brandHome]
+other = "{{ .Site }} 首页"
+
+[theme]
+[theme.toggle]
+other = "切换主题"
+[theme.mode.light]
+other = "浅色"
+[theme.mode.dark]
+other = "深色"
+[theme.mode.system]
+other = "自动（跟随系统）"
+[theme.label]
+other = "主题：{{ .Mode }}，当前{{ .Theme }}；点击切换为{{ .Next }}"
+
+[search]
+[search.label]
+other = "搜索文章"
+[search.open]
+other = "打开搜索"
+[search.triggerTitle]
+other = "搜索"
+[search.dialog]
+other = "站内搜索"
+[search.close]
+other = "关闭搜索"
+[search.placeholder]
+other = "输入关键词…"
+[search.empty]
+other = "请输入搜索关键词"
+[search.searching]
+other = "正在搜索…"
+[search.results]
+other = "找到 {{ .Count }} 条结果"
+[search.noResults]
+other = "未找到相关内容"
+[search.failed]
+other = "搜索失败，请重试"
+[search.more]
+other = "加载更多"
+
+[list]
+[list.latest]
+other = "最新文章"
+[list.allPosts]
+other = "全部文章"
+[list.count]
+other = "{{ .Count }} 篇"
+[list.empty]
+other = "暂无文章"
+
+[meta]
+[meta.updated]
+other = "更新于"
+[meta.readingTime]
+other = "{{ .Minutes }} 分钟"
+[meta.pageTitle]
+other = "第 {{ .Page }} 页"
+
+[hero]
+[hero.region]
+other = "推荐文章"
+[hero.heading]
+other = "推荐阅读"
+[hero.choices]
+other = "切换推荐文章"
+[hero.read]
+other = "阅读文章"
+[hero.fallbackNav]
+other = "其他推荐文章"
+
+[footer]
+[footer.nav]
+other = "页脚浏览"
+[footer.explore]
+other = "随处逛逛"
+[footer.allPosts]
+other = "所有文章"
+[footer.contact]
+other = "保持联系"
+[footer.builtWith]
+other = '由 <a href="https://gohugo.io/">Hugo</a> 构建'
+[footer.backToTop]
+other = "回到内容开头"
+
+[pagination]
+[pagination.nav]
+other = "文章分页"
+[pagination.prev]
+other = "上一页"
+[pagination.next]
+other = "下一页"
+[pagination.loadMore]
+other = "加载更多"
+[pagination.allShown]
+other = "已显示全部文章"
+[pagination.loading]
+other = "加载中…"
+[pagination.retry]
+other = "重试加载"
+[pagination.directNext]
+other = "直接访问下一页"
+[pagination.added]
+other = "已新增 {{ .Count }} 篇文章"
+[pagination.error.load]
+other = "加载失败，请重试或直接访问下一页。"
+[pagination.error.timeout]
+other = "加载超时，请重试或直接访问下一页。"
+[pagination.error.invalid]
+other = "分页内容无效，请重试或刷新列表。"
+[pagination.error.stale]
+other = "内容已更新，请刷新列表。"
+[pagination.error.page]
+other = "分页页码无效，请刷新列表。"
+[pagination.error.url]
+other = "文章地址无效，请刷新列表。"
+[pagination.error.unsafe]
+other = "分页内容无效，请刷新列表。"
+[pagination.error.route]
+other = "分页地址无效，请直接访问下一页或刷新列表。"
+
+[toc]
+[toc.region]
+other = "文章目录"
+[toc.heading]
+other = "这篇手记"
+
+[lightbox]
+[lightbox.dialog]
+other = "图片预览"
+[lightbox.close]
+other = "关闭图片预览"
+[lightbox.original]
+other = "查看原图"
+[lightbox.openCover]
+other = "放大标题图片"
+[lightbox.openImage]
+other = "放大图片{{ with .Alt }}：{{ . }}{{ end }}"
+[lightbox.loading]
+other = "图片加载中…"
+[lightbox.unavailable]
+other = "图片预览暂不可用，请通过下方链接查看原图。"
+[lightbox.failed]
+other = "图片加载失败，可通过下方链接查看原图。"
+
+[references]
+[references.dialog]
+other = "引用来源"
+[references.close]
+other = "关闭引用来源"
+[references.goto]
+other = "跳到文末注释"
+[references.view]
+other = "查看引用 {{ .Num }}"
+[references.backref]
+other = "返回引用 {{ .Num }}，第 {{ .Index }} 处"
+
 # 文章页脚：作者版权与上下篇
 
 [article]
@@ -13,3 +177,55 @@ other = "下一篇 →"
 other = "已经是第一篇了"
 [article.noNext]
 other = "已经是最后一篇了"
+[article.back]
+other = "返回文章列表"
+[article.tags]
+other = "文章标签"
+[article.nav]
+other = "文章导航"
+
+[notFound]
+[notFound.title]
+other = "页面未找到"
+[notFound.text]
+other = "这个地址下没有内容，它可能已被移动或删除。"
+[notFound.home]
+other = "返回首页"
+[notFound.noscriptBefore]
+other = "当前浏览器未启用 JavaScript，站内搜索不可用；请返回首页，或浏览"
+[notFound.noscriptFallback]
+other = "文章列表"
+[notFound.description]
+other = "页面未找到，可返回首页或使用站内搜索继续浏览。"
+
+[friends]
+[friends.empty]
+other = "友链整理中。"
+
+[about]
+[about.social]
+other = "社交链接"
+
+[shortcode]
+[shortcode.aiSummary]
+other = "AI 摘要"
+[shortcode.aiWarning]
+other = "AI 辅助声明"
+[shortcode.aiWarningClose]
+other = "关闭 AI 声明"
+[shortcode.references]
+other = "参考文献与注释"
+[shortcode.photos]
+other = "照片墙"
+[shortcode.prevPhoto]
+other = "上一张照片"
+[shortcode.nextPhoto]
+other = "下一张照片"
+[shortcode.photoHint]
+other = "点击桌面翻页 · 左右键切换"
+[shortcode.photoCounter]
+other = "第 {{ .Current }} 张，共 {{ .Total }} 张照片"
+
+[restore]
+[restore.stale]
+other = "内容已更新，已保留当前列表，请刷新后继续浏览。"

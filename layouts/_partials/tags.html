@@ -1,5 +1,5 @@
 {{ with .GetTerms "tags" }}
-  <div class="post-tags" aria-label="文章标签">
+  <div class="post-tags" aria-label="{{ i18n "article.tags" }}">
     {{ range . }}
       <a class="post-tag" href="{{ .RelPermalink }}">{{ .LinkTitle }}</a>
     {{ end }}

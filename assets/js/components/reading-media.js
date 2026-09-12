@@ -1,5 +1,6 @@
 /** Lightweight image entry points; original-image rendering is loaded on demand. */
 import { initDialog } from '../core/dialog.js';
+import { t } from '../core/i18n.js';
 
 const instances = new WeakMap();
 
@@ -69,7 +70,7 @@ export function initReadingMedia(root) {
       caption.textContent = trigger.dataset.caption || img?.alt || '';
       caption.hidden = !caption.textContent;
       original.href = url.href;
-      status.textContent = '图片加载中…';
+      status.textContent = t('lightbox.loading');
       modal.open(trigger);
       try {
         const { initLightbox } = await import('./lightbox.js');
@@ -80,7 +81,7 @@ export function initReadingMedia(root) {
         });
       } catch {
         if (request === current && dialog.open) {
-          status.textContent = '图片预览暂不可用，请通过下方链接查看原图。';
+          status.textContent = t('lightbox.unavailable');
         }
       }
     },

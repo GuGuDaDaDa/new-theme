@@ -1,15 +1,10 @@
 /** Three-state light, dark, and system theme control. */
 
 import { readStorage, writeStorage } from '../core/storage.js';
+import { t } from '../core/i18n.js';
 
 const THEME_KEY = 'bugu-theme';
 const MODES = ['light', 'dark', 'system'];
-const MODE_LABELS = {
-  light: '浅色',
-  dark: '深色',
-  system: '自动（跟随系统）',
-};
-const THEME_LABELS = { light: '浅色', dark: '深色' };
 const instances = new WeakMap();
 
 /**
@@ -63,7 +58,11 @@ export function initTheme(root) {
     root.documentElement.dataset.theme = theme;
     root.documentElement.style.colorScheme = theme;
     const nextMode = MODES[(MODES.indexOf(mode) + 1) % MODES.length];
-    const label = `主题：${MODE_LABELS[mode]}，当前${THEME_LABELS[theme]}；点击切换为${MODE_LABELS[nextMode]}`;
+    const label = t('theme.label', {
+      Mode: t(`theme.mode.${mode}`),
+      Theme: t(`theme.mode.${theme}`),
+      Next: t(`theme.mode.${nextMode}`),
+    });
     trigger.setAttribute('aria-label', label);
     trigger.title = label;
   };

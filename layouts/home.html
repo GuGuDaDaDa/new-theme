@@ -19,11 +19,13 @@
           <path d="M5 5h8M5 11h14M5 17h11"></path>
         </svg>
         {{ if $hasHero }}
-          <h2 id="latest-title">最新文章</h2>
+          <h2 id="latest-title">{{ i18n "list.latest" }}</h2>
         {{ else }}
-          <h1 id="latest-title">最新文章</h1>
+          <h1 id="latest-title">{{ i18n "list.latest" }}</h1>
         {{ end }}
-        <span class="section-count">{{ $context.count }} 篇</span>
+        <span class="section-count"
+          >{{ i18n "list.count" (dict "Count" $context.count) }}</span
+        >
       </div>
     </header>
     {{ partial "list/cards.html" $context }}

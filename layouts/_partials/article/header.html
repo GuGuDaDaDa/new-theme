@@ -7,11 +7,11 @@
 {{- $posts := $page.Site.GetPage "/posts" -}}
 <header class="article-heading">
   <a class="back-link" href="{{ $posts.RelPermalink }}" data-article-back
-    >返回文章列表</a
+    >{{ i18n "article.back" }}</a
   >
   {{ if $view }}
     {{ with $view.tags }}
-      <nav class="post-tags" aria-label="文章标签">
+      <nav class="post-tags" aria-label="{{ i18n "article.tags" }}">
         {{ range . }}
           <a class="post-tag" href="{{ .url }}">{{ .label }}</a>
         {{ end }}
@@ -24,11 +24,15 @@
         <span data-article-author>{{ . }}</span>
       {{ end }}
       <time datetime="{{ $view.displayDateISO }}" data-article-date>
-        {{- if eq $view.displayDateKind "updated" }}更新于&nbsp;{{ end -}}
+        {{- if eq $view.displayDateKind "updated" }}
+          {{ i18n "meta.updated" }}&nbsp;
+        {{ end -}}
         {{- $view.displayDate -}}
       </time>
       {{ if gt $view.readingMinutes 0 }}
-        <span data-article-reading-time>{{ $view.readingMinutes }} 分钟</span>
+        <span data-article-reading-time
+          >{{ i18n "meta.readingTime" (dict "Minutes" $view.readingMinutes) }}</span
+        >
       {{ end }}
     </div>
   {{ else }}

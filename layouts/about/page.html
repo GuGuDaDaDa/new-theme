@@ -39,7 +39,7 @@
     </header>
     <div class="prose">{{ partial "article/body.html" . }}</div>
     {{ with $links }}
-      <nav class="page-social" aria-label="社交链接">
+      <nav class="page-social" aria-label="{{ i18n "about.social" }}">
         {{ range . }}
           <a href="{{ .url | safeURL }}" rel="me noopener noreferrer"
             >{{ .label }}</a

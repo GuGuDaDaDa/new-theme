@@ -11,7 +11,7 @@
       data-reference
       href="#night-note-{{ .Page.File.UniqueID }}-{{ $num }}"
       id="{{ $id }}"
-      aria-label="查看引用 {{ $num }}"
+      aria-label="{{ i18n "references.view" (dict "Num" $num) }}"
       >[{{ $num }}]</a
     ></sup
   >

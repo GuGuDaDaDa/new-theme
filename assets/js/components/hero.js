@@ -1,5 +1,7 @@
 /** Manual featured-post selection for the home hero. */
 
+import { t } from '../core/i18n.js';
+
 const instances = new WeakMap();
 
 /**
@@ -95,10 +97,11 @@ export function initHero(root) {
     read.href = item.url;
     description.textContent = item.heroExcerpt;
     description.hidden = !item.heroExcerpt;
-    date.textContent = `${item.displayDateKind === 'updated' ? '更新于\u00a0' : ''}${item.displayDate}`;
+    date.textContent = `${item.displayDateKind === 'updated' ? t('meta.updated') + '\u00a0' : ''}${item.displayDate}`;
     date.dateTime = item.displayDateISO;
-    hero.querySelector('[data-hero-time]').textContent =
-      `${item.readingMinutes} 分钟`;
+    hero.querySelector('[data-hero-time]').textContent = t('meta.readingTime', {
+      Minutes: item.readingMinutes,
+    });
 
     hideCover();
     loadCover(item, imageRequest);

@@ -1,5 +1,6 @@
 /** Incremental, validated HTML pagination using the server-rendered cards. */
 import { internalPath, listRoute, nextListPath } from '../core/url.js';
+import { t } from '../core/i18n.js';
 import { initCards } from './card.js';
 import { initMasonry } from './masonry.js';
 
@@ -32,18 +33,18 @@ export function initPagination(list) {
       button.setAttribute('aria-disabled', String(state === 'exhausted'));
       button.textContent =
         state === 'loading'
-          ? '加载中…'
+          ? t('pagination.loading')
           : state === 'error'
-            ? '重试加载'
+            ? t('pagination.retry')
             : state === 'exhausted'
-              ? '已显示全部文章'
-              : '加载更多';
+              ? t('pagination.allShown')
+              : t('pagination.loadMore');
     }
     if (end) end.hidden = Boolean(nextLink);
     if (nextLink) {
       nextLink.hidden = state !== 'error';
       if (next) nextLink.href = next;
-      nextLink.textContent = '直接访问下一页';
+      nextLink.textContent = t('pagination.directNext');
     }
   }
 
@@ -56,7 +57,7 @@ export function initPagination(list) {
     if (disposed || state === 'loading' || !next) return false;
     state = 'loading';
     render();
-    status.textContent = '加载中…';
+    status.textContent = t('pagination.loading');
     const target = next;
     const controller = new AbortController();
     request = controller;
@@ -67,25 +68,25 @@ export function initPagination(list) {
         redirect: 'error',
       });
       if (!response.ok || internalPath(response.url, base) !== target)
-        throw new Error('加载失败，请重试或直接访问下一页。');
+        throw new Error(t('pagination.error.load'));
       const html = new DOMParser().parseFromString(
         await response.text(),
         'text/html',
       );
       const incoming = html.querySelector('[data-post-list]');
       if (!incoming || incoming.dataset.listId !== list.dataset.listId)
-        throw new Error('分页内容无效，请重试或刷新列表。');
+        throw new Error(t('pagination.error.invalid'));
       if (incoming.dataset.buildId !== list.dataset.buildId)
-        throw new Error('内容已更新，请刷新列表。');
+        throw new Error(t('pagination.error.stale'));
       if (Number(incoming.dataset.page) !== listRoute(target, base).page)
-        throw new Error('分页页码无效，请刷新列表。');
+        throw new Error(t('pagination.error.page'));
       const container = incoming.querySelector('[data-cards]');
       const nodes = container ? [...container.children] : [];
       if (
         !nodes.length ||
         nodes.some((node) => !node.matches('.post[data-post-url][id]'))
       )
-        throw new Error('分页内容无效，请重试或刷新列表。');
+        throw new Error(t('pagination.error.invalid'));
       const following = incoming.querySelector('[data-next]');
       const followingURL = following
         ? nextListPath(following.getAttribute('href'), target, base)
@@ -99,7 +100,7 @@ export function initPagination(list) {
       for (const node of nodes) {
         const url = internalPath(node.dataset.postUrl, base);
         if (!url || !url.startsWith('/posts/') || listRoute(url, base))
-          throw new Error('文章地址无效，请刷新列表。');
+          throw new Error(t('pagination.error.url'));
         if (
           node.querySelector('script, iframe, object, embed, base') ||
           [...node.querySelectorAll('*'), node].some((element) =>
@@ -113,7 +114,7 @@ export function initPagination(list) {
             ),
           )
         )
-          throw new Error('分页内容无效，请刷新列表。');
+          throw new Error(t('pagination.error.unsafe'));
         if (seen.has(url)) continue;
         seen.add(url);
         const card = document.importNode(node, true);
@@ -128,14 +129,14 @@ export function initPagination(list) {
       pages.push(target);
       next = followingURL;
       state = next ? 'idle' : 'exhausted';
-      status.textContent = `已新增 ${added.length} 篇文章${next ? '' : '，已显示全部文章'}。`;
+      status.textContent = `${t('pagination.added', { Count: added.length })}${next ? '' : '，' + t('pagination.allShown')}。`;
       list.dispatchEvent(new CustomEvent('night:page-loaded'));
       return true;
     } catch (error) {
       if (!disposed && request === controller) {
         state = 'error';
         status.textContent = controller.signal.aborted
-          ? '加载超时，请重试或直接访问下一页。'
+          ? t('pagination.error.timeout')
           : error.message;
       }
       return false;
@@ -186,7 +187,7 @@ export function initPagination(list) {
       for (const cleanup of cleanups.reverse()) cleanup();
       if (nextLink) {
         nextLink.hidden = !next;
-        nextLink.textContent = '下一页';
+        nextLink.textContent = t('pagination.next');
       }
       if (button) button.hidden = true;
       if (end) end.hidden = Boolean(next);

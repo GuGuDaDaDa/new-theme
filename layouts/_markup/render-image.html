@@ -11,7 +11,7 @@
         class="image-open"
         data-lightbox
         data-caption="{{ .Title }}"
-        aria-label="放大图片{{ with .PlainText }}：{{ . }}{{ end }}"
+        aria-label="{{ i18n "lightbox.openImage" (dict "Alt" .PlainText) }}"
       >
         <img
           src="{{ $src }}"
@@ -35,7 +35,7 @@
       class="image-inline"
       data-lightbox
       data-caption="{{ .Title }}"
-      aria-label="放大图片{{ with .PlainText }}：{{ . }}{{ end }}"
+      aria-label="{{ i18n "lightbox.openImage" (dict "Alt" .PlainText) }}"
     >
       <img
         src="{{ $src }}"

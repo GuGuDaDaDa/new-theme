@@ -2,6 +2,6 @@
   {{ range .pager.Pages }}
     {{ partial "card.html" . }}
   {{ else }}
-    <p class="list-empty">暂无文章</p>
+    <p class="list-empty">{{ i18n "list.empty" }}</p>
   {{ end }}
 </div>

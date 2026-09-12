@@ -10,7 +10,7 @@
       id="{{ $id }}"
       data-photo-stack
       role="region"
-      aria-label="照片墙"
+      aria-label="{{ i18n "shortcode.photos" }}"
     >
       <div class="stack-area">
         <div class="stack-track" id="{{ $id }}-track">
@@ -21,7 +21,7 @@
                   href="{{ .url }}"
                   data-lightbox
                   data-caption="{{ .caption }}"
-                  aria-label="放大图片{{ with .alt }}：{{ . }}{{ end }}"
+                  aria-label="{{ i18n "lightbox.openImage" (dict "Alt" .alt) }}"
                   draggable="false"
                 >
                   <img
@@ -54,7 +54,7 @@
           class="stack-nav prev"
           data-photo-prev
           data-search-exclude
-          aria-label="上一张照片"
+          aria-label="{{ i18n "shortcode.prevPhoto" }}"
           aria-controls="{{ $id }}-track"
           hidden
         >
@@ -67,7 +67,7 @@
           class="stack-nav next"
           data-photo-next
           data-search-exclude
-          aria-label="下一张照片"
+          aria-label="{{ i18n "shortcode.nextPhoto" }}"
           aria-controls="{{ $id }}-track"
           hidden
         >
@@ -76,7 +76,7 @@
           </svg>
         </button>
         <div class="stack-hint" data-photo-hint data-search-exclude hidden>
-          点击桌面翻页 · 左右键切换
+          {{ i18n "shortcode.photoHint" }}
         </div>
       {{- end }}
       <div

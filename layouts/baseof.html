@@ -4,7 +4,7 @@
     {{ partial "head.html" . }}
   </head>
   <body class="{{ if .IsHome }}home-page{{ end }}">
-    <a class="skip" href="#main">跳到正文</a>
+    <a class="skip" href="#main">{{ i18n "nav.skipToContent" }}</a>
     {{ partial "header.html" . }}
     <main
       id="main"
@@ -16,6 +16,8 @@
       {{- block "main" . }}{{ end -}}
     </main>
     {{ partial "footer.html" . }}
-    {{ partial "dialogs.html" . }}
+    <script type="application/json" data-i18n>
+      {{- partial "i18n/strings.html" . | jsonify | safeJS -}}
+    </script> {{ partial "dialogs.html" . }}
   </body>
 </html>

@@ -25,7 +25,7 @@
   {{- end -}}
   {{- $active := index $items 0 -}}
   {{- $activeCover := $active.cover -}}
-  <section class="hero" aria-label="推荐文章" data-hero>
+  <section class="hero" aria-label="{{ i18n "hero.region" }}" data-hero>
     <img
       class="hero-cover"
       data-hero-cover
@@ -49,8 +49,8 @@
     <div class="hero-inner">
       {{ if gt (len $items) 1 }}
         <div class="hero-selection">
-          <h2>推荐阅读</h2>
-          <div class="hero-choices" aria-label="切换推荐文章">
+          <h2>{{ i18n "hero.heading" }}</h2>
+          <div class="hero-choices" aria-label="{{ i18n "hero.choices" }}">
             {{ range $index, $item := $items }}
               <button
                 type="button"
@@ -90,11 +90,13 @@
         <div class="meta">
           <time datetime="{{ $active.displayDateISO }}" data-hero-date>
             {{- if eq $active.displayDateKind "updated" -}}
-              更新于&nbsp;
+              {{ i18n "meta.updated" }}&nbsp;
             {{- end -}}
             {{- $active.displayDate -}}
           </time>
-          <span data-hero-time>{{ $active.readingMinutes }} 分钟</span>
+          <span data-hero-time
+            >{{ i18n "meta.readingTime" (dict "Minutes" $active.readingMinutes) }}</span
+          >
         </div>
         <h1>
           <a href="{{ $active.url }}" data-hero-link>{{ $active.title }}</a>
@@ -105,13 +107,13 @@
           <p data-hero-description hidden></p>
         {{ end }}
         <a class="hero-read" href="{{ $active.url }}" data-hero-read
-          >阅读文章</a
+          >{{ i18n "hero.read" }}</a
         >
       </div>
     </div>
     {{ if gt (len $items) 1 }}
       <noscript>
-        <nav class="hero-fallback" aria-label="其他推荐文章">
+        <nav class="hero-fallback" aria-label="{{ i18n "hero.fallbackNav" }}">
           {{ range after 1 $items }}
             <a href="{{ .url }}">{{ .title }}</a>
           {{ end }}

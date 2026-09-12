@@ -1,5 +1,5 @@
 <details class="ai-summary" data-ai-summary>
-  <summary data-search-exclude>AI 摘要</summary>
+  <summary data-search-exclude>{{ i18n "shortcode.aiSummary" }}</summary>
   <div class="ai-summary-content">
     {{ .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML }}
   </div>

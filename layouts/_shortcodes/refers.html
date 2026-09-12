@@ -1,4 +1,4 @@
-{{- $title := .Get "title" | default "参考文献与注释" -}}
+{{- $title := .Get "title" | default (i18n "shortcode.references") -}}
 {{- .Page.Store.SetInMap "night-refers" (partial "data/shortcode-key.html" .) (dict "title" $title "position" (printf "%s" .Position)) -}}
 {{- $inner := .Inner -}}
 <section

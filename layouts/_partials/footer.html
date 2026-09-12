@@ -23,10 +23,10 @@
       </a>
       {{ with site.Params.description }}<p>{{ . }}</p>{{ end }}
     </div>
-    <nav class="footer-links" aria-label="页脚浏览">
-      <h2>随处逛逛</h2>
+    <nav class="footer-links" aria-label="{{ i18n "footer.nav" }}">
+      <h2>{{ i18n "footer.explore" }}</h2>
       {{ with site.GetPage "/posts" }}
-        <a href="{{ .RelPermalink }}">所有文章</a>
+        <a href="{{ .RelPermalink }}">{{ i18n "footer.allPosts" }}</a>
       {{ end }}
       {{- range site.Menus.main -}}
         {{- $item := . -}}
@@ -46,7 +46,7 @@
     {{- $hasEmail := and (strings.Contains $emailAddress "@") (not (strings.Contains $emailAddress ":")) (not (strings.Contains $emailAddress "\n")) -}}
     {{- if or (and (eq $githubURL.Scheme "https") $githubURL.Host) (and (eq $twitterURL.Scheme "https") $twitterURL.Host) $hasEmail site.Params.footerText }}
       <div class="footer-links">
-        <h2>保持联系</h2>
+        <h2>{{ i18n "footer.contact" }}</h2>
         {{- if and (eq $githubURL.Scheme "https") $githubURL.Host }}
           <a href="{{ $github }}" rel="me noopener">GitHub</a>
         {{- end }}
@@ -64,8 +64,8 @@
         <span>© {{ now.Year }} {{ . }}</span>
       {{ end }}
       {{ with site.Params.icp }}<span>{{ . }}</span>{{ end }}
-      <span>由 <a href="https://gohugo.io/">Hugo</a> 构建</span>
-      <a href="#main">回到内容开头</a>
+      <span>{{ i18n "footer.builtWith" | safeHTML }}</span>
+      <a href="#main">{{ i18n "footer.backToTop" }}</a>
     </div>
   </div>
 </footer>

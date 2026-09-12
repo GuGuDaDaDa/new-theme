@@ -1,0 +1,52 @@
+{{- /*
+  Strings consumed by the browser bundle through assets/js/core/i18n.js.
+
+  Hugo resolves Go-template placeholders inside i18n values at build time, so
+  each placeholder key is rendered with its own placeholder text as the
+  argument value; the bundle substitutes the brace-only {Name} slots it gets.
+
+  @context {page} page The current page.
+
+  @returns {map[string]string} Translations for the browser bundle.
+  */
+-}}
+{{- $strings := dict
+  "theme.mode.light" (i18n "theme.mode.light")
+  "theme.mode.dark" (i18n "theme.mode.dark")
+  "theme.mode.system" (i18n "theme.mode.system")
+  "theme.label" (i18n "theme.label" (dict
+  "Mode" "{Mode}" "Theme" "{Theme}" "Next" "{Next}"
+  ))
+  "search.empty" (i18n "search.empty")
+  "search.searching" (i18n "search.searching")
+  "search.results" (i18n "search.results" (dict "Count" "{Count}"))
+  "search.noResults" (i18n "search.noResults")
+  "search.failed" (i18n "search.failed")
+  "meta.updated" (i18n "meta.updated")
+  "meta.readingTime" (i18n "meta.readingTime" (dict "Minutes" "{Minutes}"))
+  "pagination.loading" (i18n "pagination.loading")
+  "pagination.retry" (i18n "pagination.retry")
+  "pagination.allShown" (i18n "pagination.allShown")
+  "pagination.loadMore" (i18n "pagination.loadMore")
+  "pagination.directNext" (i18n "pagination.directNext")
+  "pagination.next" (i18n "pagination.next")
+  "pagination.added" (i18n "pagination.added" (dict "Count" "{Count}"))
+  "pagination.error.load" (i18n "pagination.error.load")
+  "pagination.error.timeout" (i18n "pagination.error.timeout")
+  "pagination.error.invalid" (i18n "pagination.error.invalid")
+  "pagination.error.stale" (i18n "pagination.error.stale")
+  "pagination.error.page" (i18n "pagination.error.page")
+  "pagination.error.url" (i18n "pagination.error.url")
+  "pagination.error.unsafe" (i18n "pagination.error.unsafe")
+  "pagination.error.route" (i18n "pagination.error.route")
+  "lightbox.loading" (i18n "lightbox.loading")
+  "lightbox.unavailable" (i18n "lightbox.unavailable")
+  "lightbox.failed" (i18n "lightbox.failed")
+  "references.dialog" (i18n "references.dialog")
+  "references.goto" (i18n "references.goto")
+  "restore.stale" (i18n "restore.stale")
+  "shortcode.photoCounter" (i18n "shortcode.photoCounter" (dict
+  "Current" "{Current}" "Total" "{Total}"
+  ))
+  -}}
+{{- return $strings -}}

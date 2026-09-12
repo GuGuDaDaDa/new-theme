@@ -1,4 +1,6 @@
 /** Progressively enhance server-rendered photo walls with isolated navigation. */
+import { t } from '../core/i18n.js';
+
 const instances = new WeakMap();
 const documents = new WeakMap();
 const positions = [
@@ -50,7 +52,10 @@ export function initPhotoStack(root) {
     counter.textContent = `${state.index + 1} / ${cards.length}`;
     counter.setAttribute(
       'aria-label',
-      `第 ${state.index + 1} 张，共 ${cards.length} 张照片`,
+      t('shortcode.photoCounter', {
+        Current: state.index + 1,
+        Total: cards.length,
+      }),
     );
   }
 

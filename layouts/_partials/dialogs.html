@@ -1,8 +1,12 @@
-<dialog id="image-dialog" aria-label="图片预览" data-lightbox-dialog>
+<dialog
+  id="image-dialog"
+  aria-label="{{ i18n "lightbox.dialog" }}"
+  data-lightbox-dialog
+>
   <button
     type="button"
     class="icon close-dialog"
-    aria-label="关闭图片预览"
+    aria-label="{{ i18n "lightbox.close" }}"
     data-dialog-close
     autofocus
   >
@@ -20,60 +24,60 @@
   <div data-lightbox-content></div>
   <p data-lightbox-caption hidden></p>
   <p role="status" data-lightbox-status></p>
-  <a data-lightbox-original>查看原图</a>
+  <a data-lightbox-original>{{ i18n "lightbox.original" }}</a>
 </dialog>
 <dialog
   id="search-dialog"
   class="search-dialog"
-  aria-label="站内搜索"
+  aria-label="{{ i18n "search.dialog" }}"
   data-search-dialog
 >
   <button
     type="button"
     class="icon close-dialog"
     data-dialog-close
-    aria-label="关闭搜索"
+    aria-label="{{ i18n "search.close" }}"
   >
     <svg aria-hidden="true" viewBox="0 0 24 24">
       <path d="m7 7 10 10M17 7 7 17" />
     </svg>
   </button>
   <form class="search-form" data-search-form role="search">
-    <label for="site-search">搜索文章</label
+    <label for="site-search">{{ i18n "search.label" }}</label
     ><input
       id="site-search"
       type="search"
       name="q"
       autocomplete="off"
-      placeholder="输入关键词…"
+      placeholder="{{ i18n "search.placeholder" }}"
       data-search-input
     />
   </form>
   <p class="search-status" role="status" aria-live="polite" data-search-status>
-    请输入搜索关键词
+    {{ i18n "search.empty" }}
   </p>
   <ol class="search-results" data-search-results></ol>
   <button type="button" class="search-more" data-search-more hidden>
-    加载更多
+    {{ i18n "search.more" }}
   </button>
 </dialog>
 
 <dialog
   id="note-dialog"
   data-reference-dialog
-  aria-label="引用来源"
+  aria-label="{{ i18n "references.dialog" }}"
   data-search-exclude
 >
   <button
     type="button"
     class="icon close-dialog"
     data-dialog-close
-    aria-label="关闭引用来源"
+    aria-label="{{ i18n "references.close" }}"
   >
     <svg aria-hidden="true" viewBox="0 0 24 24">
       <path d="m7 7 10 10M17 7 7 17" />
     </svg>
   </button>
   <div data-reference-preview-content></div>
-  <a class="note-goto" data-reference-goto>跳到文末注释</a>
+  <a class="note-goto" data-reference-goto>{{ i18n "references.goto" }}</a>
 </dialog>

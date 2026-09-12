@@ -37,12 +37,16 @@
       {{ with $view.cardExcerpt }}<p>{{ . }}</p>{{ end }}
       <div class="meta">
         <span>
-          {{- if eq $view.displayDateKind "updated" }}更新于&nbsp;{{ end -}}
+          {{- if eq $view.displayDateKind "updated" }}
+            {{ i18n "meta.updated" }}&nbsp;
+          {{ end -}}
           <time datetime="{{ $view.displayDateISO }}"
             >{{ $view.displayDate }}</time
           >
         </span>
-        <span>{{ $view.readingMinutes }} 分钟</span>
+        <span
+          >{{ i18n "meta.readingTime" (dict "Minutes" $view.readingMinutes) }}</span
+        >
       </div>
     </div>
   </div>

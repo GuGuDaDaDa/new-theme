@@ -1,5 +1,6 @@
 /** Interactive reference previews sourced exclusively from the article notes. */
 import { initDialog } from '../core/dialog.js';
+import { t } from '../core/i18n.js';
 
 const instances = new WeakMap();
 
@@ -86,7 +87,7 @@ export function initReferences(root) {
   preview.dataset.referencePreview = '';
   preview.dataset.searchExclude = '';
   preview.setAttribute('role', 'region');
-  preview.setAttribute('aria-label', '引用来源');
+  preview.setAttribute('aria-label', t('references.dialog'));
   preview.hidden = true;
   root.body.append(preview);
   let current = null;
@@ -158,7 +159,7 @@ export function initReferences(root) {
     const goto = root.createElement('a');
     goto.className = 'note-goto';
     goto.href = reference.hash;
-    goto.textContent = '跳到文末注释';
+    goto.textContent = t('references.goto');
     preview.append(content, goto);
     reference.setAttribute('aria-expanded', 'true');
     preview.hidden = false;
