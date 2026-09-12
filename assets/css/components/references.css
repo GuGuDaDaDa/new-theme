@@ -21,6 +21,12 @@
   outline-offset: 4px;
 }
 
+/* Touch-opened panels restore focus to the marker without leaving a keyboard ring. */
+html[data-input-mode='pointer'] .prose .note-ref:focus {
+  outline: none;
+  box-shadow: none;
+}
+
 .prose .footnotes,
 .prose .footnotes[data-references] {
   margin-top: 60px;
