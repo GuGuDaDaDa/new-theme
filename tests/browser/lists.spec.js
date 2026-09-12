@@ -107,15 +107,6 @@ async function waitForMasonry(page) {
   await expect(page.locator('.post').first()).toHaveCSS('position', 'absolute');
 }
 
-/**
- * Wait for the required first-load entry animation, which keeps links unstable and blocks click actionability while running.
- * @param {import('@playwright/test').Page} page - Active page.
- * @returns {Promise<void>} Completion.
- */
-async function waitForEntry(page) {
-  await expect(page.locator('main')).toHaveCSS('opacity', '1');
-}
-
 test.beforeAll(async () => {
   const fixture = await createBoundarySite({
     name: 'browser-lists',
@@ -144,7 +135,10 @@ test.afterAll(async () => {
 test('real HTML pagination remains readable without JavaScript and on direct page two', async ({
   browser,
 }) => {
-  const context = await browser.newContext({ javaScriptEnabled: false });
+  const context = await browser.newContext({
+    javaScriptEnabled: false,
+    reducedMotion: 'reduce',
+  });
   const page = await context.newPage();
   await page.goto(fixtureBaseURL);
   await expect(page.locator('[data-post-list]')).toHaveAttribute(
@@ -165,7 +159,6 @@ test('real HTML pagination remains readable without JavaScript and on direct pag
     '-1',
   );
 
-  await waitForEntry(page);
   await page.locator('[data-next]').click();
   await expect(page).toHaveURL(`${fixtureBaseURL}/page/2/`);
   await expect(page.locator('[data-post-list]')).toHaveAttribute(

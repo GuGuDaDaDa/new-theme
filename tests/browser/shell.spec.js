@@ -351,6 +351,27 @@ test('reduced motion and repeated pageshow retain a single usable enhancement', 
   );
 });
 
+test('first load plays the content entry animation and every opt-out keeps it still', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-entry', 'on');
+  await expect(page.locator('main')).toHaveCSS('animation-name', 'night-entry');
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await expect(page.locator('main')).toHaveCSS('animation-name', 'none');
+
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.evaluate(() =>
+    globalThis.sessionStorage.setItem('night:return', '{"entryId":"test"}'),
+  );
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute('data-entry', 'restore');
+  await expect(page.locator('main')).toHaveCSS('animation-name', 'none');
+});
+
 test('configuration hides unresolved pages and unsafe social links', async () => {
   const fixtureDefinition = JSON.parse(
     await readFile(
