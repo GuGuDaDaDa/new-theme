@@ -1,5 +1,4 @@
-{{- /*
-  Strings consumed by the browser bundle through assets/js/core/i18n.js.
+{{/* Strings consumed by the browser bundle through assets/js/core/i18n.js.
 
   Hugo resolves Go-template placeholders inside i18n values at build time, so
   each placeholder key is rendered with its own placeholder text as the
@@ -8,8 +7,7 @@
   @context {page} page The current page.
 
   @returns {map[string]string} Translations for the browser bundle.
-  */
--}}
+*/}}
 {{- $strings := dict
   "theme.mode.light" (i18n "theme.mode.light")
   "theme.mode.dark" (i18n "theme.mode.dark")
