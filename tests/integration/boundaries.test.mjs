@@ -1,6 +1,7 @@
 /** Prove isolated roots, fixed clocks, and managed fixture cleanup. */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   cp,
   mkdir,
@@ -18,8 +19,16 @@ import {
   snapshotTree,
 } from '../helpers/site.mjs';
 import { files, readJson, removeGenerated, root } from '../../scripts/lib.mjs';
-import { hash } from '../../scripts/prepare-content.mjs';
 import { validateOutput } from '../../scripts/validate-output.mjs';
+
+/**
+ * Hash a stable route or term value.
+ * @param {string} value - Value to hash.
+ * @returns {string} SHA-256 digest.
+ */
+function hash(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
 
 test('buildSite uses the fixture root and injected clock without touching author inputs', async () => {
   const authorContent = await snapshotTree(path.join(root, 'content'));
@@ -32,12 +41,12 @@ test('buildSite uses the fixture root and injected clock without touching author
     });
     assert.equal(result.projectRoot, fixture.projectRoot);
     assert.equal(result.metadata.buildTime, fixture.clock.toISOString());
-    assert.ok(
-      result.finalConfig.startsWith(`${fixture.projectRoot}/.generated/`),
+    assert.equal(
+      result.finalConfig,
+      path.join(fixture.projectRoot, '.build/config.json'),
     );
-    assert.ok(
-      result.prepareDestination.startsWith(`${fixture.projectRoot}/.build/`),
-    );
+    assert.equal(result.prepareConfig, undefined);
+    assert.equal(result.prepareDestination, undefined);
     assert.ok(result.publicDir.startsWith(`${fixture.projectRoot}/`));
   } finally {
     await removeBoundarySite(fixture.projectRoot);
@@ -70,6 +79,11 @@ test('public collection keeps only eligible posts and excludes hidden bundles', 
       'posts/publish-later/index.md',
       'PUBLISH_LATER_MARKER',
       'date: 2026-09-09T00:00:00Z\npublishDate: 2026-09-10T00:00:01Z',
+    ],
+    [
+      'posts/future-date-past-publish/index.md',
+      'FUTURE_DATE_MARKER',
+      'date: 2026-09-10T00:00:01Z\npublishDate: 2026-09-09T00:00:00Z',
     ],
     [
       'posts/expired/index.md',
@@ -129,6 +143,7 @@ test('public collection keeps only eligible posts and excludes hidden bundles', 
     for (const forbidden of [
       '/posts/future/',
       '/posts/publish-later/',
+      '/posts/future-date-past-publish/',
       '/posts/expired/',
       '/posts/draft/',
     ])
@@ -141,7 +156,7 @@ test('public collection keeps only eligible posts and excludes hidden bundles', 
       const text = await readFile(file, 'utf8');
       assert.doesNotMatch(
         text,
-        /FUTURE_MARKER|PUBLISH_LATER_MARKER|EXPIRED_MARKER|DRAFT_MARKER|HIDDEN_RESOURCE_MARKER|HIDDEN_NESTED_MARKER/,
+        /FUTURE_MARKER|PUBLISH_LATER_MARKER|FUTURE_DATE_MARKER|EXPIRED_MARKER|DRAFT_MARKER|HIDDEN_RESOURCE_MARKER|HIDDEN_NESTED_MARKER/,
       );
     }
   } finally {
@@ -149,7 +164,7 @@ test('public collection keeps only eligible posts and excludes hidden bundles', 
   }
 });
 
-test('prepare output preserves UTF-8 BOM, CRLF, and body whitespace', async () => {
+test('direct content input preserves UTF-8 BOM, CRLF, and body whitespace', async () => {
   const body = '\ufeff正文\r\n  trailing spaces  \r\n';
   const fixture = await createBoundarySite({
     name: 'raw-body',
@@ -166,15 +181,21 @@ test('prepare output preserves UTF-8 BOM, CRLF, and body whitespace', async () =
     },
   });
   try {
+    const sourcePath = path.join(
+      fixture.projectRoot,
+      'content/posts/raw/index.md',
+    );
+    const source = await readFile(sourcePath, 'utf8');
     const result = await buildSite({
       projectRoot: fixture.projectRoot,
       clock: fixture.clock,
     });
-    const generated = await readFile(
-      path.join(result.projectRoot, '.generated/content/posts/raw/index.md'),
+    const rendered = await readFile(
+      path.join(result.publicDir, 'posts/raw/index.html'),
       'utf8',
     );
-    assert.ok(generated.endsWith(body));
+    assert.match(rendered, /正文/);
+    assert.equal(await readFile(sourcePath, 'utf8'), source);
   } finally {
     await removeBoundarySite(fixture.projectRoot);
   }
@@ -365,7 +386,7 @@ test('tags isolate drafts, distinguish case, support Chinese, and PostView handl
   });
 
   await cp(
-    path.join(root, 'content/posts/post-3/bryce-canyon.jpg'),
+    path.join(root, 'exampleSite/content/posts/post-3/bryce-canyon.jpg'),
     path.join(
       fixture.projectRoot,
       'content/posts/bundle-cover/bryce-canyon.jpg',
@@ -376,6 +397,7 @@ test('tags isolate drafts, distinguish case, support Chinese, and PostView handl
     fixture.projectRoot,
     'layouts/section.html',
   );
+  await mkdir(path.dirname(sectionHtmlPath), { recursive: true });
   await writeFile(
     sectionHtmlPath,
     [
@@ -623,10 +645,6 @@ test('two-pass text extraction handles description, more, code, image, emoji, an
       clock: fixture.clock,
     });
     const indexJson = await readJson(path.join(res.publicDir, 'index.json'));
-    const nightText = await readJson(
-      path.join(res.projectRoot, '.generated/data/night_text.json'),
-    );
-
     const postsByUrl = new Map(indexJson.posts.map((p) => [p.url, p]));
 
     // 1. Description post: description takes priority
@@ -651,21 +669,15 @@ test('two-pass text extraction handles description, more, code, image, emoji, an
     const imgPost = postsByUrl.get('/posts/pure-image-post/');
     assert.equal(imgPost.description, '');
 
-    // 5. Emoji long post in night_text.json: Unicode safe excerpt ≤110/60
-    const emojiEntry = nightText['posts/emoji-long-post/index.md'];
-    assert.equal(Array.from(emojiEntry.cardExcerpt).length, 110);
-    assert.equal(Array.from(emojiEntry.heroExcerpt).length, 60);
-    assert.ok(emojiEntry.cardExcerpt.endsWith('…'));
-    assert.ok(emojiEntry.heroExcerpt.endsWith('…'));
-    assert.ok(emojiEntry.cardExcerpt.startsWith('🌟🎉🚀'));
+    // 5. Emoji long post in the rendered index: Unicode remains intact.
+    const emojiPost = postsByUrl.get('/posts/emoji-long-post/');
+    assert.ok(emojiPost.description.startsWith('🌟🎉🚀'));
+    assert.equal(emojiPost.description.includes('�'), false);
 
     // 6. Empty post: empty strings
     const emptyPost = postsByUrl.get('/posts/empty-post/');
     assert.equal(emptyPost.description, '');
-    const emptyEntry = nightText['posts/empty-post/index.md'];
-    assert.equal(emptyEntry.summaryText, '');
-    assert.equal(emptyEntry.cardExcerpt, '');
-    assert.equal(emptyEntry.heroExcerpt, '');
+    assert.equal(emptyPost.description, '');
 
     // 7. Internal prepare files forbidden from entering public
     const publicFiles = await files(res.publicDir);
@@ -891,7 +903,7 @@ test('minimal shortcode fixture proves complete evaluation, idempotency across o
   }
 });
 
-test('continuous rebuild removes deleted content, staging failure preserves valid public and generated', async () => {
+test('continuous rebuild removes deleted content and preserves valid public on failure', async () => {
   const clock = new Date('2026-09-10T00:00:00Z');
   const fixture = await createBoundarySite({
     name: 'failure-recovery',
@@ -949,10 +961,6 @@ test('continuous rebuild removes deleted content, staging failure preserves vali
     const validPublicSnapshot = await snapshotTree(
       path.join(fixture.projectRoot, 'public'),
     );
-    const validGeneratedSnapshot = await snapshotTree(
-      path.join(fixture.projectRoot, '.generated'),
-    );
-
     // 4. Introduce build error in post A
     await writeFile(
       path.join(fixture.projectRoot, 'content/posts/post-a/index.md'),
@@ -965,7 +973,7 @@ test('continuous rebuild removes deleted content, staging failure preserves vali
       /invalid date|datetime|timezone/i,
     );
 
-    // 6. Public output and generated directory remain preserved as valid artifacts
+    // 6. Public output remains preserved as a valid artifact
     const publicAfterFailure = await snapshotTree(
       path.join(fixture.projectRoot, 'public'),
     );
@@ -974,23 +982,13 @@ test('continuous rebuild removes deleted content, staging failure preserves vali
       validPublicSnapshot,
       'Public directory must be preserved on build failure',
     );
-
-    const generatedAfterFailure = await snapshotTree(
-      path.join(fixture.projectRoot, '.generated'),
-    );
-    assert.deepEqual(
-      generatedAfterFailure,
-      validGeneratedSnapshot,
-      'Generated directory must not be destroyed by staging failure',
-    );
   } finally {
     await removeBoundarySite(fixture.projectRoot);
   }
 });
 
-test('buildId is deterministic across different now timestamps and updates on independent page changes', async () => {
+test('buildId changes on every rebuild and is shared by page and search output', async () => {
   const clock1 = new Date('2026-09-10T00:00:00Z');
-  const clock2 = new Date('2026-09-10T00:00:01Z');
   const fixture = await createBoundarySite({
     name: 'build-id-determinism',
     definition: {
@@ -1011,30 +1009,27 @@ test('buildId is deterministic across different now timestamps and updates on in
       projectRoot: fixture.projectRoot,
       clock: clock1,
     });
-    const res2 = await buildSite({
-      projectRoot: fixture.projectRoot,
-      clock: clock2,
-    });
+    const firstIndex = await readJson(path.join(res1.publicDir, 'index.json'));
+    const firstHome = await readFile(
+      path.join(res1.publicDir, 'index.html'),
+      'utf8',
+    );
+    assert.equal(firstIndex.buildId, res1.metadata.buildId);
     assert.equal(
+      load(firstHome)('[data-post-list]').attr('data-build-id'),
       res1.metadata.buildId,
-      res2.metadata.buildId,
-      'Stable buildId across different clock timestamps when content is identical',
     );
-
-    // Add independent page
-    await writeFile(
-      path.join(fixture.projectRoot, 'content/about.md'),
-      '---\ntitle: About\n---\nAbout text\n',
-    );
-    const res3 = await buildSite({
+    const res2 = await buildSite({
       projectRoot: fixture.projectRoot,
       clock: clock1,
     });
     assert.notEqual(
       res1.metadata.buildId,
-      res3.metadata.buildId,
-      'buildId must update when visible independent pages change',
+      res2.metadata.buildId,
+      'Every rebuild must receive a new buildId',
     );
+    const secondIndex = await readJson(path.join(res2.publicDir, 'index.json'));
+    assert.equal(secondIndex.buildId, res2.metadata.buildId);
   } finally {
     await removeBoundarySite(fixture.projectRoot);
   }

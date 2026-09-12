@@ -15,7 +15,9 @@
     {{- end }}
     {{- with .page.Store.GetSortedMapValues "night-refers" }}
       {{- range . }}
-        <a href="#night-notes-{{ $.page.File.UniqueID }}">{{ .title }}</a>
+        <a href="#night-notes-{{ $.page.Params._night.sourceId }}"
+          >{{ .title }}</a
+        >
       {{- end }}
     {{- end }}
   </aside>

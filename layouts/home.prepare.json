@@ -1,5 +1,0 @@
-{{ $posts := slice }}
-{{ range partial "data/public-posts.html" . }}
-  {{ $posts = $posts | append (dict "path" .File.Path "content" (partial "article/body.html" (dict "page" . "output" "prepare")) "summary" .Summary "description" (.Description | default "")) }}
-{{ end }}
-{{ dict "posts" $posts | jsonify }}

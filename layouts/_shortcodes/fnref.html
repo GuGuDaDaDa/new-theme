@@ -3,13 +3,13 @@
   {{- errorf "fnref number %q must be a positive integer (%s)" $num .Position -}}
 {{- else -}}
   {{- $ordinal := partial "data/shortcode-key.html" . -}}
-  {{- $id := printf "night-ref-%s-%s-%s" .Page.File.UniqueID $num $ordinal -}}
+  {{- $id := printf "night-ref-%s-%s-%s" .Page.Params._night.sourceId $num $ordinal -}}
   {{- .Page.Store.SetInMap "night-refs" $ordinal (dict "num" $num "id" $id) -}}
   <sup data-search-exclude
     ><a
       class="note-ref"
       data-reference
-      href="#night-note-{{ .Page.File.UniqueID }}-{{ $num }}"
+      href="#night-note-{{ .Page.Params._night.sourceId }}-{{ $num }}"
       id="{{ $id }}"
       aria-label="{{ i18n "references.view" (dict "Num" $num) }}"
       >[{{ $num }}]</a

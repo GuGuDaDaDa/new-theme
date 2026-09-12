@@ -1,0 +1,33 @@
+{{- /* Extract text using a tag stack, including nested excluded controls. */ -}}
+{{- $stack := slice -}}
+{{- $text := slice -}}
+{{- $excluded := slice "script" "style" "button" "nav" -}}
+{{- if .summary }}{{ $excluded = $excluded | append "pre" "code" }}{{ end -}}
+{{- $void := slice "area" "base" "br" "col" "embed" "hr" "img" "input" "link" "meta" "param" "source" "track" "wbr" -}}
+{{- $blocks := slice "p" "div" "h1" "h2" "h3" "h4" "h5" "h6" "li" "br" "tr" "th" "td" "blockquote" "pre" -}}
+{{- range findRE `(?s)<!--.*?-->|<![^>]*>|</?[a-zA-Z](?:"[^"]*"|'[^']*'|[^'">])*>|[^<]+|<` .html -}}
+  {{- $token := . -}}
+  {{- if strings.HasPrefix $token "<!" }}{{ continue }}{{ end -}}
+  {{- if findRE `^</?[a-zA-Z]` $token -}}
+    {{- $tag := lower (index (findRE `[a-zA-Z][a-zA-Z0-9:-]*` $token 1) 0) -}}
+    {{- if $stack -}}
+      {{- if and (strings.HasPrefix $token "</") (eq $tag (index $stack (sub (len $stack) 1))) -}}
+        {{- $stack = first (sub (len $stack) 1) $stack -}}
+      {{- else if and (not (strings.HasPrefix $token "</")) (not (in $void $tag)) (not (strings.HasSuffix $token "/>")) -}}
+        {{- if not (in (slice "script" "style") (index $stack 0)) }}
+          {{ $stack = $stack | append $tag }}
+        {{ end -}}
+      {{- end -}}
+    {{- else -}}
+      {{- $skip := or (in $excluded $tag) (findRE `\sdata-search-exclude(?:\s|=|>)|\sclass=["'][^"']*\bfootnote-backref\b` $token) -}}
+      {{- if and $skip (not (strings.HasPrefix $token "</")) (not (in $void $tag)) (not (strings.HasSuffix $token "/>")) -}}
+        {{- $stack = slice $tag -}}
+      {{- else if in $blocks $tag -}}
+        {{- $text = $text | append " " -}}
+      {{- end -}}
+    {{- end -}}
+  {{- else if not $stack -}}
+    {{- $text = $text | append $token -}}
+  {{- end -}}
+{{- end -}}
+{{- return (delimit $text "" | htmlUnescape | replaceRE `[\s\p{Z}]+` " " | strings.TrimSpace) -}}

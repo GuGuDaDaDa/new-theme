@@ -1,0 +1,77 @@
+{{- $clock := now -}}
+{{- $friends := partial "data/friends.html" . -}}
+{{- hugo.Store.Set "night-build-id" (printf "%d-%v" $clock.UnixNano math.Rand) -}}
+{{- $pages := slice -}}
+{{- $hidden := slice -}}
+{{- $resources := resources.Match "night-content/**" -}}
+{{- range $resources -}}
+  {{- $path := .Name | strings.TrimPrefix "/" | strings.TrimPrefix "night-content/" -}}
+  {{- if eq (path.Ext $path) ".md" -}}
+    {{- $parsed := partial "content/parse.html" (dict "path" $path "source" .Content) -}}
+    {{- $page := partial "content/metadata.html" (merge $parsed (dict "path" $path "clock" $clock)) -}}
+    {{- $pages = $pages | append $page -}}
+    {{- if and (not $page.public) (eq (path.Base $path) "index.md") -}}
+      {{- $hidden = $hidden | append (printf "%s/" (path.Dir $path)) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $visible := slice -}}
+{{- range $pages -}}
+  {{- $page := . -}}
+  {{- $included := .public -}}
+  {{- range $hidden }}{{ if strings.HasPrefix $page.path . }}{{ $included = false }}{{ end }}{{ end -}}
+  {{- if $included }}{{ $visible = $visible | append . }}{{ end -}}
+{{- end -}}
+{{- $posts := where $visible "post" true -}}
+{{- $posts = sort (sort (sort $posts "path" "asc") "created" "desc") "day" "desc" -}}
+{{- $ranks := dict -}}
+{{- range $rank, $post := $posts }}{{ $ranks = merge $ranks (dict $post.path $rank) }}{{ end -}}
+{{- $labels := dict -}}
+{{- if not (where $visible "path" "posts/_index.md") -}}
+  {{- .AddPage (dict "kind" "section" "path" "posts" "title" "Posts") -}}
+{{- end -}}
+{{- range $visible -}}
+  {{- $sourcePath := .path -}}
+  {{- $data := .data -}}
+  {{- $keys := slice -}}
+  {{- if .post -}}
+    {{- range .tags -}}
+      {{- $key := printf "t-%s" (crypto.SHA256 .) -}}
+      {{- $label := . -}}
+      {{- with index $labels $key }}{{ if ne . $label }}{{ errorf "Tag hash collision" }}{{ end }}{{ end -}}
+      {{- $labels = merge $labels (dict $key .) -}}
+      {{- $keys = $keys | append $key -}}
+    {{- end -}}
+  {{- end -}}
+  {{- $updated := ne .date .lastmod -}}
+  {{- $internal := dict "sourcePath" $sourcePath "sourceId" (md5 $sourcePath) "rank" (index $ranks $sourcePath | default 0) "updated" $updated "displayDate" (cond $updated .lastmod .date) -}}
+  {{- $params := merge ($data.params | default dict) $data (dict "tags" $keys "_night" $internal) -}}
+  {{- /* merge gives earlier arguments priority; reserved values must win. */ -}}
+  {{- $params = merge (dict "tags" $keys "_night" $internal "categories" (slice)) $params -}}
+  {{- $logical := strings.TrimSuffix ".md" $sourcePath -}}
+  {{- $kind := "page" -}}
+  {{- if eq (path.Base $sourcePath) "index.md" }}{{ $logical = path.Dir $sourcePath }}{{ end -}}
+  {{- if eq (path.Base $sourcePath) "_index.md" -}}
+    {{- $logical = path.Dir $sourcePath -}}
+    {{- $kind = "section" -}}
+    {{- if eq $logical "." }}{{ $logical = "/" }}{{ $kind = "home" }}{{ end -}}
+  {{- end -}}
+  {{- $dates := dict "date" .date "publishDate" .published "lastmod" .lastmod -}}
+  {{- with .dates.expiryDate }}{{ $dates = merge $dates (dict "expiryDate" .) }}{{ end -}}
+  {{- $page := merge (dict "path" $logical "kind" $kind "params" $params "dates" $dates "content" (dict "mediaType" "text/markdown" "value" .content)) $data -}}
+  {{- $.AddPage $page -}}
+{{- end -}}
+{{- range $key, $label := $labels -}}
+  {{- $.AddPage (dict "kind" "term" "path" (printf "tags/%s" $key) "title" $label "slug" $key) -}}
+{{- end -}}
+{{- range $resources -}}
+  {{- $source := . -}}
+  {{- $path := .Name | strings.TrimPrefix "/" | strings.TrimPrefix "night-content/" -}}
+  {{- if ne (path.Ext $path) ".md" -}}
+    {{- $included := true -}}
+    {{- range $hidden }}{{ if strings.HasPrefix $path . }}{{ $included = false }}{{ end }}{{ end -}}
+    {{- if $included -}}
+      {{- $.AddResource (dict "path" $path "content" (dict "mediaType" .MediaType.Type "value" $source.Content)) -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

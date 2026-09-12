@@ -17,7 +17,7 @@
     "pages" $pages
     "pager" $pager
     "listId" $listId
-    "buildId" (hugo.Data.night_build.buildId | default "")
+    "buildId" (partial "data/build-id.html" .)
     "count" (len $pages)
     "currentURL" $pager.URL
   -}}

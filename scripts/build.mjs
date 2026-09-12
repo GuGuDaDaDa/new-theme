@@ -1,10 +1,9 @@
-/** Two-pass Hugo build coordinator; all commands run through this pipeline. */
-import { mkdir, rename } from 'node:fs/promises';
+/** Maintainer asset compilation and native Hugo example-site build. */
+import { mkdir, mkdtemp, rename } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { load } from 'cheerio';
 import { buildAssets } from './build-assets.mjs';
-import { prepareContent } from './prepare-content.mjs';
 import { validateOutput } from './validate-output.mjs';
 import {
   json,
@@ -70,7 +69,10 @@ export function excerpt(text, limit) {
   const chars = Array.from(text);
   return chars.length > limit ? `${chars.slice(0, limit - 1).join('')}…` : text;
 }
-/** Build a complete input and output snapshot. @param {{development?: boolean, projectRoot?: string, clock?: Date, baseURL?: string, forbiddenMarkers?: string[]}} options - Build mode, optional isolated inputs and deployment URL. @returns {Promise<object>} Hugo server configuration and output locations. */
+/** Build the example site or an isolated consumer using the native Hugo theme.
+ * @param {{development?: boolean, projectRoot?: string, clock?: Date, baseURL?: string, forbiddenMarkers?: string[]}} options - Build options.
+ * @returns {Promise<object>} Published output and Hugo invocation details.
+ */
 export async function buildSite({
   development = false,
   projectRoot = root,
@@ -82,155 +84,80 @@ export async function buildSite({
   if (!(clock instanceof Date) || !Number.isFinite(clock.getTime()))
     throw new TypeError('clock must be a valid Date');
   checkNodeVersion();
+  const example = sourceRoot === resolveProjectRoot(root);
+  const siteRoot = example ? path.join(sourceRoot, 'exampleSite') : sourceRoot;
+  const themeRoot = example
+    ? sourceRoot
+    : path.join(sourceRoot, 'themes/night-theme');
   const siteURL = resolveBaseURL({ baseURL, development });
-  const generated = path.join(sourceRoot, '.generated');
-  const staging = path.join(
-    sourceRoot,
-    '.build',
-    `staging-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  );
-  await mkdir(path.dirname(staging), { recursive: true });
-  await removeGenerated(staging, sourceRoot);
-  let metadata;
-  try {
-    metadata = await prepareContent(staging, clock, sourceRoot);
-    await buildAssets(staging, development, sourceRoot);
-  } catch (error) {
-    await removeGenerated(staging, sourceRoot).catch(() => {});
-    throw error;
-  }
-  const mounts = [
-    { source: '.generated/content', target: 'content' },
-    ...['data', 'assets', 'static'].flatMap((dir) => [
-      { source: dir, target: dir },
-      { source: `.generated/${dir}`, target: dir },
-    ]),
-    ...['layouts', 'i18n', 'archetypes'].map((dir) => ({
-      source: dir,
-      target: dir,
-    })),
-  ];
-  const baseConfig = {
-    contentDir: '.generated/content',
-    baseURL: siteURL,
-    module: { mounts },
-    params: { localPreview: true },
-  };
-  const finalConfig = path.join(generated, 'final.json');
-  const prepareConfig = path.join(generated, 'prepare.json');
-  await json(path.join(staging, 'final.json'), baseConfig);
-  await json(path.join(staging, 'prepare.json'), {
-    ...baseConfig,
-    outputs: { home: ['Prepare'] },
-  });
-
-  const backupGenerated = path.join(
-    sourceRoot,
-    '.build',
-    `backup-gen-${Date.now()}`,
-  );
-  let hadGenerated = false;
-  try {
-    await rename(generated, backupGenerated);
-    hadGenerated = true;
-  } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
-  }
-  try {
-    await rename(staging, generated);
-  } catch (error) {
-    if (hadGenerated) await rename(backupGenerated, generated).catch(() => {});
-    await removeGenerated(staging, sourceRoot).catch(() => {});
-    throw error;
-  }
-  if (hadGenerated) {
-    await removeGenerated(backupGenerated, sourceRoot).catch(() => {});
-  }
-  const workspace = path.join(sourceRoot, '.build', metadata.buildId);
-  await mkdir(path.dirname(workspace), { recursive: true });
-  await removeGenerated(workspace, sourceRoot);
-  const prepareDestination = path.join(workspace, 'prepare');
+  await buildAssets(themeRoot, development, themeRoot);
+  const workspace = path.join(sourceRoot, '.build');
+  await mkdir(workspace, { recursive: true });
+  const finalConfig = path.join(workspace, 'config.json');
+  await json(finalConfig, { baseURL: siteURL, params: { localPreview: true } });
+  const staging = await mkdtemp(path.join(workspace, 'site-'));
   const commonArgs = [
-    '--clock',
-    metadata.buildTime,
+    '--source',
+    siteRoot,
+    '--themesDir',
+    example ? path.dirname(sourceRoot) : path.join(sourceRoot, 'themes'),
+    '--config',
+    `hugo.toml,${finalConfig}`,
     '--cacheDir',
-    path.join(sourceRoot, '.build/cache'),
+    path.join(workspace, 'cache'),
   ];
-  await run(
-    'hugo',
-    [
-      '--config',
-      `hugo.toml,${prepareConfig}`,
-      '--environment',
-      'prepare',
-      '--destination',
-      prepareDestination,
-      ...commonArgs,
-    ],
-    sourceRoot,
-  );
-  const source = await readJson(path.join(prepareDestination, 'prepare.json'));
-  const text = {};
-  for (const post of source.posts) {
-    const summaryText =
-      post.description?.trim() || cleanText(post.summary, true);
-    const normalizedPath = post.path.split('\\').join('/');
-    const entry = {
-      summaryText,
-      cardExcerpt: excerpt(summaryText, 110),
-      heroExcerpt: excerpt(summaryText, 60),
-      content: cleanText(post.content),
-    };
-    text[post.path] = entry;
-    text[normalizedPath] = entry;
-  }
-  await json(path.join(generated, 'data/night_text.json'), text);
-  const destination = path.join(workspace, 'site');
-  await run(
-    'hugo',
-    [
-      '--config',
-      `hugo.toml,${finalConfig}`,
-      '--environment',
-      development ? 'development' : 'local',
-      '--destination',
-      destination,
-      '--minify',
-      ...commonArgs,
-    ],
-    sourceRoot,
-  );
-  await validateOutput(destination, { forbiddenMarkers });
-  if (!development) {
+  try {
+    await run(
+      'hugo',
+      [
+        ...commonArgs,
+        '--clock',
+        clock.toISOString(),
+        '--environment',
+        development ? 'development' : 'local',
+        '--destination',
+        staging,
+        '--minify',
+      ],
+      sourceRoot,
+    );
+    await validateOutput(staging, { forbiddenMarkers });
+    const index = await readJson(path.join(staging, 'index.json'));
     const publicDir = path.join(sourceRoot, 'public');
-    const backup = path.join(sourceRoot, '.build/previous-public');
-    await removeGenerated(backup, sourceRoot);
-    await mkdir(path.dirname(backup), { recursive: true });
-    let hadPrevious = false;
-    try {
-      await rename(publicDir, backup);
-      hadPrevious = true;
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
+    if (!development) {
+      const backup = path.join(workspace, 'previous-public');
+      await removeGenerated(backup, sourceRoot);
+      let hadPrevious = false;
+      try {
+        await rename(publicDir, backup);
+        hadPrevious = true;
+      } catch (error) {
+        if (error.code !== 'ENOENT') throw error;
+      }
+      try {
+        await rename(staging, publicDir);
+      } catch (error) {
+        if (hadPrevious) await rename(backup, publicDir);
+        throw error;
+      }
+      await removeGenerated(backup, sourceRoot);
     }
-    try {
-      await rename(destination, publicDir);
-    } catch (error) {
-      if (hadPrevious) await rename(backup, publicDir);
-      throw error;
-    }
-    await removeGenerated(backup, sourceRoot);
+    return {
+      finalConfig,
+      commonArgs,
+      projectRoot: sourceRoot,
+      metadata: {
+        buildId: index.buildId,
+        buildTime: clock.toISOString(),
+        schemaVersion: 1,
+      },
+      destination: development ? staging : publicDir,
+      publicDir,
+    };
+  } catch (error) {
+    await removeGenerated(staging, sourceRoot);
+    throw error;
   }
-  return {
-    finalConfig,
-    prepareConfig,
-    metadata,
-    commonArgs,
-    projectRoot: sourceRoot,
-    prepareDestination,
-    destination,
-    publicDir: path.join(sourceRoot, 'public'),
-  };
 }
 
 if (

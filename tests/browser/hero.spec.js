@@ -10,7 +10,7 @@ import { buildSite } from '../../scripts/build.mjs';
 const projectRoot = process.cwd();
 const coverSource = path.join(
   projectRoot,
-  'content/posts/post-3/bryce-canyon.jpg',
+  'exampleSite/content/posts/post-3/bryce-canyon.jpg',
 );
 let fixtureRoot;
 let fixtureBaseURL;

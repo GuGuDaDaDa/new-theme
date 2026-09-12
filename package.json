@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "node scripts/dev.mjs",
     "build": "node scripts/build.mjs",
+    "build:assets": "node scripts/build-assets.mjs",
     "preview": "node scripts/preview.mjs",
     "lint": "eslint assets/js scripts tests eslint.config.js playwright.config.js --max-warnings=0",
     "format": "prettier --write README.md package.json package-lock.json .prettierrc.json hugo.toml netlify.toml eslint.config.js playwright.config.js 'archetypes/**/*.md' 'assets/**/*.{css,js}' 'data/**/*.{json,yaml,yml}' 'docs/cycles/**/*.md' docs/README.md docs/validation.md 'layouts/**/*.{html,json,xml}' 'scripts/**/*.{js,mjs}' 'tests/**/*.{js,mjs,json}'",

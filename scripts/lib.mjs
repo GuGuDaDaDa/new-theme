@@ -41,12 +41,22 @@ function resolveManagedTarget(file) {
 export function run(command, args, projectRoot = root) {
   const cwd = resolveProjectRoot(projectRoot);
   return new Promise((resolve, reject) => {
-    const child = spawn(command, args, { cwd, stdio: 'inherit' });
+    const child = spawn(command, args, {
+      cwd,
+      stdio: ['ignore', 'inherit', 'pipe'],
+    });
+    let diagnostics = '';
+    child.stderr.on('data', (chunk) => {
+      diagnostics += chunk;
+      process.stderr.write(chunk);
+    });
     child.once('error', reject);
     child.once('exit', (code, signal) =>
       code === 0
         ? resolve()
-        : reject(new Error(`${command} exited: ${code ?? signal}`)),
+        : reject(
+            new Error(`${command} exited: ${code ?? signal}\n${diagnostics}`),
+          ),
     );
   });
 }

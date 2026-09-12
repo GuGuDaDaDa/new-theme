@@ -1,0 +1,86 @@
+{{- $data := .data -}}
+{{- $path := .path -}}
+{{- $post := and (strings.HasPrefix $path "posts/") (ne (path.Base $path) "_index.md") -}}
+{{- if isset $data "_night" }}
+  {{ errorf "%s: _night: reserved field" $path }}
+{{ end -}}
+{{- range slice "title" "description" "summary" "cover" "cover_alt" -}}
+  {{- if and (isset $data .) (ne (printf "%T" (index $data .)) "string") -}}
+    {{- errorf "%s: %s: expected a string" $path . -}}
+  {{- end -}}
+{{- end -}}
+{{- if and $post (not (strings.TrimSpace ($data.title | default ""))) -}}
+  {{- errorf "%s: title: required for posts" $path -}}
+{{- end -}}
+{{- if and (isset $data "title") (eq (printf "%T" $data.title) "string") (not (strings.TrimSpace $data.title)) }}
+  {{ errorf "%s: title: must be a non-empty string" $path }}
+{{ end -}}
+{{- if and $post (not (isset $data "date")) }}
+  {{ errorf "%s: date: required for posts" $path }}
+{{ end -}}
+{{- range slice "featured" "draft" "toc" -}}
+  {{- if and (isset $data .) (ne (printf "%T" (index $data .)) "bool") -}}
+    {{- errorf "%s: %s: expected a boolean" $path . -}}
+  {{- end -}}
+{{- end -}}
+{{- if not (isset $data "toc") }}
+  {{ $data = merge $data (dict "toc" true) }}
+{{ end -}}
+{{- $dates := dict -}}
+{{- range slice "date" "created" "publishDate" "expiryDate" "lastmod" -}}
+  {{- $field := . -}}
+  {{- if isset $data $field -}}
+    {{- $value := index $data $field -}}
+    {{- if ne (printf "%T" $value) "time.Time" -}}
+      {{- if not (findRE `^\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})$` (printf "%v" $value)) -}}
+        {{- errorf "%s: %s: expected a datetime with timezone" $path $field -}}
+      {{- end -}}
+    {{- end -}}
+    {{- with try (time.AsTime $value) -}}
+      {{- with .Err -}}
+        {{- errorf "%s: %s: invalid datetime: %s" $path $field . -}}
+      {{- else -}}
+        {{- $dates = merge $dates (dict $field .Value) -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $date := $dates.date | default .clock -}}
+{{- $created := $dates.created | default $date -}}
+{{- $published := $dates.publishDate | default $date -}}
+{{- $lastmod := $dates.lastmod | default $date -}}
+{{- $public := and (not $data.draft) (le $date .clock) (le $published .clock) -}}
+{{- with $dates.expiryDate }}
+  {{ $public = and $public (gt . $.clock) }}
+{{ end -}}
+{{- $tags := slice -}}
+{{- if isset $data "tags" -}}
+  {{- if not (reflect.IsSlice $data.tags) -}}
+    {{- errorf "%s: tags: expected an array of strings" $path -}}
+  {{- else -}}
+    {{- range $data.tags -}}
+      {{- if ne (printf "%T" .) "string" -}}
+        {{- errorf "%s: tags: expected an array of strings" $path -}}
+      {{- else -}}
+        {{- $label := strings.TrimSpace . -}}
+        {{- if and $label (not (in $tags $label)) }}
+          {{ $tags = $tags | append $label }}
+        {{ end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $position := "50% 50%" -}}
+{{- if isset $data "cover_position" -}}
+  {{- $position = $data.cover_position -}}
+  {{- $parts := split (replaceRE `\s+` " " (strings.TrimSpace (printf "%v" $position))) " " -}}
+  {{- $valid := and (eq (printf "%T" $position) "string") (eq (len $parts) 2) -}}
+  {{- range $parts }}
+    {{ $valid = and $valid (gt (len (findRE `^(100(\.0+)?|\d{1,2}(\.\d+)?)%$` .)) 0) }}
+  {{ end -}}
+  {{- if not $valid }}
+    {{ errorf "%s: cover_position: expected two 0-100%% coordinates" $path }}
+  {{ end -}}
+{{- end -}}
+{{- $data = merge $data (dict "cover_position" $position) -}}
+{{- return (dict "data" $data "content" .content "path" $path "post" $post "public" $public "date" $date "created" $created "published" $published "lastmod" $lastmod "dates" $dates "tags" $tags "day" (time.Format "2006-01-02" $date.Local)) -}}

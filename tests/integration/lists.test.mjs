@@ -2,12 +2,21 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { load } from 'cheerio';
 import { buildBoundarySite, removeBoundarySite } from '../helpers/site.mjs';
 import { files, readJson, root } from '../../scripts/lib.mjs';
-import { hash } from '../../scripts/prepare-content.mjs';
+
+/**
+ * Hash a stable route or term value.
+ * @param {string} value - Value to hash.
+ * @returns {string} SHA-256 digest.
+ */
+function hash(value) {
+  return createHash('sha256').update(value).digest('hex');
+}
 
 const fixture = await readJson(
   path.join(root, 'tests/fixtures/lists/site.json'),

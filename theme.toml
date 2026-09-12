@@ -1,0 +1,6 @@
+name = 'Night Theme'
+description = '中文阅读型 Hugo 主题，预编译前端资源，使用端无需 Node。'
+min_version = '0.165.0'
+
+[author]
+name = 'GuGuDaDa'

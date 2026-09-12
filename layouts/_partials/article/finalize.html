@@ -3,7 +3,7 @@
 {{- $notes := .Store.GetSortedMapValues "night-notes" -}}
 {{- $containers := .Store.GetSortedMapValues "night-refers" | default (slice) -}}
 {{- if gt (len $containers) 1 -}}
-  {{- errorf "Only one refers container is allowed (%s)" .File.Path -}}
+  {{- errorf "Only one refers container is allowed (%s)" .Params._night.sourcePath -}}
 {{- end -}}
 {{- $seen := slice -}}
 {{- range $notes -}}
@@ -28,7 +28,7 @@
 {{- end -}}
 {{- range $refs -}}
   {{- if not (in $seen .num) -}}
-    {{- errorf "fnref %s has no refer target (%s)" .num $.File.Path -}}
+    {{- errorf "fnref %s has no refer target (%s)" .num $.Params._night.sourcePath -}}
   {{- end -}}
 {{- end -}}
 {{- return ($body | safeHTML) -}}

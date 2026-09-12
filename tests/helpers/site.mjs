@@ -9,21 +9,15 @@ const fixtureDefinition = path.join(
   root,
   'tests/fixtures/boundaries/site.json',
 );
-const templateDirectories = [
+const themeDirectories = [
   'archetypes',
   'assets',
   'data',
   'i18n',
   'layouts',
-  'scripts',
   'static',
 ];
-const templateFiles = [
-  '.nvmrc',
-  'hugo.toml',
-  'package.json',
-  'package-lock.json',
-];
+const themeFiles = ['hugo.toml', 'theme.toml'];
 
 /** Validate and resolve a fixture content path. @param {string} fixtureRoot - Isolated project root. @param {string} relative - Relative content path from the fixture declaration. @returns {string} Absolute content path. */
 function contentPath(fixtureRoot, relative) {
@@ -64,12 +58,34 @@ export async function createBoundarySite({
   const fixtureParent = path.join(root, '.build', 'fixtures');
   await mkdir(fixtureParent, { recursive: true });
   const fixtureRoot = await mkdtemp(path.join(fixtureParent, `${name}-`));
-  for (const directory of templateDirectories)
-    await cp(path.join(root, directory), path.join(fixtureRoot, directory), {
+  const themeRoot = path.join(fixtureRoot, 'themes', 'night-theme');
+  await mkdir(themeRoot, { recursive: true });
+  for (const directory of themeDirectories)
+    await cp(path.join(root, directory), path.join(themeRoot, directory), {
       recursive: true,
     });
-  for (const file of templateFiles)
-    await cp(path.join(root, file), path.join(fixtureRoot, file));
+  for (const file of themeFiles)
+    await cp(path.join(root, file), path.join(themeRoot, file));
+  await cp(
+    path.join(root, 'content/_content.gotmpl'),
+    path.join(themeRoot, 'content/_content.gotmpl'),
+  );
+
+  const siteConfig = await readFile(
+    path.join(root, 'exampleSite/hugo.toml'),
+    'utf8',
+  );
+  await writeFile(
+    path.join(fixtureRoot, 'hugo.toml'),
+    siteConfig.replace(/^\s*themesDir\s*=.*(?:\r?\n|$)/m, ''),
+  );
+  await cp(
+    path.join(root, 'exampleSite/data'),
+    path.join(fixtureRoot, 'data'),
+    {
+      recursive: true,
+    },
+  );
 
   const source = definition ?? (await readJson(fixtureDefinition));
   if (!Array.isArray(source.content))
@@ -96,7 +112,11 @@ export async function createBoundarySite({
           throw new TypeError(
             `Fixture ${groupName} entries require path and source text`,
           );
-        const target = path.resolve(fixtureRoot, entry.path);
+        const base =
+          groupName === 'assets' && entry.path.startsWith('assets/')
+            ? themeRoot
+            : fixtureRoot;
+        const target = path.resolve(base, entry.path);
         const outside = path.relative(fixtureRoot, target);
         if (outside.startsWith('..') || path.isAbsolute(outside))
           throw new Error(

@@ -1,0 +1,28 @@
+{{- $friends := hugo.Data.friends | default (slice) -}}
+{{- if and (isset hugo.Data "friends") (not (reflect.IsSlice hugo.Data.friends)) -}}
+  {{- errorf "data/friends.yaml: expected an array" -}}
+{{- else -}}
+  {{- range $index, $friend := $friends -}}
+    {{- $label := printf "data/friends.yaml entry %d" (add $index 1) -}}
+    {{- if not (reflect.IsMap $friend) -}}
+      {{- errorf "%s: expected an object" $label -}}
+    {{- else -}}
+      {{- range slice "name" "url" "avatar" "description" -}}
+        {{- $field := . -}}
+        {{- $required := in (slice "name" "url") $field -}}
+        {{- if or $required (isset $friend $field) -}}
+          {{- $value := index $friend $field -}}
+          {{- if or (ne (printf "%T" $value) "string") (and $required (not (strings.TrimSpace (printf "%v" $value)))) -}}
+            {{- errorf "%s: %s must be a %sstring" $label $field (cond $required "non-empty " "") -}}
+          {{- else if in (slice "url" "avatar") $field -}}
+            {{- $local := and (eq $field "avatar") (or (eq $value "") (findRE `^/[^/]` $value)) -}}
+            {{- if and (not $local) (not (findRE `^https?://[^\s/?#]+(?:[/?#][^\s]*)?$` $value)) -}}
+              {{- errorf "%s: %s must use http or https%s" $label $field (cond (eq $field "avatar") " or a site-root path" "") -}}
+            {{- end -}}
+          {{- end -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- return $friends -}}

@@ -1,0 +1,56 @@
+{{- /* Only identify the front matter boundary; Hugo decodes its values. */ -}}
+{{- $source := strings.TrimPrefix "\ufeff" .source -}}
+{{- $header := "" -}}
+{{- $body := $source -}}
+{{- $format := "yaml" -}}
+{{- $data := dict -}}
+{{- if or (strings.HasPrefix $source "---") (strings.HasPrefix $source "+++") -}}
+  {{- $lines := split $source "\n" -}}
+  {{- $opening := strings.TrimSuffix "\r" (index $lines 0) -}}
+  {{- $delimiter := $opening -}}
+  {{- if eq $opening "+++" }}{{ $format = "toml" }}{{ end -}}
+  {{- if eq $opening "---json" }}
+    {{ $format = "json" }}{{ $delimiter = "---" }}
+  {{ end -}}
+  {{- $offset := add (strings.RuneCount (index $lines 0)) 1 -}}
+  {{- $closed := false -}}
+  {{- range after 1 $lines -}}
+    {{- if eq (strings.TrimSuffix "\r" .) $delimiter -}}
+      {{- $offset = add $offset (add (strings.RuneCount .) 1) -}}
+      {{- $closed = true -}}
+      {{- break -}}
+    {{- end -}}
+    {{- $header = printf "%s%s\n" $header . -}}
+    {{- $offset = add $offset (add (strings.RuneCount .) 1) -}}
+  {{- end -}}
+  {{- if not $closed }}{{ errorf "%s: unclosed frontmatter" .path }}{{ end -}}
+  {{- $body = substr $source (math.Min $offset (strings.RuneCount $source) | int) -}}
+  {{- if strings.TrimSpace $header -}}
+    {{- $data = transform.Unmarshal (dict "format" $format) $header -}}
+  {{- end -}}
+{{- else if strings.HasPrefix $source "{" -}}
+  {{- /* A JSON object can span lines; the JSON decoder decides its end. */ -}}
+  {{- $offset := 0 -}}
+  {{- $closed := false -}}
+  {{- range split $source "\n" -}}
+    {{- $header = printf "%s%s\n" $header . -}}
+    {{- $offset = add $offset (add (strings.RuneCount .) 1) -}}
+    {{- if strings.HasSuffix (strings.TrimSpace .) "}" -}}
+      {{- with try (transform.Unmarshal (dict "format" "json") $header) -}}
+        {{- if not .Err -}}
+          {{- $data = .Value -}}
+          {{- $closed = true -}}
+        {{- end -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $closed }}{{ break }}{{ end -}}
+  {{- end -}}
+  {{- if not $closed }}
+    {{ errorf "%s: invalid JSON frontmatter" .path }}
+  {{ end -}}
+  {{- $body = substr $source (math.Min $offset (strings.RuneCount $source) | int) -}}
+{{- end -}}
+{{- if not (reflect.IsMap $data) }}
+  {{ errorf "%s: frontmatter must be an object" .path }}
+{{ end -}}
+{{- return (dict "data" $data "content" $body) -}}

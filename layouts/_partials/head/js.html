@@ -1,3 +1,5 @@
 {{ with hugo.Data.night_assets }}
   <script type="module" src="{{ .main | relURL }}"></script>
+{{ else }}
+  {{ errorf "Night Theme release is missing data/night_assets.json; install a complete theme release." }}
 {{ end }}

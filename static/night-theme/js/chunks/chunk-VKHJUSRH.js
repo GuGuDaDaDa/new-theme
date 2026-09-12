@@ -1,0 +1,1 @@
+var e;function o(){if(!e){let t=document.querySelector("script[data-i18n]");e=t?JSON.parse(t.textContent):{}}return e}function u(t,n={}){return(o()[t]??t).replace(/\{(\w+)\}/g,(c,r)=>String(n[r]??""))}export{u as a};

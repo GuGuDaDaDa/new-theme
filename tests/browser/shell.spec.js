@@ -379,7 +379,7 @@ test('configuration hides unresolved pages and unsafe social links', async () =>
       'utf8',
     ),
   );
-  const config = `${await readFile(path.join(projectRoot, 'hugo.toml'), 'utf8')}
+  const config = `${await readFile(path.join(projectRoot, 'exampleSite/hugo.toml'), 'utf8')}
 [params.social]
 github = 'javascript:alert(1)'
 twitter = 'https://example.com/night-theme'

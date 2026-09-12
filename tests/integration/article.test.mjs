@@ -232,7 +232,7 @@ test('cached article body evaluates once and stays isolated by page', async () =
       {
         path: 'layouts/posts/page.html',
         source:
-          '{{ define "main" }}{{ $context := dict "page" . }}{{ $first := partialCached "article/body.html" $context .File.Path .RelPermalink hugo.Data.night_build.buildId }}{{ $second := partialCached "article/body.html" $context .File.Path .RelPermalink hugo.Data.night_build.buildId }}<article data-first>{{ $first }}</article><article data-second>{{ $second }}</article>{{ end }}',
+          '{{ define "main" }}{{ $context := dict "page" . }}{{ $first := partialCached "article/body.html" $context .Params._night.sourcePath .RelPermalink (partial "data/build-id.html" .) }}{{ $second := partialCached "article/body.html" $context .Params._night.sourcePath .RelPermalink (partial "data/build-id.html" .) }}<article data-first>{{ $first }}</article><article data-second>{{ $second }}</article>{{ end }}',
       },
     ],
   };

@@ -1,7 +1,7 @@
 {{ define "main" }}
   {{- $view := partial "data/post-view.html" . -}}
   {{- $context := dict "page" . "view" $view -}}
-  {{- $body := partialCached "article/body.html" $context .File.Path .RelPermalink hugo.Data.night_build.buildId -}}
+  {{- $body := partialCached "article/body.html" $context .Params._night.sourcePath .RelPermalink (partial "data/build-id.html" .) -}}
   <article class="reading" data-article>
     {{ partial "article/header.html" $context }}
     {{ with $view.cover.url }}

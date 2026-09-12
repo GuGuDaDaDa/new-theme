@@ -37,7 +37,7 @@
   {{- end -}}
   {{- $noref = eq $value "true" -}}
 {{- end -}}
-{{- $id := printf "night-note-%s-%s" .Page.File.UniqueID $num -}}
+{{- $id := printf "night-note-%s-%s" .Page.Params._night.sourceId $num -}}
 {{- $placeholder := printf `<span data-night-backlinks="%s" data-search-exclude></span>` $id -}}
 {{- .Page.Store.SetInMap "night-notes" (partial "data/shortcode-key.html" .) (dict "num" $num "noref" $noref "placeholder" $placeholder "position" (printf "%s" .Position)) -}}
 <li class="fn-item" id="{{ $id }}" tabindex="-1">

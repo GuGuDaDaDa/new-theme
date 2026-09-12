@@ -111,7 +111,7 @@ test.beforeAll(async () => {
   });
   fixtureRoot = fixture.projectRoot;
   await cp(
-    path.join(projectRoot, 'content/posts/post-3/bryce-canyon.jpg'),
+    path.join(projectRoot, 'exampleSite/content/posts/post-3/bryce-canyon.jpg'),
     path.join(fixtureRoot, 'content/posts/horizontal-cover/cover.jpg'),
   );
   const build = await buildSite({

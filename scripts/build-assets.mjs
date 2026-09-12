@@ -1,8 +1,9 @@
 /** Tailwind CLI and esbuild resource compilation. */
 import { build } from 'esbuild';
 import path from 'node:path';
-import { mkdir } from 'node:fs/promises';
-import { json, root, resolveProjectRoot, run } from './lib.mjs';
+import { pathToFileURL } from 'node:url';
+import { mkdir, readdir, unlink } from 'node:fs/promises';
+import { json, root, run } from './lib.mjs';
 
 /** Compile CSS and split ES modules into generated inputs. @param {string} generated - Generated directory. @param {boolean} development - Emit source maps when true. @param {string} projectRoot - Project root containing source assets. @returns {Promise<void>} Completion. */
 export async function buildAssets(
@@ -10,7 +11,7 @@ export async function buildAssets(
   development = false,
   projectRoot = root,
 ) {
-  const sourceRoot = resolveProjectRoot(projectRoot);
+  const sourceRoot = path.resolve(projectRoot);
   await mkdir(path.join(generated, 'assets/css'), { recursive: true });
   await run(
     process.execPath,
@@ -24,10 +25,11 @@ export async function buildAssets(
     ],
     sourceRoot,
   );
+  const outputDir = path.join(generated, 'static/night-theme/js');
   const result = await build({
     absWorkingDir: sourceRoot,
     entryPoints: ['assets/js/main.js'],
-    outdir: path.join(generated, 'static/js'),
+    outdir: outputDir,
     nodePaths: [path.join(root, 'node_modules')],
     bundle: true,
     splitting: true,
@@ -44,6 +46,30 @@ export async function buildAssets(
   );
   if (!entry) throw new Error('esbuild did not emit main entry');
   await json(path.join(generated, 'data/night_assets.json'), {
-    main: `js/${path.basename(entry[0])}`,
+    main: `night-theme/js/${path.basename(entry[0])}`,
   });
+  // Only remove obsolete compiler outputs inside this dedicated asset directory.
+  const emitted = new Set(
+    Object.keys(result.metafile.outputs).map((file) =>
+      path.resolve(sourceRoot, file),
+    ),
+  );
+  for (const directory of [outputDir, path.join(outputDir, 'chunks')]) {
+    for (const file of await readdir(directory, { withFileTypes: true })) {
+      const target = path.join(directory, file.name);
+      if (
+        file.isFile() &&
+        /\.js(?:\.map)?$/.test(file.name) &&
+        !emitted.has(target)
+      )
+        await unlink(target);
+    }
+  }
+}
+
+if (
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(process.argv[1]).href
+) {
+  await buildAssets(root, false, root);
 }

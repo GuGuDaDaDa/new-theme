@@ -4,6 +4,7 @@ node_modules/
 .build/
 public/
 resources/_gen/
+exampleSite/resources/
 .hugo_build.lock
 .env
 .env.*
@@ -19,4 +20,3 @@ docs/
 .agent/
 .codex/
 AGENTS.md
-

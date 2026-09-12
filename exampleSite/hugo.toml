@@ -1,5 +1,8 @@
+baseURL = 'http://localhost:4173/'
+theme = 'night-theme'
 locale = 'zh-CN'
 defaultContentLanguage = 'zh'
+title = 'BuGuLog'
 timeZone = 'Asia/Shanghai'
 hasCJKLanguage = true
 summaryLength = 100
@@ -34,6 +37,31 @@ expiryDate = ['expiryDate']
 [module.hugoVersion]
 min = '0.165.0'
 extended = true
+
+# Feed author content to the adapter without generating duplicate native pages.
+[[module.mounts]]
+source = 'content'
+target = 'assets/night-content'
+[[module.mounts]]
+source = 'content'
+target = 'content'
+files = ['! **']
+[[module.mounts]]
+source = 'assets'
+target = 'assets'
+
 [params]
+description = '记录技术实践、游戏体验与个人观察。'
+footerText = '海雾深处，字字为灯'
+author = 'GuGuDaDa'
 defaultSocialImage = ''
 googleAnalytics = ''
+[menus]
+[[menus.main]]
+name = '关于'
+pageRef = '/about'
+weight = 10
+[[menus.main]]
+name = '友链'
+pageRef = '/friends'
+weight = 20

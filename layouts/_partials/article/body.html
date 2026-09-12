@@ -4,4 +4,4 @@
   {{- $page = .page -}}
   {{- with .output }}{{ $output = . }}{{ end -}}
 {{- end -}}
-{{- return (partialCached "article/finalize.html" $page $page.File.UniqueID $output hugo.Data.night_build.buildId) -}}
+{{- return (partialCached "article/finalize.html" $page $page.Params._night.sourceId $output (partial "data/build-id.html" $page)) -}}

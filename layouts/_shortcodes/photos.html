@@ -1,6 +1,6 @@
 {{- $inner := .Inner -}}
 {{- $photos := .Store.GetSortedMapValues "photos" -}}
-{{- $id := printf "night-photos-%s-%d" .Page.File.UniqueID .Ordinal -}}
+{{- $id := printf "night-photos-%s-%d" .Page.Params._night.sourceId .Ordinal -}}
 {{- if not $photos -}}
   {{- warnf "Empty photos omitted (%s, %s)" .Position $id -}}
 {{- else -}}

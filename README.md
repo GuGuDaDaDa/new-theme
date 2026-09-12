@@ -4,60 +4,87 @@ BuGuLog 的 Hugo 主题：面向中文技术记录与个人随笔的阅读型博
 
 - [需求文档](docs/requirements.md)：功能范围、业务规则与验收条件。
 - [技术文档](docs/tech-spec.md)：架构、数据与组件合同、构建管线。
-- [设计规范](../design/DESIGN-SPEC.md)：视觉、布局与交互基线。
+- [设计规范](../../design/DESIGN-SPEC.md)：视觉、布局与交互基线。
 - [验证记录](docs/validation.md)：各轮实际执行的命令与结果。
 
-## 1. 如何使用
+## 1. 安装到 Hugo 站点
 
-本仓库是**自包含站点**，不是可以直接拷进别的站点 `themes/` 目录的通用主题：`scripts/build.mjs` 用 Hugo `module.mounts` 把本目录的 `layouts`、`assets`、`static`、`i18n`、`data`、`archetypes` 和生成目录 `.generated/content` 一起挂载给 Hugo，`scripts/lib.mjs` 也把工程根限制在本目录内。
+将完整主题放入站点的 `themes/night-theme/`。使用者只需 **Hugo extended >=0.165.0**，不需要 Node、npm 或 `node_modules`。
 
-因此使用方式就是：把仓库放在本机，直接在 `content/` 写 Markdown、在 `hugo.toml` 改配置，用下面的 npm 脚本开发和构建。不要直接运行 `hugo`——缺少生成资源时会得到不完整的站点。
+从 [exampleSite/hugo.toml](exampleSite/hugo.toml) 复制站点配置到自己的 `hugo.toml`，修改域名、标题、作者和菜单。主题通过 Hugo 内容适配器保留日期过滤和大小写敏感标签规则，以下挂载配置必须保留：
 
-## 2. 环境要求
+```toml
+theme = 'night-theme'
 
-| 依赖    | 版本                                              | 说明                                                                                     |
-| ------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| Hugo    | `extended`（实测 `v0.165.0+extended+withdeploy`） | 系统安装，不由 npm 下载；最低版本与 extended 由 `hugo.toml` 的 `module.hugoVersion` 强制 |
-| Node.js | `>=22.19.0`（实测 `v26.7.0`）                     | 最低版本写在 `package.json` 的 `engines`；`.nvmrc` 是维护者实测版本，不是硬性要求        |
-| npm     | 随 Node                                           | 依赖锁定在 `package-lock.json`                                                           |
+[[module.mounts]]
+source = 'content'
+target = 'assets/night-content'
 
-样式用 Tailwind CSS v4 CLI 编译，脚本用 esbuild 打包原生 ESM；没有 TypeScript、Vite 或 Webpack，也不使用 CDN。
+[[module.mounts]]
+source = 'content'
+target = 'content'
+files = ['! **']
 
-## 3. 快速开始
+[[module.mounts]]
+source = 'assets'
+target = 'assets'
+```
+
+第一项让适配器读取作者内容，第二项防止原始 Markdown 被 Hugo 重复生成，第三项保留站点自己的 assets。主题的适配器仍从主题目录加载。不要将原始 content 同时作为普通 Hugo 页面输入。
+
+在自己的站点根目录运行：
+
+```sh
+hugo server
+hugo --minify
+```
+
+文章写在站点 `content/posts/`；关于页、友链页和 `data/friends.yaml` 由站点自己提供。主题不会自动注入示例内容。第一次配置可参考 `exampleSite/`，也可以复制其文章和资源体验功能。
+
+`hugo server` 下修改已有文章会立即生效，删除文章在自身触发的重建中生效；新建文章要再触发一次重建（保存任意其他内容）才会进入内容适配器，这是 Hugo v0.165.0 对挂载到 `assets` 的文件的索引时机，重启开发服务会立刻看到。`hugo --minify` 等完整构建每次重新读取全部输入，不受影响。
+
+## 2. 无 Node 预览本仓库
+
+在主题根目录运行：
+
+```sh
+hugo server --source exampleSite --themesDir ../..
+hugo --source exampleSite --themesDir ../.. --destination ../public --minify
+```
+
+前端产物已随主题提供：`assets/css/compiled.css`、`static/night-theme/js/` 和 `data/night_assets.json`。不要从主题发布包中排除这些文件。内容过滤、标签、摘要和搜索索引都在 Hugo 内完成，不需要 `.generated` 或预处理命令。
+
+## 3. 主题维护者工具
+
+只有修改主题 CSS/JS 源码、增加 Tailwind 工具类或运行测试时才需要 Node >=22.19.0 和 npm：
 
 ```sh
 npm ci
-npm run dev
+npm run build:assets  # 更新预编译 CSS、JS 与入口清单
+npm run dev           # 前端资源监听 + Hugo 原生内容监听
+npm run build         # 编译资源、构建 exampleSite、校验并替换 public
+npm run preview       # 本地提供 public，http://localhost:4173/
 ```
 
-开发地址 http://localhost:1313/。`dev` 先完成内容准备和资源编译，再启动 Hugo 服务，并监听 `content/`、`assets/`、`layouts/`、`data/`、`static/`、`i18n/`、`scripts/`、`hugo.toml` 与 `package-lock.json`；变更后串行重建并重启服务，浏览器手动刷新，终端 Ctrl+C 停止。构建错误显示在终端，修好源文件后自动重试。
+修改前端后，将源码和重新编译的产物一起提交。普通用户新增文章无需编译 Tailwind；覆盖模板时新增未包含的工具类，需要额外 CSS 或重新编译主题资源。依赖版本由 package-lock.json 锁定，Fuse.js 本地按需加载，不使用 CDN。
 
-```sh
-npm run build    # 生成生产构建，产物写入 public/
-npm run preview  # 用本地 HTTP 服务托管 public/，地址 http://localhost:4173/
-```
+## 4. 目录与职责
 
-`build` 的流程是：校验工具链版本 → 校验并准备内容 → 编译 Tailwind 与 esbuild 资源 → 两遍 Hugo 构建（先 prepare 提取摘要与搜索正文，再输出最终站点）→ 校验产物 → 原子替换 `public/`。构建失败时旧 `public/` 保持不变。`preview` 不重新构建，因此需要先执行过 `npm run build`。
+| 路径                                               | 用途                                 |
+| -------------------------------------------------- | ------------------------------------ |
+| `layouts/`、`i18n/`、`archetypes/`                 | 主题模板、外壳文案、文章模板         |
+| `content/_content.gotmpl`                          | 内容适配器，负责过滤及注册页面和资源 |
+| `assets/css/`、`assets/js/`                        | 前端源码及预编译 CSS                 |
+| `static/night-theme/js/`、`data/night_assets.json` | 随主题发布的 ESM 分块及入口          |
+| `hugo.toml`、`theme.toml`                          | 主题默认配置与元数据                 |
+| `exampleSite/`                                     | 示例站点配置、文章、图片和友链       |
+| `scripts/`、`tests/`                               | 维护者工具和检查                     |
 
-## 4. 目录结构
-
-作者维护：
-
-| 路径                      | 用途                                                                                      |
-| ------------------------- | ----------------------------------------------------------------------------------------- |
-| `content/`                | 文章与独立页面；文章使用 `content/posts/<名字>/index.md` 的 page bundle，图片放在同一目录 |
-| `data/friends.yaml`       | 友链条目                                                                                  |
-| `hugo.toml`               | 站点配置、菜单、`params`、taxonomy、分页与输出格式                                        |
-| `assets/css`、`assets/js` | 设计令牌、组件样式与脚本源码                                                              |
-| `layouts/`                | Hugo 模板、partials、render hooks、shortcodes                                             |
-| `i18n/zh-CN.toml`         | 主题外壳文案                                                                              |
-| `archetypes/`             | `hugo new` 使用的 frontmatter 模板                                                        |
-
-受管生成目录，不要手工编辑或提交：`.generated/`（派生内容与数据）、`.build/`（未完成构建与缓存）、`public/`（已完成的生产构建）、`test-results/`、`node_modules/`。
+`.build/`、`public/`、`resources/_gen/`、`test-results/`、`node_modules/` 是本地产物，不随主题发布。旧版本的 `.generated/` 已不被使用。
 
 ## 5. 站点配置
 
-`hugo.toml` 的关键项：
+使用者站点 `hugo.toml` 的关键项：
 
 | 配置                                | 作用                                             |
 | ----------------------------------- | ------------------------------------------------ |
@@ -105,7 +132,7 @@ email = 'mailto:you@example.com'
 hugo new content posts/my-note/index.md
 ```
 
-命令按 `archetypes/` 中的模板生成草稿 frontmatter（当前 Hugo 版本对 `content/posts/<名字>/index.md` 取 `archetypes/default.md`）；把图片一起放进 `content/posts/my-note/`，正文里用相对文件名引用。
+命令按主题 `archetypes/` 中的模板生成草稿 frontmatter；把图片一起放进 `content/posts/my-note/`，正文里用相对文件名引用。
 
 ### Frontmatter
 
@@ -195,23 +222,18 @@ hugo new content posts/my-note/index.md
 
 首次运行浏览器测试需要 `npx playwright install chromium`；下载不可用时设置 `PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH` 指向本机 Chromium，`playwright.config.js` 已配置兼容回退。验证记录需注明实际使用的浏览器版本。
 
-已记录的结果见 [docs/validation.md](docs/validation.md)：`npm run check` 与浏览器套件在 Chromium 通过，视觉核对覆盖 1440px 与 390px 的浅色／深色组合以及 320–1920px 的溢出检查。Firefox、WebKit/Safari、真实触摸设备与屏幕阅读器尚未实测，不要把 Chromium 结果当作跨浏览器承诺。
+本次迁移的实际结果见 [验证记录](docs/agent-work/hugo-native/VERIFICATION.md)。历史验证不能代替本次 Hugo 原生构建的验收；未运行的浏览器或人工检查会明确标注。
 
 ## 11. 部署
 
-`public/` 是完整的静态产物，可以交给任意静态服务器或静态托管平台。部署域名通过 `NIGHT_BASE_URL` 注入：构建脚本按「`buildSite({ baseURL })` 选项 → `NIGHT_BASE_URL` 环境变量 → 本地默认值」的顺序解析，结果会写进 canonical、`og:url`、结构化数据、sitemap 与站内绝对链接。未注入时使用本地地址（`http://localhost:4173/`），不要直接用默认值发布；注入值必须是 http/https 绝对 URL，末尾斜杠可省略。本轮只支持部署在域名根路径，带路径的 baseURL（例如 `https://example.com/blog/`）会让输出校验按根路径解析站内链接而报 ENOENT 失败，子路径部署留待后续需求。
+在使用者站点中配置正式 `baseURL`，直接运行 `hugo --minify`，将生成的 `public/` 发布到静态服务器。应在干净的专用输出目录构建，避免已删除、转草稿或过期文章的旧 HTML 残留；Hugo 本身不会提供维护者 Node 包装命令的校验后原子替换。
 
-Netlify 步骤：
+本仓库的 `netlify.toml` 用 Hugo 构建 exampleSite，发布 public，无 Node 前置命令。部署前配置正确的站点 baseURL（也可用 Hugo 标准 `HUGO_BASEURL` 环境变量）；`NIGHT_BASE_URL` 仅适用于维护者 npm 包装命令。当前支持域名根路径，子路径部署未纳入本次合同。
 
-1. 连接 Git 仓库，或本地执行 `npx netlify deploy --dir=public`。
-2. 仓库已提供 `netlify.toml`：构建命令 `npm ci && npm run build`，发布目录 `public`，并固定 `HUGO_VERSION=0.165.0`、`NODE_VERSION=24`。
-3. 在站点配置的环境变量里添加 `NIGHT_BASE_URL=https://你的域名/`。
-4. 触发部署后访问正式域名，并在页面源码中确认 canonical 与 `og:url` 已指向该域名。
-
-构建不部署、不上传；`params.googleAnalytics` 只是预留，构建脚本固定使用 `local`／`development` 环境且 `params.localPreview=true`，部署后也不会加载统计脚本。
+原生生产构建仅在配置了有效 `params.googleAnalytics` 且 baseURL 非本地地址时输出统计脚本；默认空值不加载。维护者 npm 构建固定 local/development 环境并设置 localPreview。构建不会自动部署或上传。
 
 ## 12. 相关文档
 
 - [需求文档](docs/requirements.md) · [技术文档](docs/tech-spec.md) · [产品验证记录](docs/validation.md) · [文档索引](docs/README.md)
-- [设计规范](../design/DESIGN-SPEC.md) · [首页样稿](../design/index.html) · [文章样稿](../design/article.html)
+- [设计规范](../../design/DESIGN-SPEC.md) · [首页样稿](../../design/index.html) · [文章样稿](../../design/article.html)
 - [开发周期](docs/cycles/README.md)
