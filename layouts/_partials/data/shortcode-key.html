@@ -1,0 +1,5 @@
+{{- $key := printf "%010d" .Ordinal -}}
+{{- with .Parent -}}
+  {{- $key = printf "%s-%s" (partial "data/shortcode-key.html" .) $key -}}
+{{- end -}}
+{{- return $key -}}

@@ -13,5 +13,10 @@
         >{{ index . 3 | plainify | htmlUnescape }}</a
       >
     {{- end }}
+    {{- with .page.Store.GetSortedMapValues "night-refers" }}
+      {{- range . }}
+        <a href="#night-notes-{{ $.page.File.UniqueID }}">{{ .title }}</a>
+      {{- end }}
+    {{- end }}
   </aside>
 {{- end -}}

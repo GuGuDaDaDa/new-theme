@@ -1,1 +1,112 @@
-/** notices: scaffold reserved for tech-spec implementation. */
+/* AI reading notices keep their text visible without enhancement. */
+.prose .ai-summary,
+.prose .ai-warning {
+  margin: 26px 0;
+  padding: 16px 20px;
+  background: var(--soft);
+  border-radius: 2px;
+  color: var(--text);
+  font-size: 17px;
+  line-height: 1.72;
+}
+
+.prose .ai-summary > :last-child,
+.prose .ai-warning > :last-child,
+.prose .ai-summary-content > :last-child,
+.prose .ai-warning-content > :last-child {
+  margin-bottom: 0;
+}
+
+.prose .ai-summary > summary {
+  display: list-item;
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.prose .ai-summary > summary:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.prose .ai-summary-content,
+.prose .ai-warning-content {
+  margin-top: 10px;
+}
+
+.prose .ai-summary-content > :first-child,
+.prose .ai-warning-content > :first-child {
+  margin-top: 0;
+}
+
+.prose .ai-warning {
+  position: relative;
+  padding-right: 58px;
+}
+
+.prose .ai-warning-title {
+  margin: 0 0 8px;
+  color: var(--accent);
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0;
+}
+
+.prose .ai-warning-close.close-dialog {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--muted);
+  box-shadow: none;
+}
+
+.prose .ai-warning-close[hidden] {
+  display: none;
+}
+
+.prose .ai-warning-close.close-dialog:hover {
+  background: transparent;
+  color: var(--accent);
+}
+
+.prose .ai-warning-close.close-dialog svg {
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: auto;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.prose .ai-warning-close.close-dialog:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+@media (max-width: 768px) {
+  .prose .ai-summary,
+  .prose .ai-warning {
+    margin: 22px 0;
+    padding: 15px 16px;
+    font-size: 16px;
+    line-height: 1.65;
+  }
+
+  .prose .ai-warning {
+    padding-right: 52px;
+  }
+
+  .prose .ai-warning-close.close-dialog {
+    top: 10px;
+    right: 10px;
+  }
+}

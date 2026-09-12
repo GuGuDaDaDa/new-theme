@@ -97,6 +97,38 @@ export function init(root) {
       heroCleanup();
     });
   }
+  for (const [selector, loader] of [
+    [
+      '[data-reference]',
+      () =>
+        import('../components/references.js').then(
+          (module) => module.initReferences,
+        ),
+    ],
+    [
+      '[data-ai-warning]',
+      () =>
+        import('../components/notices.js').then((module) => module.initNotices),
+    ],
+  ]) {
+    if (!root.querySelector(selector)) continue;
+    let disposed = false;
+    let componentCleanup = () => {};
+    loader()
+      .then((initialize) => {
+        if (!disposed) componentCleanup = initialize(root);
+      })
+      .catch((error) => {
+        console.error(
+          'Night Theme reading extension initialization failed.',
+          error,
+        );
+      });
+    cleanups.push(() => {
+      disposed = true;
+      componentCleanup();
+    });
+  }
   root.documentElement.dataset.js = 'ready';
 
   const cleanup = () => {

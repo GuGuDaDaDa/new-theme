@@ -1,1 +1,18 @@
-{{ errorf "Shortcode %s is reserved in this scaffold and is not implemented yet (%s)" .Name .Position }}
+{{- $num := printf "%v" (.Get 0) -}}
+{{- if not (findRE `^[1-9][0-9]*$` $num) -}}
+  {{- errorf "fnref number %q must be a positive integer (%s)" $num .Position -}}
+{{- else -}}
+  {{- $ordinal := partial "data/shortcode-key.html" . -}}
+  {{- $id := printf "night-ref-%s-%s-%s" .Page.File.UniqueID $num $ordinal -}}
+  {{- .Page.Store.SetInMap "night-refs" $ordinal (dict "num" $num "id" $id) -}}
+  <sup data-search-exclude
+    ><a
+      class="note-ref"
+      data-reference
+      href="#night-note-{{ .Page.File.UniqueID }}-{{ $num }}"
+      id="{{ $id }}"
+      aria-label="查看引用 {{ $num }}"
+      >[{{ $num }}]</a
+    ></sup
+  >
+{{- end -}}

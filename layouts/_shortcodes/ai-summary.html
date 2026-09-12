@@ -1,1 +1,6 @@
-{{ errorf "Shortcode %s is reserved in this scaffold and is not implemented yet (%s)" .Name .Position }}
+<details class="ai-summary" data-ai-summary>
+  <summary data-search-exclude>AI 摘要</summary>
+  <div class="ai-summary-content">
+    {{ .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML }}
+  </div>
+</details>

@@ -1,1 +1,16 @@
-{{ errorf "Shortcode %s is reserved in this scaffold and is not implemented yet (%s)" .Name .Position }}
+{{- $title := .Get "title" | default "参考文献与注释" -}}
+{{- .Page.Store.SetInMap "night-refers" (partial "data/shortcode-key.html" .) (dict "title" $title "position" (printf "%s" .Position)) -}}
+{{- $inner := .Inner -}}
+<section
+  class="footnotes"
+  id="night-notes-{{ .Page.File.UniqueID }}"
+  data-references
+>
+  <h2 class="footnotes-title">
+    <span class="fn-icon" aria-hidden="true" data-search-exclude>¶</span
+    >{{ $title }}
+  </h2>
+  <ol class="footnotes-list">
+    {{ $inner }}
+  </ol>
+</section>

@@ -1,0 +1,32 @@
+{{- $body := .Content -}}
+{{- $refs := .Store.GetSortedMapValues "night-refs" -}}
+{{- $notes := .Store.GetSortedMapValues "night-notes" -}}
+{{- $containers := .Store.GetSortedMapValues "night-refers" -}}
+{{- if gt (len $containers) 1 -}}
+  {{- errorf "Only one refers container is allowed (%s)" .File.Path -}}
+{{- end -}}
+{{- $seen := slice -}}
+{{- range $notes -}}
+  {{- if in $seen .num -}}
+    {{- errorf "Duplicate refer number %s (%s)" .num .position -}}
+  {{- end -}}
+  {{- $seen = $seen | append .num -}}
+  {{- $links := slice -}}
+  {{- $num := .num -}}
+  {{- range $refs -}}
+    {{- if eq .num $num -}}
+      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="返回引用 %s，第 %d 处" data-search-exclude>↩%d</a>` .id $num (add (len $links) 1) (add (len $links) 1)) -}}
+    {{- end -}}
+  {{- end -}}
+  {{- if and (not .noref) (not $links) -}}
+    {{- errorf "refer %s has no fnref; set noref=true for additional reading (%s)" .num .position -}}
+  {{- end -}}
+  {{- if .noref }}{{ $links = slice }}{{ end -}}
+  {{- $body = replace $body .placeholder (delimit $links " ") -}}
+{{- end -}}
+{{- range $refs -}}
+  {{- if not (in $seen .num) -}}
+    {{- errorf "fnref %s has no refer target (%s)" .num $.File.Path -}}
+  {{- end -}}
+{{- end -}}
+{{- return ($body | safeHTML) -}}

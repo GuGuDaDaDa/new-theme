@@ -1,1 +1,74 @@
-{{ errorf "Shortcode %s is reserved in this scaffold and is not implemented yet (%s)" .Name .Position }}
+{{- $num := printf "%v" (.Get "num") -}}
+{{- if not (findRE `^[1-9][0-9]*$` $num) -}}
+  {{- errorf "refer num %q must be a positive integer (%s)" $num .Position -}}
+{{- end -}}
+{{- if not .Parent -}}
+  {{- errorf "refer %s requires a refers parent (%s)" $num .Position -}}
+{{- else if ne .Parent.Name "refers" -}}
+  {{- errorf "refer %s requires a refers parent (%s)" $num .Position -}}
+{{- end -}}
+{{- if isset .Params "desc" -}}
+  {{- errorf "refer %s does not support desc; use Markdown body (%s)" $num .Position -}}
+{{- end -}}
+{{- $source := "" -}}
+{{- if isset .Params "source" }}{{ $source = .Get "source" }}{{ end -}}
+{{- $url := "" -}}
+{{- if isset .Params "url" }}{{ $url = .Get "url" }}{{ end -}}
+{{- if ne (printf "%T" $source) "string" -}}
+  {{- errorf "refer %s source must be plain text (%s)" $num .Position -}}
+{{- end -}}
+{{- if ne (printf "%T" $url) "string" -}}
+  {{- errorf "refer %s url must be an HTTPS URL (%s)" $num .Position -}}
+{{- else if $url -}}
+  {{- if not (findRE `^https://[^\s/?#]+(?:[/?#][^\s]*)?$` $url) -}}
+    {{- errorf "refer %s url must be an HTTPS URL (%s)" $num .Position -}}
+  {{- else -}}
+    {{- $parsed := urls.Parse $url -}}
+    {{- if or (not $parsed.Hostname) $parsed.User -}}
+      {{- errorf "refer %s url requires a host and no credentials (%s)" $num .Position -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}
+{{- $noref := false -}}
+{{- if isset .Params "noref" -}}
+  {{- $value := printf "%v" (.Get "noref") -}}
+  {{- if not (in (slice "true" "false") $value) -}}
+    {{- errorf "refer %s noref must be true or false (%s)" $num .Position -}}
+  {{- end -}}
+  {{- $noref = eq $value "true" -}}
+{{- end -}}
+{{- $id := printf "night-note-%s-%s" .Page.File.UniqueID $num -}}
+{{- $placeholder := printf `<span data-night-backlinks="%s" data-search-exclude></span>` $id -}}
+{{- .Page.Store.SetInMap "night-notes" (partial "data/shortcode-key.html" .) (dict "num" $num "noref" $noref "placeholder" $placeholder "position" (printf "%s" .Position)) -}}
+<li class="fn-item" id="{{ $id }}" tabindex="-1">
+  <span class="fn-item-num" data-search-exclude>[{{ $num }}]</span>
+  <div>
+    <div data-reference-content>
+      {{- with $source -}}
+        {{- if $url }}
+          <a
+            class="fn-item-link"
+            href="{{ $url }}"
+            rel="noopener noreferrer"
+            target="_blank"
+            >{{ . }}</a
+          >
+        {{- else }}
+          <span class="fn-item-link">{{ . }}</span>
+        {{ end -}}
+        {{- " " -}}
+      {{- end -}}
+      {{- .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML -}}
+      {{- with $url }}
+        <a
+          class="fn-source"
+          href="{{ . }}"
+          rel="noopener noreferrer"
+          target="_blank"
+          >{{ . }}</a
+        >
+      {{ end -}}
+    </div>
+    {{ $placeholder | safeHTML }}
+  </div>
+</li>
