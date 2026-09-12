@@ -4,6 +4,7 @@ import { initHeader } from '../components/header.js';
 import { initTheme } from '../components/theme.js';
 import { initInputMode } from './input-mode.js';
 import { initReadingMedia } from '../components/reading-media.js';
+import { initSearch } from '../components/search.js';
 
 const instances = new WeakMap();
 
@@ -17,7 +18,7 @@ export function init(root) {
   if (existing) return existing;
 
   const cleanups = [];
-  for (const initializer of [initInputMode, initTheme, initHeader]) {
+  for (const initializer of [initInputMode, initTheme, initHeader, initSearch]) {
     try {
       cleanups.push(initializer(root));
     } catch (error) {
