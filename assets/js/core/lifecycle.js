@@ -116,6 +116,13 @@ export function init(root) {
       () =>
         import('../components/notices.js').then((module) => module.initNotices),
     ],
+    [
+      '[data-spoiler]',
+      () =>
+        import('../components/spoiler.js').then(
+          (module) => module.initSpoilers,
+        ),
+    ],
   ]) {
     if (!root.querySelector(selector)) continue;
     let disposed = false;

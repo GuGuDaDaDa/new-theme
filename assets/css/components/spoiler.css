@@ -1,0 +1,64 @@
+/* Spoiler text stays covered until the reader reveals it. */
+.spoiler {
+  padding: 0.1em 0.25em;
+  border-radius: 2px;
+  background-color: var(--spoiler-cover);
+  color: transparent;
+  box-decoration-break: clone;
+  -webkit-box-decoration-break: clone;
+}
+
+.spoiler * {
+  opacity: 0;
+}
+
+.spoiler[role='button'] {
+  cursor: pointer;
+}
+
+.spoiler:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 4px;
+}
+
+.spoiler:focus-visible,
+.spoiler[data-spoiler-state='shown'] {
+  background-color: transparent;
+  color: inherit;
+}
+
+.spoiler:focus-visible *,
+.spoiler[data-spoiler-state='shown'] * {
+  opacity: 1;
+}
+
+@media (hover: hover) {
+  .spoiler:hover {
+    background-color: transparent;
+    color: inherit;
+  }
+
+  .spoiler:hover * {
+    opacity: 1;
+  }
+}
+
+/* An explicit hide wins over hover and keyboard focus. */
+.spoiler[data-spoiler-state='hidden'] {
+  background-color: var(--spoiler-cover);
+  color: transparent;
+}
+
+.spoiler[data-spoiler-state='hidden'] * {
+  opacity: 0;
+}
+
+/* Without scripting the text stays readable instead of covered forever. */
+@media (scripting: none) {
+  .spoiler,
+  .spoiler * {
+    background-color: transparent;
+    color: inherit;
+    opacity: 1;
+  }
+}

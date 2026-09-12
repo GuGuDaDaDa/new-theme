@@ -44,6 +44,8 @@ function browserDefinition() {
         '',
         '文字承担说明，图片承担观察。它们不需要争夺注意力。',
         '',
+        '最后一段藏着一个 {{< spoiler >}}被黑色方块遮住的答案{{< /spoiler >}}，先自己猜一猜。',
+        '',
       ].join('\n');
     }
   }
@@ -463,4 +465,142 @@ test('article footer and navigation keep the reading column and stack on mobile'
   expect(narrow.documentWidth).toBeLessThanOrEqual(narrow.viewport);
   expect(narrow.navOverflow).toBeLessThanOrEqual(0);
   expect(narrow.titleInsideCard).toBe(true);
+});
+
+test('spoiler text stays covered until hover, click, tap, or keyboard activation', async ({
+  page,
+  browser,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+  const spoiler = page.locator('.spoiler');
+  await expect(spoiler).toHaveAttribute('role', 'button');
+  await expect(spoiler).toHaveAttribute('tabindex', '0');
+  await expect(spoiler).toHaveAttribute('aria-expanded', 'false');
+  await expect(spoiler).not.toHaveAttribute('data-spoiler-state', /.+/);
+  const styles = await spoiler.evaluate((element) => {
+    const style = globalThis.getComputedStyle(element);
+    return {
+      background: style.backgroundColor,
+      color: style.color,
+      cursor: style.cursor,
+    };
+  });
+  expect(styles.background).toBe('rgb(13, 17, 23)');
+  expect(styles.color).toBe('rgba(0, 0, 0, 0)');
+  expect(styles.cursor).toBe('pointer');
+
+  // A fine pointer reveals the text only while it hovers the cover.
+  await spoiler.hover();
+  await expect(spoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await expect(spoiler).toHaveCSS('color', 'rgb(37, 43, 52)');
+  await page.mouse.move(0, 0);
+  await expect(spoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+
+  // Clicking pins the revealed state and pins the covered state back.
+  await spoiler.click();
+  await expect(spoiler).toHaveAttribute('data-spoiler-state', 'shown');
+  await expect(spoiler).toHaveAttribute('aria-expanded', 'true');
+  await expect(spoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await spoiler.click();
+  await expect(spoiler).toHaveAttribute('data-spoiler-state', 'hidden');
+  await expect(spoiler).toHaveAttribute('aria-expanded', 'false');
+  // The explicit hide wins over the pointer that is still over the cover.
+  await expect(spoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await spoiler.click();
+  await expect(spoiler).toHaveAttribute('data-spoiler-state', 'shown');
+
+  // Keyboard users reveal and hide with Enter and Space.
+  await page.reload();
+  await spoiler.focus();
+  await page.keyboard.press('Enter');
+  await expect(spoiler).toHaveAttribute('data-spoiler-state', 'shown');
+  await page.keyboard.press(' ');
+  await expect(spoiler).toHaveAttribute('data-spoiler-state', 'hidden');
+  await page.keyboard.press('Enter');
+  await expect(spoiler).toHaveAttribute('data-spoiler-state', 'shown');
+
+  // Touch devices have no hover, so a tap is the only reveal.
+  const touchContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  const touchPage = await touchContext.newPage();
+  await touchPage.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+  const touchSpoiler = touchPage.locator('.spoiler');
+  expect(
+    await touchPage.evaluate(
+      () => globalThis.matchMedia('(hover: hover)').matches,
+    ),
+  ).toBe(false);
+  await expect(touchSpoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await touchSpoiler.tap();
+  await expect(touchSpoiler).toHaveAttribute('aria-expanded', 'true');
+  await expect(touchSpoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+  await touchSpoiler.tap();
+  await expect(touchSpoiler).toHaveAttribute('aria-expanded', 'false');
+  await expect(touchSpoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await touchContext.close();
+
+  // Without scripting the text must stay readable instead of covered forever.
+  const noScriptContext = await browser.newContext({
+    javaScriptEnabled: false,
+  });
+  const noScriptPage = await noScriptContext.newPage();
+  await noScriptPage.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+  const noScriptStyles = await noScriptPage
+    .locator('.spoiler')
+    .evaluate((element) => {
+      const style = globalThis.getComputedStyle(element);
+      return { background: style.backgroundColor, color: style.color };
+    });
+  expect(noScriptStyles).toEqual({
+    background: 'rgba(0, 0, 0, 0)',
+    color: 'rgb(37, 43, 52)',
+  });
+  await noScriptContext.close();
+});
+
+test('spoiler cover keeps the reading column in both themes and viewports', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const screenshotDir = path.join(
+    projectRoot,
+    'docs/agent-work/spoiler/screenshots',
+  );
+  await mkdir(screenshotDir, { recursive: true });
+  for (const [width, height, size] of [
+    [1440, 1000, 'desktop'],
+    [390, 844, 'mobile'],
+  ]) {
+    await page.setViewportSize({ width, height });
+    for (const theme of ['light', 'dark']) {
+      await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
+      await setTheme(page, theme);
+      const spoiler = page.locator('.spoiler');
+      const geometry = await spoiler.evaluate((element) => ({
+        documentWidth: globalThis.document.documentElement.scrollWidth,
+        viewport: globalThis.innerWidth,
+        coverHeight: element.getBoundingClientRect().height,
+        paragraphHeight: element.closest('p').getBoundingClientRect().height,
+        padding: globalThis.getComputedStyle(element).padding,
+      }));
+      expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
+      expect(geometry.coverHeight).toBeLessThan(geometry.paragraphHeight);
+      expect(geometry.padding).toBe(width > 768 ? '1.7px 4.25px' : '1.6px 4px');
+      await spoiler.scrollIntoViewIfNeeded();
+      await page.screenshot({
+        path: path.join(screenshotDir, `spoiler-${size}-${theme}.png`),
+        fullPage: true,
+      });
+      if (size !== 'desktop' || theme !== 'light') continue;
+      await spoiler.hover();
+      await expect(spoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+      await spoiler
+        .locator('xpath=..')
+        .screenshot({ path: path.join(screenshotDir, 'spoiler-revealed.png') });
+    }
+  }
 });

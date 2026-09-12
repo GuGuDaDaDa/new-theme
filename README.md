@@ -184,9 +184,13 @@ hugo new content posts/my-note/index.md
 
 {{< ai-summary >}}作者手写的摘要，默认折叠。{{< /ai-summary >}}
 {{< ai-warning title="透明声明" >}}AI 辅助声明，默认展开且可关闭。{{< /ai-warning >}}
+
+{{< spoiler >}}默认被黑色方块遮住的文字{{< /spoiler >}}
 ```
 
 约束：`photo.src` 必须是 bundle 内资源或 HTTPS 地址，`photos` 为空时省略并给出构建警告；`fnref` 为正整数，`refer.num` 必填且同页唯一，`url` 只接受 HTTPS，编号重复、缺少被引用条目或非 `noref` 条目无人引用都会构建报错。
+
+`spoiler` 位于正文行内，桌面悬停显示、点击固定显示／隐藏，移动端点击切换；无 JS 时文字直接可读，遮罩文字不进入搜索索引与卡片摘要。
 
 ## 8. 界面功能
 
@@ -197,6 +201,7 @@ hugo new content posts/my-note/index.md
 - **目录**：`toc` 为 true、正文至少 3 个 H2 且视口宽于 1100px 时显示右侧目录，否则不保留空栏。
 - **图片**：单图点击打开灯箱，图片墙支持点击翻页、方向键与触摸横滑。
 - **引用**：正文角标悬停或聚焦显示预览，手机点击打开底部面板，文末保留可回跳的条目。
+- **剧透**：`{{< spoiler >}}` 包裹的行内文字默认被黑色方块遮盖，桌面悬停显示、点击固定或隐藏，移动端点击切换，键盘 Enter／Space 切换。
 - **搜索**：导航按钮打开弹窗并聚焦输入框，按需加载 Fuse.js 与 `/index.json`，150ms 防抖，每批 20 条，Escape 与关闭按钮退出并把焦点交回入口。
 - **主题**：单按钮循环「浅色 → 深色 → 跟随系统」，手动选择存入 localStorage，首次绘制前确定主题避免闪色。
 - **其他**：关于页（`content/about/index.md`，支持 `avatar`、`description` 与页内覆盖社交字段）、友链页（`data/friends.yaml`，`name` 与 `url` 为必填字符串，`url` 只接受 http/https，`avatar` 可选 http/https 或站内根路径，另有可选 `description`）、404 页含搜索入口、文章页 SEO（canonical、OG、Twitter Card、JSON-LD、sitemap）。

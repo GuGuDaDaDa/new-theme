@@ -164,6 +164,125 @@ test('public collection keeps only eligible posts and excludes hidden bundles', 
   }
 });
 
+test('spoiler shortcode covers inline text without leaking it into search or summaries', async () => {
+  const clock = '2026-09-10T00:00:00Z';
+  const fixture = await createBoundarySite({
+    name: 'spoiler-shortcode',
+    definition: {
+      clock,
+      content: [
+        { path: '_index.md', source: '---\ntitle: Home\n---\n' },
+        { path: 'posts/_index.md', source: '---\ntitle: Posts\n---\n' },
+        {
+          path: 'posts/spoiler-post/index.md',
+          source: [
+            '---',
+            'title: Spoiler Post',
+            'date: 2026-09-09T00:00:00Z',
+            '---',
+            'The answer is {{< spoiler >}}**forty-two**{{< /spoiler >}} and that is final.',
+            '',
+          ].join('\n'),
+        },
+      ],
+    },
+  });
+
+  try {
+    const res = await buildSite({
+      projectRoot: fixture.projectRoot,
+      clock: fixture.clock,
+    });
+    const $ = load(
+      await readFile(
+        path.join(res.publicDir, 'posts/spoiler-post/index.html'),
+        'utf8',
+      ),
+    );
+    const spoiler = $('.spoiler');
+    // Server markup carries the cover hook and the search exclusion, nothing else
+    assert.equal(spoiler.length, 1);
+    assert.equal(spoiler.attr('data-spoiler'), '');
+    assert.equal(spoiler.attr('data-search-exclude'), '');
+    assert.equal(spoiler.attr('role'), undefined);
+    assert.equal(spoiler.attr('tabindex'), undefined);
+    assert.equal(spoiler.attr('aria-expanded'), undefined);
+    // Inner text keeps inline Markdown
+    assert.equal(spoiler.children('strong').length, 1);
+    assert.equal(spoiler.text(), 'forty-two');
+
+    const indexJson = await readJson(path.join(res.publicDir, 'index.json'));
+    const postInIndex = indexJson.posts.find(
+      (p) => p.url === '/posts/spoiler-post/',
+    );
+    assert.ok(postInIndex);
+    assert.ok(postInIndex.content.includes('The answer is'));
+    assert.equal(postInIndex.content.includes('forty-two'), false);
+
+    const home = load(
+      await readFile(path.join(res.publicDir, 'index.html'), 'utf8'),
+    );
+    const cardText = home('.post-copy').text();
+    assert.ok(cardText.includes('The answer is'));
+    assert.equal(cardText.includes('forty-two'), false);
+  } finally {
+    await removeBoundarySite(fixture.projectRoot);
+  }
+});
+
+test('spoiler shortcode rejects empty text and unsupported parameters', async () => {
+  const clock = '2026-09-10T00:00:00Z';
+  const fixture = await createBoundarySite({
+    name: 'spoiler-errors',
+    definition: {
+      clock,
+      content: [
+        { path: '_index.md', source: '---\ntitle: Home\n---\n' },
+        { path: 'posts/_index.md', source: '---\ntitle: Posts\n---\n' },
+        {
+          path: 'posts/spoiler-post/index.md',
+          source: [
+            '---',
+            'title: Spoiler Post',
+            'date: 2026-09-09T00:00:00Z',
+            '---',
+            'Empty {{< spoiler >}}{{< /spoiler >}} body.',
+            '',
+          ].join('\n'),
+        },
+      ],
+    },
+  });
+  const postPath = path.join(
+    fixture.projectRoot,
+    'content/posts/spoiler-post/index.md',
+  );
+
+  try {
+    await assert.rejects(
+      buildSite({ projectRoot: fixture.projectRoot, clock: fixture.clock }),
+      /spoiler requires inline text/,
+    );
+    await writeFile(
+      postPath,
+      [
+        '---',
+        'title: Spoiler Post',
+        'date: 2026-09-09T00:00:00Z',
+        '---',
+        'Parameterised {{< spoiler colour="red" >}}text{{< /spoiler >}} body.',
+        '',
+      ].join('\n'),
+    );
+    await assert.rejects(
+      buildSite({ projectRoot: fixture.projectRoot, clock: fixture.clock }),
+      /spoiler does not accept parameters/,
+    );
+  } finally {
+    await removeBoundarySite(fixture.projectRoot);
+  }
+});
+
 test('direct content input preserves UTF-8 BOM, CRLF, and body whitespace', async () => {
   const body = '\ufeff正文\r\n  trailing spaces  \r\n';
   const fixture = await createBoundarySite({

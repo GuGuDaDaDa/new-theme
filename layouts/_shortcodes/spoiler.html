@@ -1,0 +1,10 @@
+{{- if .Params -}}
+  {{- errorf "spoiler does not accept parameters (%s)" .Position -}}
+{{- end -}}
+{{- $inner := strings.TrimSpace .Inner -}}
+{{- if not $inner -}}
+  {{- errorf "spoiler requires inline text (%s)" .Position -}}
+{{- end -}}
+<span class="spoiler" data-spoiler data-search-exclude
+  >{{ .Page.RenderString (dict "display" "inline") $inner }}</span
+>
