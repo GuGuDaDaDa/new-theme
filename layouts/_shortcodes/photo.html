@@ -1,1 +1,32 @@
-{{ errorf "Shortcode %s is reserved in this scaffold and is not implemented yet (%s)" .Name .Position }}
+{{- if not .Parent -}}
+  {{- errorf "photo requires a photos parent (%s, photo %d)" .Position .Ordinal -}}
+{{- else if ne .Parent.Name "photos" -}}
+  {{- errorf "photo requires a photos parent (%s, photo %d)" .Position .Ordinal -}}
+{{- else -}}
+  {{- $src := strings.TrimSpace (.Get "src" | default "") -}}
+  {{- if not $src -}}
+    {{- errorf "photo src is required (%s, photos %d, photo %d)" .Position .Parent.Ordinal .Ordinal -}}
+  {{- else -}}
+    {{- $resource := .Page.Resources.GetMatch $src -}}
+    {{- $local := and $resource (not (strings.HasPrefix $src "/")) (not (strings.Contains $src ":")) -}}
+    {{- $remote := false -}}
+    {{- if strings.HasPrefix $src "https://" -}}
+      {{- $url := urls.Parse $src -}}
+      {{- $remote = ne $url.Host "" -}}
+    {{- end -}}
+    {{- if not (or $local $remote) -}}
+      {{- errorf "photo src %q must reference a page image resource or an HTTPS URL (%s, photos %d, photo %d)" $src .Position .Parent.Ordinal .Ordinal -}}
+    {{- else -}}
+      {{- $image := partial "data/article-image.html" (dict "page" .Page "src" $src) -}}
+      {{- if not $image.allowed -}}
+        {{- errorf "photo src %q is not an image (%s, photos %d, photo %d)" $src .Position .Parent.Ordinal .Ordinal -}}
+      {{- else -}}
+        {{- $caption := .Get "caption" | default "" -}}
+        {{- $alt := $caption -}}
+        {{- if isset .Params "alt" }}{{ $alt = .Get "alt" }}{{ end -}}
+        {{- $photo := merge $image (dict "alt" $alt "caption" $caption) -}}
+        {{- .Parent.Store.SetInMap "photos" (printf "%010d" .Ordinal) $photo -}}
+      {{- end -}}
+    {{- end -}}
+  {{- end -}}
+{{- end -}}

@@ -1,1 +1,93 @@
-{{ errorf "Shortcode %s is reserved in this scaffold and is not implemented yet (%s)" .Name .Position }}
+{{- $inner := .Inner -}}
+{{- $photos := .Store.GetSortedMapValues "photos" -}}
+{{- $id := printf "night-photos-%s-%d" .Page.File.UniqueID .Ordinal -}}
+{{- if not $photos -}}
+  {{- warnf "Empty photos omitted (%s, %s)" .Position $id -}}
+{{- else -}}
+  <div class="wide photo-stack-wide">
+    <div
+      class="photo-stack"
+      id="{{ $id }}"
+      data-photo-stack
+      role="region"
+      aria-label="照片墙"
+    >
+      <div class="stack-area">
+        <div class="stack-track" id="{{ $id }}-track">
+          {{- range $photos }}
+            <div class="stack-card">
+              <figure class="photo-print">
+                <a
+                  href="{{ .url }}"
+                  data-lightbox
+                  data-caption="{{ .caption }}"
+                  aria-label="放大图片{{ with .alt }}：{{ . }}{{ end }}"
+                  draggable="false"
+                >
+                  <img
+                    class="photo-image"
+                    src="{{ .url }}"
+                    alt="{{ .alt }}"
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                    {{- if .width }}
+                      width="{{ .width }}" height="{{ .height }}"
+                    {{ end }}
+                    {{- with .srcset }}
+                      srcset="{{ delimit . ", " }}" sizes="(max-width: 480px)
+                      82vw, (max-width: 768px) 72vw, 460px"
+                    {{ end }}
+                  />
+                </a>
+                {{- with .caption }}
+                  <figcaption class="photo-caption">{{ . }}</figcaption>
+                {{ end -}}
+              </figure>
+            </div>
+          {{- end }}
+        </div>
+      </div>
+      {{- if gt (len $photos) 1 }}
+        <button
+          type="button"
+          class="stack-nav prev"
+          data-photo-prev
+          data-search-exclude
+          aria-label="上一张照片"
+          aria-controls="{{ $id }}-track"
+          hidden
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <polyline points="15 4 7 12 15 20"></polyline>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="stack-nav next"
+          data-photo-next
+          data-search-exclude
+          aria-label="下一张照片"
+          aria-controls="{{ $id }}-track"
+          hidden
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <polyline points="9 4 17 12 9 20"></polyline>
+          </svg>
+        </button>
+        <div class="stack-hint" data-photo-hint data-search-exclude hidden>
+          点击桌面翻页 · 左右键切换
+        </div>
+      {{- end }}
+      <div
+        class="stack-counter"
+        data-photo-counter
+        data-search-exclude
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        hidden
+      ></div>
+    </div>
+  </div>
+{{- end -}}

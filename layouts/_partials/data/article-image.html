@@ -1,0 +1,39 @@
+{{- $src := .src -}}
+{{- $resource := .page.Resources.GetMatch .src -}}
+{{- $allowed := false -}}
+{{- with $resource -}}
+  {{- if eq .MediaType.MainType "image" -}}
+    {{- $src = .RelPermalink -}}
+    {{- $allowed = true -}}
+  {{- end -}}
+{{- else -}}
+  {{- if strings.HasPrefix .src "https://" -}}
+    {{- $allowed = true -}}
+  {{- else if and (strings.HasPrefix .src "/") (not (strings.HasPrefix .src "//")) -}}
+    {{- $relative := strings.TrimPrefix "/" .src -}}
+    {{- $allowed = true -}}
+    {{- range split $relative "/" -}}
+      {{- if or (eq . "") (eq . ".") (eq . "..") -}}
+        {{- $allowed = false -}}
+      {{- end -}}
+    {{- end -}}
+    {{- if $allowed }}{{ $src = relURL .src }}{{ end -}}
+  {{- end -}}
+{{- end -}}
+{{- $variants := slice -}}
+{{- $width := 0 -}}
+{{- $height := 0 -}}
+{{- with $resource -}}
+  {{- if in (slice "jpeg" "png" "webp" "gif" "tiff" "bmp") .MediaType.SubType -}}
+    {{- $width = .Width -}}
+    {{- $height = .Height -}}
+    {{- range (slice 480 768 960) -}}
+      {{- if gt $resource.Width . -}}
+        {{- $resized := $resource.Resize (printf "%dx" .) -}}
+        {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
+      {{- end -}}
+    {{- end -}}
+    {{- $variants = $variants | append (printf "%s %dw" .RelPermalink .Width) -}}
+  {{- end -}}
+{{- end -}}
+{{- return (dict "url" $src "allowed" $allowed "width" $width "height" $height "srcset" $variants) -}}

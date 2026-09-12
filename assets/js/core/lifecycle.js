@@ -31,6 +31,21 @@ export function init(root) {
       console.error('Night Theme image initialization failed.', error);
     }
   }
+  if (root.querySelector('[data-photo-stack]')) {
+    let disposed = false;
+    let photosCleanup = () => {};
+    import('../components/photo-stack.js')
+      .then(({ initPhotoStacks }) => {
+        if (!disposed) photosCleanup = initPhotoStacks(root);
+      })
+      .catch((error) => {
+        console.error('Night Theme photo wall initialization failed.', error);
+      });
+    cleanups.push(() => {
+      disposed = true;
+      photosCleanup();
+    });
+  }
   if (root.querySelector('[data-toc]')) {
     let disposed = false;
     let tocCleanup = () => {};

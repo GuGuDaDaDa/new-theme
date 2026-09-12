@@ -1,42 +1,9 @@
-{{- $src := .Destination -}}
-{{- $resource := .Page.Resources.GetMatch .Destination -}}
-{{- $allowed := false -}}
-{{- with $resource -}}
-  {{- if eq .MediaType.MainType "image" -}}
-    {{- $src = .RelPermalink -}}
-    {{- $allowed = true -}}
-  {{- end -}}
-{{- else -}}
-  {{- if strings.HasPrefix .Destination "https://" -}}
-    {{- $allowed = true -}}
-  {{- else if and (strings.HasPrefix .Destination "/") (not (strings.HasPrefix .Destination "//")) -}}
-    {{- $relative := strings.TrimPrefix "/" .Destination -}}
-    {{- $allowed = true -}}
-    {{- range split $relative "/" -}}
-      {{- if or (eq . "") (eq . ".") (eq . "..") -}}
-        {{- $allowed = false -}}
-      {{- end -}}
-    {{- end -}}
-    {{- if $allowed }}{{ $src = relURL .Destination }}{{ end -}}
-  {{- end -}}
-{{- end -}}
-{{- if $allowed -}}
-  {{- $variants := slice -}}
-  {{- $width := 0 -}}
-  {{- $height := 0 -}}
-  {{- with $resource -}}
-    {{- if in (slice "jpeg" "png" "webp" "gif" "tiff" "bmp") .MediaType.SubType -}}
-      {{- $width = .Width -}}
-      {{- $height = .Height -}}
-      {{- range (slice 480 768 960) -}}
-        {{- if gt $resource.Width . -}}
-          {{- $resized := $resource.Resize (printf "%dx" .) -}}
-          {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
-        {{- end -}}
-      {{- end -}}
-      {{- $variants = $variants | append (printf "%s %dw" .RelPermalink .Width) -}}
-    {{- end -}}
-  {{- end -}}
+{{- $image := partial "data/article-image.html" (dict "page" .Page "src" .Destination) -}}
+{{- $src := $image.url -}}
+{{- $width := $image.width -}}
+{{- $height := $image.height -}}
+{{- $variants := $image.srcset -}}
+{{- if $image.allowed -}}
   {{- if .IsBlock }}<figure class="wide">{{ end -}}
   <a href="{{ $src }}" class="{{ if .IsBlock }}image-open{{ else }}image-inline{{ end }}" data-lightbox data-caption="{{ .Title }}" aria-label="放大图片{{ with .PlainText }}：{{ . }}{{ end }}">
     <img src="{{ $src }}" alt="{{ .PlainText }}" loading="lazy" decoding="async"
