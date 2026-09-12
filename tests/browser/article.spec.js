@@ -670,7 +670,7 @@ test('AI notices keep the theme block shape, round controls, and both themes', a
   expect(geometry.cardRadius).toBe('2px');
   expect(geometry.warningRadius).toBe('2px');
   expect(geometry.labelSize).toBe('11px');
-  expect(geometry.labelSpacing).toBe('1.32px');
+  expect(geometry.labelSpacing).toBe('0.88px');
   expect(geometry.summaryContentSize).toBe('13px');
   expect(geometry.warningSize).toBe('12px');
   expect(geometry.warningDisplay).toBe('flex');
@@ -679,7 +679,7 @@ test('AI notices keep the theme block shape, round controls, and both themes', a
   expect(geometry.rowHeight).toBeLessThan(30);
   expect(geometry.headerHeight).toBeGreaterThan(geometry.rowHeight);
   expect(geometry.warningHeight).toBeLessThanOrEqual(60);
-  expect(geometry.warningBodyHeight).toBeLessThan(20);
+  expect(geometry.warningBodyHeight).toBeCloseTo(32, 0);
   expect(geometry.titleIconDelta).toBeLessThan(4);
   expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
 
@@ -738,24 +738,69 @@ test('AI notices keep the theme block shape, round controls, and both themes', a
   expect(violations).toEqual([]);
 });
 
-test('AI notices keep the reference layout without scripting and capture screenshots', async ({
+test('AI notices preserve reading alignment across viewports and without scripting', async ({
   page,
   browser,
 }) => {
   const screenshotDir = path.join(
     projectRoot,
-    'docs/agent-work/ai-notices-refine/screenshots',
+    'docs/agent-work/ai-notices-redesign/screenshots',
   );
   await mkdir(screenshotDir, { recursive: true });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const [width, height, size] of [
     [1440, 1000, 'desktop'],
     [390, 844, 'mobile'],
+    [320, 844, '320'],
+    [360, 844, '360'],
+    [768, 1000, '768'],
+    [1024, 1000, '1024'],
+    [1920, 1000, '1920'],
   ]) {
     await page.setViewportSize({ width, height });
     for (const theme of ['light', 'dark']) {
       await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
       await setTheme(page, theme);
+      const summary = page.locator('details.ai-summary');
+      await summary.screenshot({
+        path: path.join(screenshotDir, `ai-collapsed-${size}-${theme}.png`),
+      });
+      await summary.locator('summary').focus();
+      await page.keyboard.press('Enter');
+      await expect(summary).toHaveAttribute('open', '');
+      await page.keyboard.press('Space');
+      await expect(summary).not.toHaveAttribute('open', '');
+      await summary.locator('summary').click();
+      await expect(summary).toHaveAttribute('open', '');
+      const alignment = await page.evaluate(() => {
+        const label = globalThis.document.querySelector('.ai-summary-label');
+        const paragraph = globalThis.document.querySelector(
+          '.ai-summary-content p',
+        );
+        const warning = globalThis.document.querySelector('.ai-warning');
+        const close = warning.querySelector('.ai-warning-close');
+        const closeBox = close.getBoundingClientRect();
+        const warningBox = warning.getBoundingClientRect();
+        return {
+          textDelta: Math.abs(
+            label.getBoundingClientRect().left -
+              paragraph.getBoundingClientRect().left,
+          ),
+          overflow:
+            globalThis.document.documentElement.scrollWidth >
+            globalThis.innerWidth,
+          closeInside:
+            closeBox.left - 6 >= warningBox.left &&
+            closeBox.right + 6 <= warningBox.right &&
+            closeBox.top - 6 >= warningBox.top &&
+            closeBox.bottom + 6 <= warningBox.bottom,
+        };
+      });
+      expect(alignment.textDelta).toBeLessThan(1);
+      expect(alignment.overflow).toBe(false);
+      expect(alignment.closeInside).toBe(true);
+      await page.locator('.ai-summary-content p').click();
+      await page.mouse.move(0, 0);
       for (const [block, selector] of [
         ['summary', 'details.ai-summary'],
         ['warning', 'aside.ai-warning'],

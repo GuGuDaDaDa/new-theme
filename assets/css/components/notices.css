@@ -1,18 +1,18 @@
-/* AI reading notices follow the reference AI cards on theme tokens. */
+/* Quiet reading notes share the article palette and spacing. */
 .prose .ai-summary,
 .prose .ai-warning {
   position: relative;
-  margin: 26px 0;
+  margin: 24px 0;
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 2px;
   color: var(--text);
   transition:
-    background-color 0.4s ease,
-    border-color 0.4s ease;
+    background-color 0.38s ease,
+    border-color 0.38s ease;
 }
 
-.prose .ai-summary > :last-child,
+.prose .ai-summary-content > :last-child,
 .prose .ai-warning-body > :last-child {
   margin-bottom: 0;
 }
@@ -22,39 +22,12 @@
   margin-top: 0;
 }
 
-/* Angled corner marks are decoration taken from the reference summary card. */
-.prose .ai-summary::before,
-.prose .ai-summary::after {
-  position: absolute;
-  z-index: 2;
-  width: 20px;
-  height: 20px;
-  border-color: var(--accent);
-  content: '';
-  opacity: 0.7;
-  pointer-events: none;
-  transition: all 0.35s ease;
-}
-
-.prose .ai-summary::before {
-  top: 0;
-  left: 0;
-  border-top: 2px solid;
-  border-left: 2px solid;
-}
-
-.prose .ai-summary::after {
-  right: 0;
-  bottom: 0;
-  border-right: 2px solid;
-  border-bottom: 2px solid;
-}
-
 .prose .ai-summary > summary {
   display: flex;
   align-items: center;
-  gap: 8px;
-  padding: 14px 18px;
+  gap: 12px;
+  min-height: 52px;
+  padding: 12px 20px;
   list-style: none;
   cursor: pointer;
   user-select: none;
@@ -74,17 +47,16 @@
   height: 8px;
   flex-shrink: 0;
   background: var(--accent);
-  opacity: 0.8;
   transform: rotate(45deg);
-  transition: opacity 0.3s ease;
 }
 
 .prose .ai-summary-label {
-  color: var(--accent);
+  color: var(--text);
   font-size: 11px;
   font-weight: 600;
-  letter-spacing: 0.12em;
-  transition: color 0.3s ease;
+  line-height: 1.5;
+  letter-spacing: 0.08em;
+  transition: color 0.38s ease;
 }
 
 .prose .ai-summary-toggle {
@@ -98,7 +70,9 @@
   border: 1px solid transparent;
   border-radius: 50%;
   color: var(--muted);
-  transition: all 0.25s ease;
+  transition:
+    background-color 0.38s ease,
+    color 0.38s ease;
 }
 
 .prose .ai-summary-toggle::before {
@@ -110,7 +84,7 @@
   border-bottom: 1.5px solid;
   content: '';
   transform: rotate(45deg);
-  transition: transform 0.35s cubic-bezier(0.22, 0.61, 0.36, 1);
+  transition: transform 0.2s ease;
 }
 
 .prose .ai-summary[open] .ai-summary-toggle::before {
@@ -119,40 +93,31 @@
 }
 
 .prose .ai-summary-content {
-  padding: 0 18px 18px;
+  margin-inline: 20px;
+  padding: 12px 0 16px 20px;
+  border-top: 1px solid var(--line);
   color: var(--text);
   font-size: 13px;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .prose .ai-summary-content p {
   margin-bottom: 0.7em;
 }
 
-/* The AI disclosure is one reference-style row: mark, text, close. */
+/* Keep the disclosure controls at the first line when its text wraps. */
 .prose .ai-warning {
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 12px 18px;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 20px;
   color: var(--muted);
   font-size: 12px;
-  line-height: 1.6;
+  line-height: 1.7;
 }
 
 .prose .ai-warning[hidden] {
   display: none;
-}
-
-.prose .ai-warning::before {
-  position: absolute;
-  top: 10px;
-  bottom: 10px;
-  left: 0;
-  width: 2px;
-  background: var(--accent);
-  content: '';
-  opacity: 0.5;
 }
 
 .prose .ai-warning-icon {
@@ -162,18 +127,18 @@
   min-width: 20px;
   height: 20px;
   flex-shrink: 0;
-  border: 1.5px solid var(--accent);
+  margin-top: 6px;
+  border: 1px solid var(--accent);
   border-radius: 50%;
   color: var(--accent);
   font-size: 11px;
   font-weight: 600;
   line-height: 1;
-  opacity: 0.75;
-  transition: opacity 0.3s ease;
 }
 
 .prose .ai-warning-body {
   min-width: 0;
+  padding-block: calc((32px - 1lh) / 2);
   flex: 1;
 }
 
@@ -198,6 +163,9 @@
   background: transparent;
   color: var(--muted);
   box-shadow: none;
+  transition:
+    background-color 0.38s ease,
+    color 0.38s ease;
 }
 
 .prose .ai-warning-close[hidden] {
@@ -221,67 +189,37 @@
 }
 
 @media (hover: hover) {
-  .prose .ai-summary:hover::before,
-  .prose .ai-summary:hover::after {
-    width: 24px;
-    height: 24px;
-    opacity: 1;
-  }
-
-  .prose .ai-summary > summary:hover .ai-summary-icon,
-  .prose .ai-warning:hover .ai-warning-icon {
-    opacity: 1;
-  }
-
   .prose .ai-summary > summary:hover .ai-summary-toggle,
   .prose .ai-warning-close.close-dialog:hover {
-    border-color: var(--accent);
     background: var(--soft);
     color: var(--accent);
   }
 }
 
-.prose .ai-warning-close.close-dialog:active {
-  transform: scale(0.94);
-}
-
-.prose .ai-summary > summary:active .ai-summary-toggle {
-  transform: scale(0.94);
-}
-
 @media (max-width: 768px) {
-  .prose .ai-summary::before,
-  .prose .ai-summary::after {
-    width: 14px;
-    height: 14px;
-    border-width: 1.5px;
-  }
-
   .prose .ai-summary > summary {
-    padding: 12px 14px;
+    padding-inline: 16px;
   }
 
   .prose .ai-summary-content {
-    padding: 0 14px 14px;
+    margin-inline: 16px;
     font-size: 12px;
   }
 
   .prose .ai-warning {
-    gap: 9px;
-    padding: 11px 14px;
+    padding-inline: 16px;
     font-size: 11px;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .prose .ai-summary,
-  .prose .ai-summary::before,
-  .prose .ai-summary::after,
   .prose .ai-summary-icon,
   .prose .ai-summary-label,
   .prose .ai-summary-toggle,
   .prose .ai-summary-toggle::before,
-  .prose .ai-warning-icon {
+  .prose .ai-warning,
+  .prose .ai-warning-close.close-dialog {
     transition: none;
   }
 }
