@@ -103,7 +103,14 @@ test('optional header regions and summary sources have no empty placeholders', a
 
   const imageOnly = await readArticle('image-only');
   assert.equal(imageOnly.$('.dek').length, 0);
-  assert.equal(imageOnly.$('[data-article-body] > p > img').length, 1);
+  assert.equal(
+    imageOnly.$('[data-article-body] figure.wide > a.image-open > img').length,
+    1,
+  );
+  assert.equal(
+    imageOnly.$('[data-article-body] a[data-lightbox]').attr('href'),
+    'https://images.example.test/article-body-only.jpg',
+  );
   assert.equal(
     imageOnly.$('[data-article-body] img').attr('alt'),
     '正文中的一张远程照片',
@@ -136,7 +143,12 @@ test('cover follows the heading and preserves content without list cropping', as
   assert.equal(cover.attr('fetchpriority'), 'high');
   assert.equal(cover.attr('style'), undefined);
   assert.equal($('.opening-image figcaption').length, 0);
-  assert.equal($('.opening-image button, .opening-image a').length, 0);
+  assert.equal($('.opening-image button').length, 0);
+  assert.equal($('.opening-image a.image-open[data-lightbox]').length, 1);
+  assert.equal(
+    $('.opening-image a.image-open').attr('href'),
+    'https://images.example.test/article-horizontal.jpg',
+  );
   assert.equal(html.includes('17% 83%'), false);
 
   const withoutCover = await readArticle('default-frontmatter');
