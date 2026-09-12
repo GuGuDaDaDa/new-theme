@@ -427,3 +427,55 @@ weight = 30
     await removeBoundarySite(fixture.projectRoot);
   }
 });
+
+test('search dialog hides the automatic focus ring for pointer and touch opens', async ({
+  page,
+  browser,
+}) => {
+  const input = page.locator('[data-search-input]');
+  await page.goto('/');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.click('[data-search-trigger]');
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-input-mode',
+    'pointer',
+  );
+  await expect(input).toBeFocused();
+  await expect(input).toHaveCSS('outline-style', 'none');
+  await page.keyboard.press('Escape');
+  await expect(input).not.toBeFocused();
+
+  await page.locator('[data-search-trigger]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-input-mode',
+    'keyboard',
+  );
+  await expect(input).toBeFocused();
+  await expect(input).toHaveCSS('outline-style', 'solid');
+  await expect(input).toHaveCSS('outline-width', '3px');
+  await page.keyboard.press('Escape');
+  await expect(input).not.toBeFocused();
+
+  const touchContext = await browser.newContext({
+    viewport: { width: 390, height: 844 },
+    hasTouch: true,
+    isMobile: true,
+  });
+  const touchPage = await touchContext.newPage();
+  try {
+    await touchPage.goto('/');
+    await touchPage.locator('[data-search-trigger]').tap();
+    await expect(touchPage.locator('html')).toHaveAttribute(
+      'data-input-mode',
+      'pointer',
+    );
+    await expect(touchPage.locator('[data-search-input]')).toBeFocused();
+    await expect(touchPage.locator('[data-search-input]')).toHaveCSS(
+      'outline-style',
+      'none',
+    );
+  } finally {
+    await touchContext.close();
+  }
+});
