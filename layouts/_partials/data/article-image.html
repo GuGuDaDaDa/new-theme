@@ -35,7 +35,10 @@
         {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
       {{- end -}}
     {{- end -}}
-    {{- $native := $resource.Resize (printf "%dx webp" $resource.Width) -}}
+    {{- $native := . -}}
+    {{- if ne .MediaType.SubType "webp" -}}
+      {{- $native = $resource.Resize (printf "%dx webp" $resource.Width) -}}
+    {{- end -}}
     {{- $src = $native.RelPermalink -}}
     {{- $variants = $variants | append (printf "%s %dw" $native.RelPermalink $native.Width) -}}
   {{- else if eq .MediaType.SubType "gif" -}}

@@ -57,7 +57,10 @@
               {{- $variants = $variants | append (printf "%s %dw" $resized.RelPermalink .) -}}
             {{- end -}}
           {{- end -}}
-          {{- $native := $resource.Resize (printf "%dx webp" $resource.Width) -}}
+          {{- $native := $resource -}}
+          {{- if ne $resource.MediaType.SubType "webp" -}}
+            {{- $native = $resource.Resize (printf "%dx webp" $resource.Width) -}}
+          {{- end -}}
           {{- $variants = $variants | append (printf "%s %dw" $native.RelPermalink $native.Width) -}}
           {{- $cover = dict
             "url" $native.RelPermalink
