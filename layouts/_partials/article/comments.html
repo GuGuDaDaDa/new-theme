@@ -1,4 +1,12 @@
 {{- $comments := site.Params.comments -}}
+{{- $emojiURLs := slice -}}
+{{- with $comments.emoji -}}
+  {{- if reflect.IsSlice . -}}
+    {{- $emojiURLs = . -}}
+  {{- else -}}
+    {{- $emojiURLs = slice . -}}
+  {{- end -}}
+{{- end -}}
 {{- with $comments.api_base -}}
   <section
     class="comments"
@@ -7,7 +15,7 @@
     data-comments
     data-api-base="{{ . }}"
     data-site-id="{{ $comments.site_id | default "" }}"
-    data-emoji="{{ $comments.emoji | default "" }}"
+    data-emoji="{{ delimit $emojiURLs " " }}"
     data-post-title="{{ $.Title }}"
     data-post-url="{{ $.Permalink }}"
   >

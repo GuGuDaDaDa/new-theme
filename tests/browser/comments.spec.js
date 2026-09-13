@@ -98,7 +98,7 @@ function listPayload(roots, pagination = {}) {
 /**
  * Install deterministic comment API responses for one page.
  * @param {import('@playwright/test').Page} page - Active page.
- * @param {{config?: object, emoji?: object, list: Function, post?: Function, verify?: Function}} options - Scenario responses.
+ * @param {{config?: object, emoji?: object, emojiExtra?: object, list: Function, post?: Function, verify?: Function}} options - Scenario responses.
  * @returns {Promise<{listCalls: number, posts: object[], verifications: string[], requests: object[]}>} Recorded request state.
  */
 async function mockComments(page, options) {
@@ -124,6 +124,11 @@ async function mockComments(page, options) {
       if (!options.emoji)
         return route.fulfill({ status: 404, body: 'missing emoji' });
       return json(200, options.emoji);
+    }
+    if (pathname === '/__comments/emoji-extra.json') {
+      if (!options.emojiExtra)
+        return route.fulfill({ status: 404, body: 'missing emoji' });
+      return json(200, options.emojiExtra);
     }
     if (pathname.endsWith('.png')) {
       return route.fulfill({
@@ -198,6 +203,9 @@ test.beforeAll(async () => {
   const build = await buildSite({
     projectRoot: fixtureRoot,
     clock: fixture.clock,
+    comments: {
+      emoji: ['/__comments/emoji.json', '/__comments/emoji-extra.json'],
+    },
   });
   fixtureBaseURL = await serve(build.publicDir);
 });
@@ -657,16 +665,35 @@ test('renders the OwO panel, paginates packs and inserts image emoticons', async
       ],
     },
   };
+  const emojiExtra = {
+    颜文字: {
+      type: 'emoticon',
+      container: [
+        { text: '笑', icon: '(^_^)' },
+        { text: '哭', icon: '(T_T)' },
+        { text: '怒', icon: '(#_#)' },
+      ],
+    },
+    星星: imagePack('star', 2),
+  };
   await openArticle(page, {
     emoji,
+    emojiExtra,
     list: () => listPayload([comment(1)]),
   });
   await expect(page.locator('[data-comment-list] .comment-root')).toHaveCount(
     1,
   );
+  expect(await page.locator('[data-comments]').getAttribute('data-emoji')).toBe(
+    '/__comments/emoji.json /__comments/emoji-extra.json',
+  );
   await expect(page.locator('[data-emoji-toggle]')).toBeVisible();
   await page.locator('[data-emoji-toggle]').click();
-  await expect(page.locator('[data-emoji-categories] button')).toHaveCount(2);
+  await expect(page.locator('[data-emoji-categories] button')).toHaveText([
+    '图片',
+    '颜文字',
+    '星星',
+  ]);
   await expect(page.locator('[data-emoji-grid] button')).toHaveCount(24);
   await expect(page.locator('[data-emoji-page]')).toHaveText('1 / 2');
   await page.locator('[data-emoji-next]').click();
@@ -684,9 +711,41 @@ test('renders the OwO panel, paginates packs and inserts image emoticons', async
   await page
     .locator('[data-emoji-categories] button', { hasText: '颜文字' })
     .click();
+  await expect(page.locator('[data-emoji-grid] button')).toHaveCount(3);
+  await page.locator('[data-emoji-grid] button').first().click();
+  await expect(page.locator('[data-comment-body]')).toHaveValue(/\(\^_\^\)/);
+
+  await page.locator('[data-emoji-toggle]').click();
+  await page
+    .locator('[data-emoji-categories] button', { hasText: '星星' })
+    .click();
   await expect(page.locator('[data-emoji-grid] button')).toHaveCount(2);
   await page.locator('[data-emoji-grid] button').first().click();
-  await expect(page.locator('[data-comment-body]')).toHaveValue(/\(>_<\)/);
+  await expect(page.locator('[data-comment-body]')).toHaveValue(
+    /!\[star-0\]\(<http:\/\/127\.0\.0\.1:\d+\/__comments\/emoji\/star-0\.png>\)/,
+  );
+});
+
+test('skips an unavailable emoji file and keeps the remaining packs', async ({
+  page,
+}) => {
+  await openArticle(page, {
+    emoji: {
+      颜文字: {
+        type: 'emoticon',
+        container: [{ text: '笑', icon: '(>_<)' }],
+      },
+    },
+    list: () => listPayload([comment(1)]),
+  });
+  await expect(page.locator('.comment-root')).toHaveCount(1);
+  await expect(page.locator('[data-emoji-toggle]')).toBeVisible();
+  await expect(page.locator('[data-emoji-status]')).toHaveText('');
+  await page.locator('[data-emoji-toggle]').click();
+  await expect(page.locator('[data-emoji-categories] button')).toHaveText([
+    '颜文字',
+  ]);
+  await expect(page.locator('[data-emoji-grid] button')).toHaveCount(1);
 });
 
 test('degrades when the emoji file is unavailable', async ({ page }) => {

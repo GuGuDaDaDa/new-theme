@@ -51,9 +51,10 @@ export function initComments(root) {
     /\/$/,
     '',
   );
-  const emojiURL = section.dataset.emoji
-    ? new URL(section.dataset.emoji, location.href).href
-    : '';
+  const emojiURLs = (section.dataset.emoji ?? '')
+    .split(' ')
+    .filter(Boolean)
+    .map((url) => new URL(url, location.href).href);
   const siteId = section.dataset.siteId;
   const postSlug = `${location.origin}${location.pathname}`;
   const renderMarkdown = createMarkdownRenderer(location.href);
@@ -312,21 +313,25 @@ export function initComments(root) {
   }
 
   /**
-   * Read the configured OwO expression file.
+   * Read the configured OwO expression files, skipping the ones that fail.
    * @returns {Promise<void>} Completion.
    */
   async function loadEmoji() {
-    if (!emojiURL) return;
-    try {
-      const payload = await request(emojiURL);
-      if (disposed) return;
-      state.packs = parseEmojiPacks(payload);
-      setAllowedImages(emojiImageURLs(state.packs, location.href));
-      state.pack = Object.keys(state.packs)[0] ?? '';
-    } catch {
-      if (disposed) return;
+    if (!emojiURLs.length) return;
+    const results = await Promise.allSettled(
+      emojiURLs.map((url) => request(url)),
+    );
+    if (disposed) return;
+    const payloads = results
+      .filter((result) => result.status === 'fulfilled')
+      .map((result) => result.value);
+    if (!payloads.length) {
       emojiStatus.textContent = t('comments.emojiUnavailable');
+      return;
     }
+    state.packs = Object.assign({}, ...payloads.map(parseEmojiPacks));
+    setAllowedImages(emojiImageURLs(state.packs, location.href));
+    state.pack = Object.keys(state.packs)[0] ?? '';
   }
 
   /**

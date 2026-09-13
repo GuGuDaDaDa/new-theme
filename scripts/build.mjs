@@ -70,7 +70,7 @@ export function excerpt(text, limit) {
   return chars.length > limit ? `${chars.slice(0, limit - 1).join('')}…` : text;
 }
 /** Build the example site or an isolated consumer using the native Hugo theme.
- * @param {{development?: boolean, projectRoot?: string, clock?: Date, baseURL?: string, forbiddenMarkers?: string[]}} options - Build options.
+ * @param {{development?: boolean, projectRoot?: string, clock?: Date, baseURL?: string, forbiddenMarkers?: string[], comments?: object}} options - Build options.
  * @returns {Promise<object>} Published output and Hugo invocation details.
  */
 export async function buildSite({
@@ -79,6 +79,7 @@ export async function buildSite({
   clock = new Date(),
   baseURL,
   forbiddenMarkers = [],
+  comments = {},
 } = {}) {
   const sourceRoot = resolveProjectRoot(projectRoot);
   if (!(clock instanceof Date) || !Number.isFinite(clock.getTime()))
@@ -101,6 +102,7 @@ export async function buildSite({
       comments: {
         api_base: '/__comments',
         emoji: '/__comments/emoji.json',
+        ...comments,
       },
     },
   });

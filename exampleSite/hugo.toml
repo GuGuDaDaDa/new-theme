@@ -55,6 +55,8 @@ target = 'assets'
 # api_base = 'https://your-comment-worker.example.workers.dev'
 # site_id = ''
 # emoji = 'https://example.com/OwO.json'
+# Or several files, merged in order; an unavailable file is skipped:
+# emoji = ['https://example.com/OwO.json', 'https://example.com/OwO-extra.json']
 # Standalone pages: set to true to show comments on /about/ or /friends/ (default off).
 about = true
 friends = true

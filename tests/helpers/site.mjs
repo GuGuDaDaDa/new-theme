@@ -130,7 +130,7 @@ export async function createBoundarySite({
   return { projectRoot: fixtureRoot, clock: buildClock, definition: source };
 }
 
-/** Build an isolated fixture with the production buildSite implementation. @param {{name?: string, clock?: Date, definition?: object, development?: boolean}} options - Fixture and build options. @returns {Promise<{projectRoot: string, clock: Date, definition: object, build: object}>} Fixture and build result. */
+/** Build an isolated fixture with the production buildSite implementation. @param {{name?: string, clock?: Date, definition?: object, development?: boolean, comments?: object}} options - Fixture and build options. @returns {Promise<{projectRoot: string, clock: Date, definition: object, build: object}>} Fixture and build result. */
 export async function buildBoundarySite(options = {}) {
   const fixture = await createBoundarySite(options);
   try {
@@ -138,6 +138,7 @@ export async function buildBoundarySite(options = {}) {
       projectRoot: fixture.projectRoot,
       clock: fixture.clock,
       development: options.development ?? false,
+      comments: options.comments,
     });
     return { ...fixture, build };
   } catch (error) {
