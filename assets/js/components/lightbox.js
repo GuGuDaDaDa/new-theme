@@ -31,21 +31,27 @@ function paintedRect(image) {
 }
 
 /**
- * Grow the preview image from the in-page trigger into its final position.
+ * Grow the dialog card, preview included, out of the in-page trigger. Scaling is
+ * pinned to the preview's centre so the photo lands on the trigger's painted rect.
+ * @param {HTMLDialogElement} root - Already open dialog.
  * @param {HTMLImageElement} img - Preview image inside the open dialog.
  * @param {HTMLImageElement|null} source - Trigger image on the page.
  * @returns {Animation|null} Started animation, or null when it is skipped.
  */
-function zoomFromSource(img, source) {
+function zoomFromSource(root, img, source) {
   if (!source || reducedMotion.matches) return null;
   const from = paintedRect(source);
   if (!from) return null;
   const to = img.getBoundingClientRect();
   if (!to.width || !to.height) return null;
+  const card = root.getBoundingClientRect();
+  const centreX = to.left + to.width / 2;
+  const centreY = to.top + to.height / 2;
   const scale = from.width / to.width;
-  const x = from.left + from.width / 2 - (to.left + to.width / 2);
-  const y = from.top + from.height / 2 - (to.top + to.height / 2);
-  return img.animate(
+  const x = from.left + from.width / 2 - centreX;
+  const y = from.top + from.height / 2 - centreY;
+  root.style.transformOrigin = `${centreX - card.left}px ${centreY - card.top}px`;
+  return root.animate(
     [{ transform: `translate(${x}px, ${y}px) scale(${scale})` }, {}],
     { duration: OPEN_DURATION, easing: OPEN_EASING },
   );
@@ -65,23 +71,27 @@ export function initLightbox(root, image) {
   const status = root.querySelector('[data-lightbox-status]');
   const img = new Image();
   let animation = null;
-  /** Paint the card once the preview has finished opening. @returns {void} */
-  const revealCard = () => root.removeAttribute('data-lightbox-opening');
+  /** Put the card in place when no flight runs. @returns {void} */
+  const showCard = () => root.removeAttribute('data-lightbox-opening');
+  /** Hand the frame's controls back once the card has landed. @returns {void} */
+  const landCard = () => root.removeAttribute('data-lightbox-flying');
   img.alt = image.alt;
   img.addEventListener(
     'load',
     () => {
       status.textContent = '';
-      animation = zoomFromSource(img, image.source);
-      if (animation) animation.finished.then(revealCard, () => {});
-      else revealCard();
+      showCard();
+      animation = zoomFromSource(root, img, image.source);
+      if (!animation) return;
+      root.setAttribute('data-lightbox-flying', '');
+      animation.finished.then(landCard, landCard);
     },
     { signal },
   );
   img.addEventListener(
     'error',
     () => {
-      revealCard();
+      showCard();
       status.textContent = t('lightbox.failed');
     },
     { signal },

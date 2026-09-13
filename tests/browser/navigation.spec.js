@@ -303,42 +303,40 @@ test('page media and references reinitialize cleanly after repeated partial visi
 });
 
 /**
- * Assert the preview starts at the trigger's painted location and size.
- * @param {object} start - First computed keyframe of the open animation.
+ * Assert the card's first frame sits on the trigger's painted area.
+ * @param {{x: number, y: number, width: number, height: number}} start - Preview box at the flight's first frame.
  * @param {{x: number, y: number, width: number, height: number}} source - Trigger image box.
  * @param {{x: number, y: number, width: number, height: number}} target - Preview box at rest.
  * @param {boolean} exactSize - Also compare the start size against the trigger box.
  * @returns {void} Completion.
  */
-function expectZoomFromTrigger(start, source, target, exactSize) {
-  const [, x, y, scale] =
-    /translate\(([-\d.]+)px, ([-\d.]+)px\) scale\(([-\d.]+)\)/
-      .exec(start.transform)
-      .map(Number);
-  expect(scale).toBeLessThan(1);
+function expectFlightStart(start, source, target, exactSize) {
+  expect(start.width).toBeLessThan(target.width);
   expect(
-    Math.abs(target.x + target.width / 2 + x - (source.x + source.width / 2)),
+    Math.abs(start.x + start.width / 2 - (source.x + source.width / 2)),
   ).toBeLessThan(1.5);
   expect(
-    Math.abs(target.y + target.height / 2 + y - (source.y + source.height / 2)),
+    Math.abs(start.y + start.height / 2 - (source.y + source.height / 2)),
   ).toBeLessThan(1.5);
   if (!exactSize) return;
-  const width = target.width * scale;
-  const height = target.height * scale;
-  expect(width).toBeLessThanOrEqual(source.width + 0.5);
-  expect(height).toBeLessThanOrEqual(source.height + 0.5);
+  expect(start.width).toBeLessThanOrEqual(source.width + 0.5);
+  expect(start.height).toBeLessThanOrEqual(source.height + 0.5);
   expect(
-    Math.min(Math.abs(width - source.width), Math.abs(height - source.height)),
+    Math.min(
+      Math.abs(start.width - source.width),
+      Math.abs(start.height - source.height),
+    ),
   ).toBeLessThan(0.5);
 }
 
-/** Read how the lightbox card is currently painted. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<{background: string, opening: boolean}>} Computed card colour and standby marker. */
+/** Read how the lightbox card is currently painted. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<{background: string, opening: boolean, flying: boolean}>} Computed card colour and open markers. */
 async function cardState(page) {
   return page.evaluate(() => {
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
     return {
       background: globalThis.getComputedStyle(dialog).backgroundColor,
       opening: dialog.hasAttribute('data-lightbox-opening'),
+      flying: dialog.hasAttribute('data-lightbox-flying'),
     };
   });
 }
@@ -355,7 +353,7 @@ async function settledCardColor(page) {
   });
 }
 
-test('image lightbox grows from its trigger and skips the growth when reduced', async ({
+test('image lightbox flies the card out of its trigger and skips the flight when reduced', async ({
   page,
 }) => {
   const triggers = [
@@ -372,64 +370,100 @@ test('image lightbox grows from its trigger and skips the growth when reduced', 
   for (const [url, trigger, exactSize] of triggers) {
     await page.goto(url);
     cardColor ||= await settledCardColor(page);
-    const growing = page.waitForFunction(
-      () =>
-        (globalThis.document
-          .querySelector('[data-lightbox-dialog] img')
-          ?.getAnimations().length ?? 0) > 0,
+    const flying = page.waitForFunction(() =>
+      globalThis.document
+        .querySelector('[data-lightbox-dialog]')
+        .hasAttribute('data-lightbox-flying'),
     );
     await trigger.click();
-    await growing;
+    await flying;
+    const flight = await page.evaluate(() => {
+      const dialog = globalThis.document.querySelector(
+        '[data-lightbox-dialog]',
+      );
+      const rect = (node) => {
+        const box = node.getBoundingClientRect();
+        return { x: box.x, y: box.y, width: box.width, height: box.height };
+      };
+      const preview = dialog.querySelector('[data-lightbox-content] img');
+      const animation = dialog
+        .getAnimations()
+        .find((item) => item.constructor.name === 'Animation');
+      animation.pause();
+      animation.currentTime = 0;
+      const start = rect(preview);
+      animation.currentTime = 320;
+      const landed = rect(preview);
+      animation.currentTime = 0;
+      return {
+        keyframes: animation.effect
+          .getKeyframes()
+          .map(({ transform }) => transform ?? null),
+        background: globalThis.getComputedStyle(dialog).backgroundColor,
+        start,
+        landed,
+      };
+    });
+    expect(flight.keyframes, url).toHaveLength(2);
+    expect(flight.keyframes[1]).toBeNull();
+    expect(flight.background, url).toBe(cardColor);
     expect(await cardState(page), url).toEqual({
-      background: 'rgba(0, 0, 0, 0)',
-      opening: true,
+      background: cardColor,
+      opening: false,
+      flying: true,
+    });
+    for (const selector of [
+      '[data-dialog-close]',
+      '[data-lightbox-caption]',
+      '[data-lightbox-original]',
+    ]) {
+      await expect(
+        page.locator(`[data-lightbox-dialog] ${selector}`),
+      ).toHaveCSS('opacity', '0');
+    }
+    expectFlightStart(
+      flight.start,
+      await trigger.locator('img').boundingBox(),
+      flight.landed,
+      exactSize,
+    );
+    await page.evaluate(() => {
+      globalThis.document
+        .querySelector('[data-lightbox-dialog]')
+        .getAnimations()
+        .find((item) => item.constructor.name === 'Animation')
+        .play();
     });
     await expect(
       page.locator('[data-lightbox-dialog] [data-dialog-close]'),
-    ).toBeVisible();
-    const keyframes = await page.evaluate(() =>
-      globalThis.document
-        .querySelector('[data-lightbox-dialog] img')
-        .getAnimations()[0]
-        .effect.getKeyframes(),
-    );
-    expect(keyframes).toHaveLength(2);
-    expect(keyframes[1].transform).toBeUndefined();
-    await page.waitForFunction(
-      () =>
-        globalThis.document
-          .querySelector('[data-lightbox-dialog] img')
-          .getAnimations().length === 0,
-    );
-    expectZoomFromTrigger(
-      keyframes[0],
-      await trigger.locator('img').boundingBox(),
-      await page
-        .locator('[data-lightbox-dialog] [data-lightbox-content] img')
-        .boundingBox(),
-      exactSize,
-    );
-    expect(
-      await page.evaluate(
-        () =>
-          globalThis.document
-            .querySelector('[data-lightbox-dialog]')
-            .getAnimations().length,
-      ),
-      url,
-    ).toBeGreaterThan(0);
+    ).toHaveCSS('opacity', '1');
     await expect
       .poll(async () => cardState(page))
       .toEqual({
         background: cardColor,
         opening: false,
+        flying: false,
       });
+    expect(
+      await page.evaluate(
+        () =>
+          globalThis.getComputedStyle(
+            globalThis.document.querySelector('[data-lightbox-dialog]'),
+          ).transform,
+      ),
+      url,
+    ).toBe('none');
+    const landed = await page
+      .locator('[data-lightbox-dialog] [data-lightbox-content] img')
+      .boundingBox();
+    expect(Math.abs(landed.x - flight.landed.x), url).toBeLessThan(1);
+    expect(Math.abs(landed.y - flight.landed.y), url).toBeLessThan(1);
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   }
 
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  // Click inside the page so the card is read in the same task as the open.
+  // The loading phase keeps the card out of the way and its controls readable.
+  await page.goto(triggers[0][0]);
   expect(
     await page.evaluate(() => {
       const dialog = globalThis.document.querySelector(
@@ -439,9 +473,20 @@ test('image lightbox grows from its trigger and skips the growth when reduced', 
       return {
         background: globalThis.getComputedStyle(dialog).backgroundColor,
         opening: dialog.hasAttribute('data-lightbox-opening'),
+        flying: dialog.hasAttribute('data-lightbox-flying'),
       };
     }),
-  ).toEqual({ background: cardColor, opening: true });
+  ).toEqual({ background: 'rgba(0, 0, 0, 0)', opening: true, flying: false });
+  await expect(
+    page.locator('[data-lightbox-dialog] [data-dialog-close]'),
+  ).toHaveCSS('opacity', '1');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
+
+  // Reduced motion: no flight, the card and its controls are ready at once.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto(triggers[0][0]);
+  await triggers[0][1].click();
   await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
   await page.waitForFunction(() => {
     const image = globalThis.document.querySelector(
@@ -449,10 +494,16 @@ test('image lightbox grows from its trigger and skips the growth when reduced', 
     );
     return Boolean(image?.complete && image.naturalWidth);
   });
-  expect(await cardState(page)).toEqual({
-    background: cardColor,
-    opening: false,
-  });
+  await expect
+    .poll(async () => cardState(page))
+    .toEqual({
+      background: cardColor,
+      opening: false,
+      flying: false,
+    });
+  await expect(
+    page.locator('[data-lightbox-dialog] [data-dialog-close]'),
+  ).toHaveCSS('opacity', '1');
   expect(
     await page.evaluate(() => ({
       dialog: globalThis.document

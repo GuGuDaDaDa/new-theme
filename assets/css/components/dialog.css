@@ -108,8 +108,7 @@ dialog::backdrop {
   text-underline-offset: 4px;
 }
 
-/* The backdrop dims the page as the preview starts growing; the card paints in
-   once the preview has finished opening. */
+/* The backdrop dims the page while the card grows out of the preview's trigger. */
 @keyframes lightbox-open {
   from {
     opacity: 0;
@@ -121,16 +120,22 @@ dialog::backdrop {
     animation: lightbox-open 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   }
 
-  #image-dialog[data-lightbox-dialog] {
-    transition:
-      background-color 200ms cubic-bezier(0.22, 0.61, 0.36, 1),
-      box-shadow 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  }
-
-  /* Keep the transparent shadow geometry in sync with the `dialog` box-shadow. */
+  /* Nothing is in place until the preview starts growing. Keep the transparent
+     shadow geometry in sync with the `dialog` box-shadow. */
   #image-dialog[data-lightbox-dialog][data-lightbox-opening] {
     background-color: transparent;
     box-shadow: 0 24px 100px #0000;
+  }
+
+  #image-dialog[data-lightbox-dialog]
+    :is(.close-dialog, [data-lightbox-caption], [data-lightbox-original]) {
+    transition: opacity 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  /* The frame's controls would only smear while the card flies out. */
+  #image-dialog[data-lightbox-dialog][data-lightbox-flying]
+    :is(.close-dialog, [data-lightbox-caption], [data-lightbox-original]) {
+    opacity: 0;
     transition: none;
   }
 }
