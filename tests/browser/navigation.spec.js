@@ -332,6 +332,29 @@ function expectZoomFromTrigger(start, source, target, exactSize) {
   ).toBeLessThan(0.5);
 }
 
+/** Read how the lightbox card is currently painted. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<{background: string, opening: boolean}>} Computed card colour and standby marker. */
+async function cardState(page) {
+  return page.evaluate(() => {
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    return {
+      background: globalThis.getComputedStyle(dialog).backgroundColor,
+      opening: dialog.hasAttribute('data-lightbox-opening'),
+    };
+  });
+}
+
+/** Resolve the card colour the lightbox settles on. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<string>} Computed colour of the `--bg` token. */
+async function settledCardColor(page) {
+  return page.evaluate(() => {
+    const probe = globalThis.document.createElement('div');
+    probe.style.background = 'var(--bg)';
+    globalThis.document.body.append(probe);
+    const color = globalThis.getComputedStyle(probe).backgroundColor;
+    probe.remove();
+    return color;
+  });
+}
+
 test('image lightbox grows from its trigger and skips the growth when reduced', async ({
   page,
 }) => {
@@ -345,8 +368,10 @@ test('image lightbox grows from its trigger and skips the growth when reduced', 
       false,
     ],
   ];
+  let cardColor = '';
   for (const [url, trigger, exactSize] of triggers) {
     await page.goto(url);
+    cardColor ||= await settledCardColor(page);
     const growing = page.waitForFunction(
       () =>
         (globalThis.document
@@ -355,6 +380,13 @@ test('image lightbox grows from its trigger and skips the growth when reduced', 
     );
     await trigger.click();
     await growing;
+    expect(await cardState(page), url).toEqual({
+      background: 'rgba(0, 0, 0, 0)',
+      opening: true,
+    });
+    await expect(
+      page.locator('[data-lightbox-dialog] [data-dialog-close]'),
+    ).toBeVisible();
     const keyframes = await page.evaluate(() =>
       globalThis.document
         .querySelector('[data-lightbox-dialog] img')
@@ -386,18 +418,40 @@ test('image lightbox grows from its trigger and skips the growth when reduced', 
       ),
       url,
     ).toBeGreaterThan(0);
+    await expect
+      .poll(async () => cardState(page))
+      .toEqual({
+        background: cardColor,
+        opening: false,
+      });
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   }
 
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await triggers[0][1].click();
+  // Click inside the page so the card is read in the same task as the open.
+  expect(
+    await page.evaluate(() => {
+      const dialog = globalThis.document.querySelector(
+        '[data-lightbox-dialog]',
+      );
+      globalThis.document.querySelector('a[data-lightbox]').click();
+      return {
+        background: globalThis.getComputedStyle(dialog).backgroundColor,
+        opening: dialog.hasAttribute('data-lightbox-opening'),
+      };
+    }),
+  ).toEqual({ background: cardColor, opening: true });
   await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
   await page.waitForFunction(() => {
     const image = globalThis.document.querySelector(
       '[data-lightbox-dialog] img',
     );
     return Boolean(image?.complete && image.naturalWidth);
+  });
+  expect(await cardState(page)).toEqual({
+    background: cardColor,
+    opening: false,
   });
   expect(
     await page.evaluate(() => ({

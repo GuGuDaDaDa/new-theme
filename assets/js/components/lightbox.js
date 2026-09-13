@@ -65,18 +65,23 @@ export function initLightbox(root, image) {
   const status = root.querySelector('[data-lightbox-status]');
   const img = new Image();
   let animation = null;
+  /** Paint the card once the preview has finished opening. @returns {void} */
+  const revealCard = () => root.removeAttribute('data-lightbox-opening');
   img.alt = image.alt;
   img.addEventListener(
     'load',
     () => {
       status.textContent = '';
       animation = zoomFromSource(img, image.source);
+      if (animation) animation.finished.then(revealCard, () => {});
+      else revealCard();
     },
     { signal },
   );
   img.addEventListener(
     'error',
     () => {
+      revealCard();
       status.textContent = t('lightbox.failed');
     },
     { signal },

@@ -72,6 +72,7 @@ export function initReadingMedia(root) {
       original.href = url.href;
       status.textContent = t('lightbox.loading');
       modal.open(trigger);
+      dialog.setAttribute('data-lightbox-opening', '');
       try {
         const { initLightbox } = await import('./lightbox.js');
         if (request !== current || !dialog.open) return;
@@ -82,6 +83,7 @@ export function initReadingMedia(root) {
         });
       } catch {
         if (request === current && dialog.open) {
+          dialog.removeAttribute('data-lightbox-opening');
           status.textContent = t('lightbox.unavailable');
         }
       }
