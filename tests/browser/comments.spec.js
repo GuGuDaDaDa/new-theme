@@ -303,7 +303,7 @@ test('renders server data, owner badge, replies and restricted markdown', async 
   ).toEqual({
     display: 'block',
     marginTop: '-4px',
-    marginBottom: '-4px',
+    marginBottom: '4px',
     height: 28,
   });
   await page.locator('#comment-1 .fold-replies').click();
