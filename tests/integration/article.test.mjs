@@ -112,6 +112,12 @@ test('optional header regions and summary sources have no empty placeholders', a
     'https://images.example.test/article-body-only.jpg',
   );
   assert.equal(
+    imageOnly
+      .$('[data-article-body] a[data-lightbox]')
+      .attr('data-lightbox-src'),
+    'https://images.example.test/article-body-only.jpg',
+  );
+  assert.equal(
     imageOnly.$('[data-article-body] img').attr('alt'),
     '正文中的一张远程照片',
   );

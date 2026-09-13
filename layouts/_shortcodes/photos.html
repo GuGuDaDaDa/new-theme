@@ -19,6 +19,7 @@
               <figure class="photo-print">
                 <a
                   href="{{ .originalURL }}"
+                  data-lightbox-src="{{ .url }}"
                   data-lightbox
                   data-caption="{{ .caption }}"
                   aria-label="{{ i18n "lightbox.openImage" (dict "Alt" .alt) }}"

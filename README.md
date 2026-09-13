@@ -175,7 +175,7 @@ hugo new content posts/my-note/index.md
 
 ## 7. Shortcode 与 Markdown 扩展
 
-正文图片和标题由 render hooks 自动处理：图片输出带灯箱的 `figure`，H2/H3 自动获得锚点并参与目录。bundle 内的栅格图（JPEG／PNG／TIFF／BMP／WebP）会自动生成 WebP 响应式变体；原图仍会发布，灯箱打开的是原图，GIF、SVG 与远程 HTTPS 图片保持原样。
+正文图片和标题由 render hooks 自动处理：图片输出带灯箱的 `figure`，H2/H3 自动获得锚点并参与目录。bundle 内的栅格图（JPEG／PNG／TIFF／BMP／WebP）会自动生成 WebP 响应式变体；原图仍会发布，灯箱默认展示 WebP 变体，「查看原图」打开未经重编码的原图，GIF、SVG 与远程 HTTPS 图片保持原样。
 
 ```text
 {{< photos >}}

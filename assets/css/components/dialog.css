@@ -108,6 +108,23 @@ dialog::backdrop {
   text-underline-offset: 4px;
 }
 
+/* The panel and backdrop fade in while the preview grows from its trigger. */
+@keyframes lightbox-open {
+  from {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  #image-dialog[data-lightbox-dialog][open] {
+    animation: lightbox-open 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+
+  #image-dialog[data-lightbox-dialog][open]::backdrop {
+    animation: lightbox-open 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+}
+
 @media (max-width: 768px) {
   #image-dialog[data-lightbox-dialog] {
     width: 95vw;

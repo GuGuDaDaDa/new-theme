@@ -76,8 +76,9 @@ export function initReadingMedia(root) {
         const { initLightbox } = await import('./lightbox.js');
         if (request !== current || !dialog.open) return;
         disposeImage = initLightbox(dialog, {
-          url: url.href,
+          url: trigger.dataset.lightboxSrc || url.href,
           alt: img?.alt || caption.textContent,
+          source: img,
         });
       } catch {
         if (request === current && dialog.open) {

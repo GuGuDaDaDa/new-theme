@@ -17,7 +17,7 @@ const server = spawn(
     '--environment',
     'development',
     '--bind',
-    '127.0.0.1',
+    '0.0.0.0',
     '--port',
     '1313',
     '--disableFastRender',

@@ -23,6 +23,8 @@ export function initHeader(root) {
   let direction = 0;
   let frame = 0;
   let revealTimer = 0;
+  /** Programmatic restore destination that suspends scroll-derived state. */
+  let restoreTop = null;
 
   /** Refresh the persistent header for the committed page. @returns {void} */
   function refresh() {
@@ -51,10 +53,21 @@ export function initHeader(root) {
 
   /** Apply one frame of scroll-derived header state. */
   const update = () => {
-    const y = Math.max(0, window.scrollY);
+    const restoring = restoreTop !== null;
+    const y = restoring ? restoreTop : Math.max(0, window.scrollY);
+    header.classList.toggle('header-scrolled', y > TOP_LIMIT);
+
+    if (restoring) {
+      header.classList.remove('header-hidden');
+      accumulated = 0;
+      direction = 0;
+      previousY = y;
+      frame = 0;
+      return;
+    }
+
     const delta = y - previousY;
     const nextDirection = Math.sign(delta);
-    header.classList.toggle('header-scrolled', y > TOP_LIMIT);
 
     if (nextDirection && nextDirection !== direction) {
       accumulated = delta;
@@ -84,6 +97,14 @@ export function initHeader(root) {
   };
 
   root.addEventListener('night:page-ready', refresh, { signal });
+  root.addEventListener(
+    'night:restore-position',
+    (event) => {
+      restoreTop = event.detail.top;
+      update();
+    },
+    { signal },
+  );
   window.addEventListener('scroll', schedule, { passive: true, signal });
   header.addEventListener('keydown', schedule, { signal });
   header.addEventListener(

@@ -287,10 +287,126 @@ test('page media and references reinitialize cleanly after repeated partial visi
     await retained(page);
     await page.locator('a[data-lightbox]').first().click();
     await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
+    await expect(
+      page.locator('[data-lightbox-dialog] [data-lightbox-content] img'),
+    ).toHaveAttribute('src', /\.webp$/);
+    await expect(page.locator('[data-lightbox-original]')).toHaveAttribute(
+      'href',
+      /\.(png|jpg)$/,
+    );
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
     await page.locator('[data-article-back]').click();
     await expect(page).toHaveURL('/');
     await retained(page);
   }
+});
+
+/**
+ * Assert the preview starts at the trigger's painted location and size.
+ * @param {object} start - First computed keyframe of the open animation.
+ * @param {{x: number, y: number, width: number, height: number}} source - Trigger image box.
+ * @param {{x: number, y: number, width: number, height: number}} target - Preview box at rest.
+ * @param {boolean} exactSize - Also compare the start size against the trigger box.
+ * @returns {void} Completion.
+ */
+function expectZoomFromTrigger(start, source, target, exactSize) {
+  const [, x, y, scale] =
+    /translate\(([-\d.]+)px, ([-\d.]+)px\) scale\(([-\d.]+)\)/
+      .exec(start.transform)
+      .map(Number);
+  expect(scale).toBeLessThan(1);
+  expect(
+    Math.abs(target.x + target.width / 2 + x - (source.x + source.width / 2)),
+  ).toBeLessThan(1.5);
+  expect(
+    Math.abs(target.y + target.height / 2 + y - (source.y + source.height / 2)),
+  ).toBeLessThan(1.5);
+  if (!exactSize) return;
+  const width = target.width * scale;
+  const height = target.height * scale;
+  expect(width).toBeLessThanOrEqual(source.width + 0.5);
+  expect(height).toBeLessThanOrEqual(source.height + 0.5);
+  expect(
+    Math.min(Math.abs(width - source.width), Math.abs(height - source.height)),
+  ).toBeLessThan(0.5);
+}
+
+test('image lightbox grows from its trigger and skips the growth when reduced', async ({
+  page,
+}) => {
+  const triggers = [
+    ['/posts/vibecoding/', page.locator('a[data-lightbox]').first(), true],
+    ['/posts/vibecoding/', page.locator('a[data-lightbox]').nth(1), true],
+    ['/posts/blender-mesh/', page.locator('a[data-lightbox]').first(), true],
+    [
+      '/posts/gallery-walk/',
+      page.locator('.photo-stack a[data-lightbox]').first(),
+      false,
+    ],
+  ];
+  for (const [url, trigger, exactSize] of triggers) {
+    await page.goto(url);
+    const growing = page.waitForFunction(
+      () =>
+        (globalThis.document
+          .querySelector('[data-lightbox-dialog] img')
+          ?.getAnimations().length ?? 0) > 0,
+    );
+    await trigger.click();
+    await growing;
+    const keyframes = await page.evaluate(() =>
+      globalThis.document
+        .querySelector('[data-lightbox-dialog] img')
+        .getAnimations()[0]
+        .effect.getKeyframes(),
+    );
+    expect(keyframes).toHaveLength(2);
+    expect(keyframes[1].transform).toBeUndefined();
+    await page.waitForFunction(
+      () =>
+        globalThis.document
+          .querySelector('[data-lightbox-dialog] img')
+          .getAnimations().length === 0,
+    );
+    expectZoomFromTrigger(
+      keyframes[0],
+      await trigger.locator('img').boundingBox(),
+      await page
+        .locator('[data-lightbox-dialog] [data-lightbox-content] img')
+        .boundingBox(),
+      exactSize,
+    );
+    expect(
+      await page.evaluate(
+        () =>
+          globalThis.document
+            .querySelector('[data-lightbox-dialog]')
+            .getAnimations().length,
+      ),
+      url,
+    ).toBeGreaterThan(0);
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
+  }
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await triggers[0][1].click();
+  await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
+  await page.waitForFunction(() => {
+    const image = globalThis.document.querySelector(
+      '[data-lightbox-dialog] img',
+    );
+    return Boolean(image?.complete && image.naturalWidth);
+  });
+  expect(
+    await page.evaluate(() => ({
+      dialog: globalThis.document
+        .querySelector('[data-lightbox-dialog]')
+        .getAnimations().length,
+      image: globalThis.document
+        .querySelector('[data-lightbox-dialog] img')
+        .getAnimations().length,
+    })),
+  ).toEqual({ dialog: 0, image: 0 });
 });

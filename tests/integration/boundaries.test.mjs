@@ -591,6 +591,24 @@ test('tags isolate drafts, distinguish case, support Chinese, and PostView handl
     assert.equal(bundleView.cover.position, '20% 80%');
     assert.equal(bundleView.cover.alt, 'Bryce Canyon');
     assert.equal(bundleView.stableId, hash('/posts/bundle-cover/'));
+
+    // The cover lightbox previews the article WebP and keeps the source image as the original link.
+    const bundleArticle = load(
+      await readFile(
+        path.join(res.publicDir, 'posts', 'bundle-cover', 'index.html'),
+        'utf8',
+      ),
+    );
+    const coverTrigger = bundleArticle('a.image-open[data-lightbox]');
+    assert.equal(coverTrigger.length, 1);
+    assert.match(coverTrigger.attr('href'), /bryce-canyon\.jpg$/);
+    const coverPreview = coverTrigger.attr('data-lightbox-src');
+    assert.match(
+      coverPreview,
+      /^\/posts\/bundle-cover\/bryce-canyon_.*\.webp$/,
+    );
+    assert.equal(coverTrigger.find('img').attr('src'), coverPreview);
+
     assert.deepEqual(
       bundleView.tags.map((tag) => tag.label),
       ['AI', '中文标签'],

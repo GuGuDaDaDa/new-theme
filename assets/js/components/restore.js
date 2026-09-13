@@ -110,6 +110,18 @@ async function settleLayout() {
 }
 
 /**
+ * Announce the programmatic restore destination to persistent chrome.
+ * @param {Document} root - Current document.
+ * @param {number|null} top - Restore destination, or null once restoration ends.
+ * @returns {void}
+ */
+function publishRestoreTop(root, top) {
+  root.dispatchEvent(
+    new CustomEvent('night:restore-position', { detail: { top } }),
+  );
+}
+
+/**
  * Enhance a list's pagination, provenance capture, and position restoration.
  * @param {HTMLElement} list - Current list.
  * @param {string} marker - Current browsing-context identity.
@@ -143,7 +155,10 @@ function initList(list, marker) {
     candidate.listId === list.dataset.listId
       ? candidate
       : null;
-  if (saved) list.ownerDocument.documentElement.dataset.entry = 'restore';
+  if (saved) {
+    list.ownerDocument.documentElement.dataset.entry = 'restore';
+    publishRestoreTop(list.ownerDocument, saved.scrollY);
+  }
   const entryId =
     saved && previous?.window === marker && previous.entryId === saved.entryId
       ? saved.entryId
@@ -240,13 +255,12 @@ function initList(list, marker) {
         card.getBoundingClientRect().top -
         restoreTarget.anchorOffset
       : restoreTarget.scrollY;
-    await scrollRestored(
-      Math.max(
-        0,
-        Math.min(top, document.documentElement.scrollHeight - innerHeight),
-      ),
-      generation,
+    const destination = Math.max(
+      0,
+      Math.min(top, document.documentElement.scrollHeight - innerHeight),
     );
+    publishRestoreTop(list.ownerDocument, destination);
+    await scrollRestored(destination, generation);
   }
 
   /** Replay missing pages before restoring the original entry. @returns {Promise<void>} */
@@ -275,6 +289,7 @@ function initList(list, marker) {
       restoring = false;
       delete list.dataset.restoring;
       history.scrollRestoration = originalRestoration;
+      publishRestoreTop(list.ownerDocument, null);
       if (generation === restoreGeneration) {
         if (complete) restoreTarget = null;
         if (!disposed) snapshot();

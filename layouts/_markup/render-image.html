@@ -8,6 +8,7 @@
     <figure class="wide">
       <a
         href="{{ $image.originalURL }}"
+        data-lightbox-src="{{ $image.url }}"
         class="image-open"
         data-lightbox
         data-caption="{{ .Title }}"
@@ -32,6 +33,7 @@
   {{- else -}}
     <a
       href="{{ $image.originalURL }}"
+      data-lightbox-src="{{ $image.url }}"
       class="image-inline"
       data-lightbox
       data-caption="{{ .Title }}"
