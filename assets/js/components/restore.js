@@ -6,6 +6,38 @@ import { initMasonry } from './masonry.js';
 import { t } from '../core/i18n.js';
 import { createId } from '../core/ids.js';
 
+/** Entry motion reused for the restored viewport. */
+const RESTORE_DURATION = 400;
+const RESTORE_CURVE = [0.22, 0.61, 0.36, 1];
+
+/**
+ * Evaluate one axis of a cubic-bezier curve.
+ * @param {number} first - First control point on the axis.
+ * @param {number} second - Second control point on the axis.
+ * @param {number} t - Curve parameter.
+ * @returns {number} Axis value.
+ */
+function bezierAxis(first, second, t) {
+  return 3 * first * (1 - t) ** 2 * t + 3 * second * (1 - t) * t ** 2 + t ** 3;
+}
+
+/**
+ * Sample the shared entry easing curve.
+ * @param {number} progress - Linear progress in [0, 1].
+ * @returns {number} Eased progress in [0, 1].
+ */
+function easeRestore(progress) {
+  let low = 0;
+  let high = 1;
+  let t = progress;
+  for (let step = 0; step < 12; step += 1) {
+    t = (low + high) / 2;
+    if (bezierAxis(RESTORE_CURVE[0], RESTORE_CURVE[2], t) < progress) low = t;
+    else high = t;
+  }
+  return bezierAxis(RESTORE_CURVE[1], RESTORE_CURVE[3], t);
+}
+
 /**
  * Merge theme metadata without overwriting other history namespaces.
  * @param {object} value - Theme state.
@@ -155,6 +187,42 @@ function initList(list, marker) {
   }
 
   /**
+   * Scroll to the restored position, stopping as soon as the reader takes over.
+   * @param {number} top - Document-space destination.
+   * @param {number} generation - Restoration lifetime at invocation.
+   * @returns {Promise<void>} Animation completion.
+   */
+  function scrollRestored(top, generation) {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      window.scrollTo({ top, behavior: 'instant' });
+      return Promise.resolve();
+    }
+    const from = window.scrollY;
+    const started = performance.now();
+    return new Promise((resolve) => {
+      /**
+       * Advance the viewport by one animation frame.
+       * @param {number} now - Frame timestamp.
+       * @returns {void}
+       */
+      const step = (now) => {
+        if (disposed || interrupted || generation !== restoreGeneration) {
+          resolve();
+          return;
+        }
+        const progress = Math.min(1, (now - started) / RESTORE_DURATION);
+        window.scrollTo({
+          top: from + (top - from) * easeRestore(progress),
+          behavior: 'instant',
+        });
+        if (progress < 1) requestAnimationFrame(step);
+        else resolve();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  /**
    * Restore focus and position unless the reader or page lifecycle cancels it.
    * @param {number} generation - Restoration lifetime at invocation.
    * @returns {Promise<void>} Positioning completion.
@@ -172,13 +240,13 @@ function initList(list, marker) {
         card.getBoundingClientRect().top -
         restoreTarget.anchorOffset
       : restoreTarget.scrollY;
-    window.scrollTo({
-      top: Math.max(
+    await scrollRestored(
+      Math.max(
         0,
         Math.min(top, document.documentElement.scrollHeight - innerHeight),
       ),
-      behavior: 'instant',
-    });
+      generation,
+    );
   }
 
   /** Replay missing pages before restoring the original entry. @returns {Promise<void>} */

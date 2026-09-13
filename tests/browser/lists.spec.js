@@ -619,12 +619,14 @@ test('partial navigation restores appended cards and position without replacing 
   await expect(page.locator('.post')).toHaveCount(13);
   await expect(page.locator('[data-navigation-progress]')).toBeHidden();
   await expect(page.locator('.post').last()).toBeFocused();
-  expect(
-    await page
-      .locator('.post')
-      .last()
-      .evaluate((node) => node.getBoundingClientRect().top),
-  ).toBeCloseTo(top, 0);
+  await expect
+    .poll(() =>
+      page
+        .locator('.post')
+        .last()
+        .evaluate((node) => node.getBoundingClientRect().top),
+    )
+    .toBeCloseTo(top, 0);
   expect(
     await page.evaluate(
       () =>
