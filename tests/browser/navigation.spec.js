@@ -1,0 +1,296 @@
+/** Real Hugo navigation regression coverage using the existing preview. */
+import { test, expect } from '@playwright/test';
+
+// Match the example site's canonical origin, including original image URLs.
+test.use({ baseURL: 'http://localhost:4173' });
+
+/** Wait for the navigation controller and capture persistent DOM identity. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<void>} Completion. */
+async function start(page) {
+  await page.goto('/');
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-navigation',
+    'ready',
+  );
+  await page.evaluate(() => {
+    globalThis.savedHeader = globalThis.document.querySelector('[data-header]');
+  });
+}
+
+/** Assert a completed partial navigation retained the original header. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<void>} Completion. */
+async function retained(page) {
+  await expect(page.locator('[data-navigation-progress]')).toBeHidden();
+  expect(
+    await page.evaluate(
+      () =>
+        globalThis.savedHeader ===
+        globalThis.document.querySelector('[data-header]'),
+    ),
+  ).toBe(true);
+  await expect(page.locator('main')).toHaveCSS('animation-name', 'none');
+}
+
+test('header and theme persist through article, back, about and friends with current metadata', async ({
+  page,
+}) => {
+  const errors = [];
+  page.on('pageerror', (error) => errors.push(error.message));
+  await start(page);
+  await page.locator('[data-theme-trigger]').click();
+  const theme = await page.locator('html').getAttribute('data-theme');
+  const article = page.locator('[data-post-title]').first();
+  const url = await article.getAttribute('href');
+  await article.click();
+  await expect(page).toHaveURL(url);
+  await retained(page);
+  await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    new RegExp(url),
+  );
+  expect(await page.title()).toContain(await page.locator('h1').textContent());
+  await page.locator('[data-article-back]').click();
+  await expect(page).toHaveURL('/');
+  await retained(page);
+  for (const route of ['about', 'friends']) {
+    await page.locator(`[data-header] a[href="/${route}/"]`).click();
+    await expect(page).toHaveURL(`/${route}/`);
+    await retained(page);
+    await expect(page.locator('[data-header]')).not.toHaveClass(
+      /header-overlay/,
+    );
+  }
+  await page.goBack();
+  await expect(page).toHaveURL('/about/');
+  await retained(page);
+  await page.goForward();
+  await expect(page).toHaveURL('/friends/');
+  await retained(page);
+  expect(errors).toEqual([]);
+});
+
+test('slow navigation preserves old content and displays progress; latest click wins', async ({
+  page,
+}) => {
+  await start(page);
+  let release;
+  const gate = new Promise((resolve) => {
+    release = resolve;
+  });
+  await page.route('**/about/', async (route) => {
+    await gate;
+    await route.continue();
+  });
+  await page.locator('[data-header] a[href="/about/"]').click();
+  await expect(page.locator('[data-navigation-progress]')).toBeVisible();
+  await expect(page.locator('#latest-title')).toBeVisible();
+  await expect(page.locator('main')).toHaveAttribute('aria-busy', 'true');
+  await page.locator('[data-header] a[href="/friends/"]').click();
+  await expect(page).toHaveURL('/friends/');
+  release();
+  await retained(page);
+  await expect(page).toHaveURL('/friends/');
+});
+
+for (const failure of ['network', 'build', 'non-html', '404']) {
+  test(`${failure} response falls back to a real document navigation`, async ({
+    page,
+  }) => {
+    await start(page);
+    await page.route('**/about/', async (route) => {
+      if (route.request().isNavigationRequest()) {
+        await route.continue();
+        return;
+      }
+      if (failure === 'network') await route.abort();
+      else if (failure === 'build') {
+        const response = await route.fetch();
+        await route.fulfill({
+          response,
+          body: (await response.text()).replace(
+            /name="?night-build"? content="[^"]+"/,
+            'name="night-build" content="new-build"',
+          ),
+        });
+      } else
+        await route.fulfill({
+          status: failure === '404' ? 404 : 200,
+          contentType: 'text/plain',
+          body: 'Unavailable',
+        });
+    });
+    await page.locator('[data-header] a[href="/about/"]').click();
+    await expect(page).toHaveURL('/about/');
+    await expect(page.locator('html')).toHaveAttribute(
+      'data-navigation',
+      'ready',
+    );
+    expect(await page.evaluate(() => globalThis.savedHeader)).toBeUndefined();
+    await expect(page.locator('main h1')).toBeVisible();
+  });
+}
+
+test('search result closes persistent modal and remains usable after navigation', async ({
+  page,
+}) => {
+  await start(page);
+  await page.locator('[data-search-trigger]').click();
+  await page.locator('[data-search-input]').fill('手记');
+  const result = page.locator('[data-search-results] a').first();
+  await expect(result).toBeVisible();
+  await result.click();
+  await retained(page);
+  await expect(page.locator('[data-search-dialog]')).not.toBeVisible();
+  await expect(page.locator('main')).toBeFocused();
+  await page.locator('[data-search-trigger]').click();
+  await expect(page.locator('[data-search-input]')).toBeFocused();
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-search-dialog]')).not.toBeVisible();
+  await expect
+    .poll(() =>
+      page.evaluate(() => globalThis.document.activeElement.outerHTML),
+    )
+    .toContain('data-search-trigger');
+});
+
+test('reduced motion, keyboard card entry and repeated article enhancements survive navigation', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await start(page);
+  const card = page.locator('[data-card-enhanced]').first();
+  const url = await card.getAttribute('data-post-url');
+  await card.focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(url);
+  await retained(page);
+  await expect(page.locator('[data-navigation-progress]')).toHaveCSS(
+    'transition-duration',
+    '0s',
+  );
+  await page.goBack();
+  await expect(page).toHaveURL('/');
+  await retained(page);
+  await expect(page.locator('[data-card-enhanced]').first()).toBeFocused();
+});
+
+test('article hash navigation and traversal keep content and restore reading position', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await start(page);
+  await page.locator('a[href="/posts/vibecoding/"]').first().click();
+  await expect(page).toHaveURL('/posts/vibecoding/');
+  await retained(page);
+  const heading = page.locator('.prose h2[id]').first();
+  const id = await heading.getAttribute('id');
+  await page.locator('[data-toc] a').first().click();
+  await expect(page).toHaveURL(new RegExp(`#${encodeURIComponent(id)}$`, 'i'));
+  const offset = await heading.evaluate(
+    (node) => node.getBoundingClientRect().top,
+  );
+  await page.locator('[data-header] a[href="/about/"]').focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL('/about/');
+  await retained(page);
+  await page.goBack();
+  await expect(page).toHaveURL(
+    new RegExp(`/posts/vibecoding/#${encodeURIComponent(id)}$`, 'i'),
+  );
+  await retained(page);
+  expect(
+    await heading.evaluate((node) => node.getBoundingClientRect().top),
+  ).toBeCloseTo(offset, 0);
+  await page.goBack();
+  await expect(page).toHaveURL('/posts/vibecoding/');
+  await retained(page);
+});
+
+for (const theme of ['light', 'dark']) {
+  test(`partial pages match direct Hugo layout across viewports in ${theme} mode`, async ({
+    page,
+  }, testInfo) => {
+    await page.emulateMedia({ colorScheme: theme, reducedMotion: 'reduce' });
+    await start(page);
+    for (const width of [320, 360, 390, 768, 1024, 1440, 1920]) {
+      await page.setViewportSize({ width, height: width <= 390 ? 844 : 900 });
+      await page.locator('a[href="/posts/vibecoding/"]').first().click();
+      await retained(page);
+      await expect(page.locator('[data-toc]')).toHaveCount(1);
+      const soft = await page.locator('main').boundingBox();
+      expect(
+        await page.evaluate(
+          () =>
+            globalThis.document.documentElement.scrollWidth <=
+            globalThis.innerWidth,
+        ),
+      ).toBe(true);
+      if ([390, 1440].includes(width))
+        await page.screenshot({
+          path: testInfo.outputPath(`article-${theme}-${width}.png`),
+          fullPage: true,
+        });
+      await page.reload();
+      await expect(page.locator('html')).toHaveAttribute(
+        'data-navigation',
+        'ready',
+      );
+      const direct = await page.locator('main').boundingBox();
+      expect(soft.x).toBeCloseTo(direct.x, 0);
+      expect(soft.width).toBeCloseTo(direct.width, 0);
+      await page.evaluate(() => {
+        globalThis.savedHeader =
+          globalThis.document.querySelector('[data-header]');
+      });
+      await page.locator('[data-header] .brand').click();
+      await retained(page);
+      expect(
+        await page.evaluate(
+          () =>
+            globalThis.document.documentElement.scrollWidth <=
+            globalThis.innerWidth,
+        ),
+      ).toBe(true);
+      if ([390, 1440].includes(width))
+        await page.screenshot({
+          path: testInfo.outputPath(`home-${theme}-${width}.png`),
+          fullPage: true,
+        });
+    }
+  });
+}
+
+test('page media and references reinitialize cleanly after repeated partial visits', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await start(page);
+  for (let visit = 0; visit < 2; visit += 1) {
+    await page.locator('a[href="/posts/gallery-walk/"]').first().click();
+    await retained(page);
+    await expect(page.locator('[data-photo-counter]')).toHaveText('1 / 4');
+    await page.locator('[data-photo-stack]').focus();
+    await page.locator('[data-photo-next]').click();
+    await expect(page.locator('[data-photo-counter]')).toHaveText('2 / 4');
+    await page.locator('[data-article-back]').click();
+    await expect(page).toHaveURL('/');
+    await retained(page);
+    await page.locator('a[href="/posts/engineering-notes/"]').first().click();
+    await retained(page);
+    await page.locator('[data-reference]').first().scrollIntoViewIfNeeded();
+    await page.locator('[data-reference]').first().hover();
+    await expect(page.locator('.popover')).toBeVisible();
+    await page.locator('[data-article-back]').click();
+    await expect(page).toHaveURL('/');
+    await retained(page);
+    await expect(page.locator('.popover')).toHaveCount(0);
+    await page.locator('a[href="/posts/vibecoding/"]').first().click();
+    await retained(page);
+    await page.locator('a[data-lightbox]').first().click();
+    await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
+    await page.locator('[data-article-back]').click();
+    await expect(page).toHaveURL('/');
+    await retained(page);
+  }
+});

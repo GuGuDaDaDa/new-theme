@@ -18,6 +18,7 @@
 @import './components/theme-menu.css';
 @import './components/notices.css';
 @import './components/spoiler.css';
+@import './components/navigation.css';
 @import './components/entry.css';
 @import './components/not-found.css';
 

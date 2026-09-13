@@ -83,6 +83,8 @@ async function settleLayout() {
  * @returns {() => void} Cleanup.
  */
 function initList(list, marker) {
+  const pageURL = location.pathname;
+  const navigationEntry = history.state?.nightNavigation?.entryId;
   const pagination = initPagination(list);
   const events = new AbortController();
   const status = list.querySelector('[data-list-status]');
@@ -136,14 +138,18 @@ function initList(list, marker) {
       window: marker,
       buildId: list.dataset.buildId,
       listId: list.dataset.listId,
-      url: location.pathname,
+      url: pageURL,
       pages: [...pagination.pages],
       scrollY: Math.max(0, window.scrollY),
       anchorUrl,
       anchorOffset,
     };
     saveList(value);
-    replaceNight(value);
+    if (
+      location.pathname === pageURL &&
+      history.state?.nightNavigation?.entryId === navigationEntry
+    )
+      replaceNight(value);
     return value;
   }
 
@@ -157,7 +163,9 @@ function initList(list, marker) {
     await settleLayout();
     if (disposed || interrupted || generation !== restoreGeneration) return;
     const card = anchorCard();
-    card?.focus({ preventScroll: true });
+    (card || list.ownerDocument.querySelector('#main')).focus({
+      preventScroll: true,
+    });
     const top = card
       ? window.scrollY +
         card.getBoundingClientRect().top -
@@ -219,6 +227,7 @@ function initList(list, marker) {
       target: anchorUrl,
       from: value,
       sourceKey: window.navigation?.currentEntry?.key || null,
+      sourceNavigationEntry: history.state?.nightNavigation?.entryId || null,
     });
   }
 
@@ -314,18 +323,28 @@ function initList(list, marker) {
     },
     { signal: events.signal },
   );
-  if (saved)
-    void restore().catch((error) => {
-      status.textContent = error.message;
-    });
-  else snapshot();
-  return () => {
+  const ready = saved
+    ? restore().catch((error) => {
+        status.textContent = error.message;
+      })
+    : Promise.resolve();
+  if (!saved) snapshot();
+  list.ownerDocument.addEventListener(
+    'night:before-navigation',
+    () => {
+      if (!restoring) snapshot();
+    },
+    { signal: events.signal },
+  );
+  const cleanup = () => {
     disposed = true;
     restoreGeneration += 1;
     clearTimeout(timer);
     events.abort();
     pagination.cleanup();
   };
+  cleanup.ready = ready;
+  return cleanup;
 }
 
 /**
@@ -350,6 +369,7 @@ function initArticle(back, marker) {
       article: location.pathname,
       from: token.from,
       sourceKey: token.sourceKey,
+      sourceNavigationEntry: token.sourceNavigationEntry,
     };
     replaceNight(source);
   }
@@ -379,9 +399,12 @@ function initArticle(back, marker) {
       const prior =
         current && entries?.find((entry) => entry.index === current.index - 1);
       if (
-        source.sourceKey &&
-        prior?.key === source.sourceKey &&
-        internalPath(prior.url, location.href) === source.from.url
+        (source.sourceNavigationEntry &&
+          history.state?.nightNavigation?.fromEntryId ===
+            source.sourceNavigationEntry) ||
+        (source.sourceKey &&
+          prior?.key === source.sourceKey &&
+          internalPath(prior.url, location.href) === source.from.url)
       ) {
         event.preventDefault();
         history.back();

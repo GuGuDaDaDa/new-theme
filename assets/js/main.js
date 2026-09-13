@@ -1,5 +1,22 @@
-/** Browser entry point for the global page shell. */
+/** Browser entry point for persistent shell and replaceable page content. */
+import { initShell, initPage } from './core/lifecycle.js';
+import { initNavigation } from './core/navigation.js';
 
-import { init } from './core/lifecycle.js';
-
-init(document);
+initShell(document);
+// Establish history identity before list initialization captures it.
+history.replaceState(
+  {
+    ...history.state,
+    nightNavigation: history.state?.nightNavigation || {
+      schema: 1,
+      entryId: crypto.randomUUID(),
+      url: location.href,
+      scrollX,
+      scrollY,
+      fromEntryId: null,
+    },
+  },
+  '',
+);
+const page = initPage(document);
+page.ready.then(() => initNavigation(document, initPage, page));

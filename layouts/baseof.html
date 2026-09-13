@@ -4,6 +4,18 @@
     {{ partial "head.html" . }}
   </head>
   <body class="{{ if .IsHome }}home-page{{ end }}">
+    <div
+      data-navigation-progress
+      hidden
+      role="progressbar"
+      aria-label="{{ i18n "navigation.loading" }}"
+    ></div>
+    <p
+      class="sr-only"
+      role="status"
+      aria-live="polite"
+      data-navigation-status
+    ></p>
     <a class="skip" href="#main">{{ i18n "nav.skipToContent" }}</a>
     {{ partial "header.html" . }}
     <main

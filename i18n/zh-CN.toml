@@ -20,6 +20,12 @@ other = "自动（跟随系统）"
 [theme.label]
 other = "主题：{{ .Mode }}，当前{{ .Theme }}；点击切换为{{ .Next }}"
 
+[navigation]
+[navigation.loading]
+other = "正在加载页面…"
+[navigation.complete]
+other = "页面加载完成"
+
 [search]
 [search.label]
 other = "搜索文章"

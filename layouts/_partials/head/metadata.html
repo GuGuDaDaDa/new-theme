@@ -30,31 +30,37 @@
     {{- end -}}
   {{- end -}}
 {{- end -}}
-<meta name="description" content="{{ $description }}" />
+<meta data-page-meta name="description" content="{{ $description }}" />
 {{- if $is404 }}
-  <meta name="robots" content="noindex" />
+  <meta data-page-meta name="robots" content="noindex" />
 {{- else }}
-  <link rel="canonical" href="{{ $canonical }}" />
+  <link data-page-meta rel="canonical" href="{{ $canonical }}" />
   <meta
+    data-page-meta
     property="og:type"
     content="{{ cond (and (eq $page.Kind "page") (eq $page.Section "posts")) "article" "website" }}"
   />
-  <meta property="og:site_name" content="{{ site.Title }}" />
-  <meta property="og:locale" content="zh_CN" />
-  <meta property="og:title" content="{{ $title }}" />
-  <meta property="og:description" content="{{ $description }}" />
-  <meta property="og:url" content="{{ $canonical }}" />
+  <meta data-page-meta property="og:site_name" content="{{ site.Title }}" />
+  <meta data-page-meta property="og:locale" content="zh_CN" />
+  <meta data-page-meta property="og:title" content="{{ $title }}" />
+  <meta data-page-meta property="og:description" content="{{ $description }}" />
+  <meta data-page-meta property="og:url" content="{{ $canonical }}" />
   {{- with $image }}
-    <meta property="og:image" content="{{ . }}" />
+    <meta data-page-meta property="og:image" content="{{ . }}" />
   {{- end }}
   <meta
+    data-page-meta
     name="twitter:card"
     content="{{ cond $image "summary_large_image" "summary" }}"
   />
-  <meta name="twitter:title" content="{{ $title }}" />
-  <meta name="twitter:description" content="{{ $description }}" />
+  <meta data-page-meta name="twitter:title" content="{{ $title }}" />
+  <meta
+    data-page-meta
+    name="twitter:description"
+    content="{{ $description }}"
+  />
   {{- with $image }}
-    <meta name="twitter:image" content="{{ . }}" />
+    <meta data-page-meta name="twitter:image" content="{{ . }}" />
   {{- end }}
   {{ partial "head/json-ld.html" (dict "page" $page "canonical" $canonical "title" $title "description" $description "image" $image) }}
 {{- end }}

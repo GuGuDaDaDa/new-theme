@@ -33,4 +33,4 @@
   {{- end -}}
   {{- $items = $items | append $article -}}
 {{- end -}}
-<script type="application/ld+json">{{ $items | jsonify | safeJS }}</script>
+<script data-page-meta type="application/ld+json">{{ $items | jsonify | safeJS }}</script>

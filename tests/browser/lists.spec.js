@@ -569,11 +569,11 @@ test('restored list focus hides the ring for pointer input and keeps it for keyb
     const active = globalThis.document.activeElement;
     return {
       outlineStyle: globalThis.getComputedStyle(active).outlineStyle,
-      focusVisible: active.matches(':focus-visible'),
+      inputMode: globalThis.document.documentElement.dataset.inputMode,
     };
   });
   expect(restored.outlineStyle).toBe('none');
-  expect(restored.focusVisible).toBe(true);
+  expect(restored.inputMode).toBe('pointer');
 
   await page.keyboard.press('Tab');
   await expect(card.locator('.post-tag').first()).toBeFocused();
@@ -592,4 +592,54 @@ test('restored list focus hides the ring for pointer input and keeps it for keyb
       .outlineStyle,
   }));
   expect(shifted.outlineStyle).toBe('solid');
+});
+
+test('partial navigation restores appended cards and position without replacing the header', async ({
+  page,
+}) => {
+  await page.goto(fixtureBaseURL);
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-navigation',
+    'ready',
+  );
+  await page.evaluate(() => {
+    globalThis.listHeader = globalThis.document.querySelector('[data-header]');
+  });
+  await page.locator('[data-load-more]').click();
+  await expect(page.locator('.post')).toHaveCount(13);
+  const last = page.locator('.post').last();
+  await last.scrollIntoViewIfNeeded();
+  await last.focus();
+  const top = await last.evaluate((node) => node.getBoundingClientRect().top);
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(`${fixtureBaseURL}/posts/card-12/`);
+  await expect(page.locator('[data-navigation-progress]')).toBeHidden();
+  await page.goBack();
+  await expect(page).toHaveURL(`${fixtureBaseURL}/`);
+  await expect(page.locator('.post')).toHaveCount(13);
+  await expect(page.locator('[data-navigation-progress]')).toBeHidden();
+  await expect(page.locator('.post').last()).toBeFocused();
+  expect(
+    await page
+      .locator('.post')
+      .last()
+      .evaluate((node) => node.getBoundingClientRect().top),
+  ).toBeCloseTo(top, 0);
+  expect(
+    await page.evaluate(
+      () =>
+        globalThis.listHeader ===
+        globalThis.document.querySelector('[data-header]'),
+    ),
+  ).toBe(true);
+  await page.locator('.footer a[href="#main"]').click();
+  await expect(page).toHaveURL(`${fixtureBaseURL}/#main`);
+  await page.locator('.post').last().focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL(`${fixtureBaseURL}/posts/card-12/`);
+  await expect(page.locator('[data-navigation-progress]')).toBeHidden();
+  await page.goBack();
+  await expect(page).toHaveURL(`${fixtureBaseURL}/#main`);
+  await expect(page.locator('.post')).toHaveCount(13);
+  await expect(page.locator('[data-navigation-progress]')).toBeHidden();
 });

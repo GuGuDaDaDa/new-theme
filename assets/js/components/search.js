@@ -114,16 +114,35 @@ export function initSearch(root) {
       }
     }
   }
-  triggers.forEach((trigger) => {
-    trigger.addEventListener(
-      'click',
-      () => {
+  root.addEventListener(
+    'click',
+    (event) => {
+      const trigger = event.target.closest('[data-search-trigger]');
+      if (trigger) {
         modal.open(trigger, input);
         input.select();
-      },
-      { signal },
-    );
-  });
+      }
+    },
+    { signal },
+  );
+  dialog.addEventListener(
+    'close',
+    () => {
+      sequence += 1;
+      clearTimeout(input._searchTimer);
+    },
+    { signal },
+  );
+  dialog.addEventListener(
+    'keydown',
+    (event) => {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        modal.close();
+      }
+    },
+    { signal },
+  );
   form.addEventListener('submit', (e) => e.preventDefault(), { signal });
   input.addEventListener(
     'input',

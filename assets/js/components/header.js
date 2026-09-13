@@ -22,11 +22,19 @@ export function initHeader(root) {
   let direction = 0;
   let frame = 0;
 
-  header.classList.toggle(
-    'header-overlay',
-    root.body.classList.contains('home-page') &&
-      Boolean(root.querySelector('.hero')),
-  );
+  /** Refresh the persistent header for the committed page. @returns {void} */
+  function refresh() {
+    header.classList.toggle(
+      'header-overlay',
+      root.body.classList.contains('home-page') &&
+        Boolean(root.querySelector('.hero')),
+    );
+    previousY = Math.max(0, window.scrollY);
+    accumulated = 0;
+    direction = 0;
+    header.classList.remove('header-hidden');
+    update();
+  }
 
   /** Keep keyboard-focused navigation visible without locking pointer focus. */
   const isLocked = () => Boolean(header.querySelector(':focus-visible'));
@@ -65,6 +73,7 @@ export function initHeader(root) {
     if (!frame) frame = requestAnimationFrame(update);
   };
 
+  root.addEventListener('night:page-ready', refresh, { signal });
   window.addEventListener('scroll', schedule, { passive: true, signal });
   header.addEventListener('keydown', schedule, { signal });
   header.addEventListener(
@@ -75,7 +84,7 @@ export function initHeader(root) {
     },
     { signal },
   );
-  update();
+  refresh();
 
   const cleanup = () => {
     controller.abort();

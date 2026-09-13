@@ -29,7 +29,7 @@
     },
     {
       "path": "assets/js/main.js",
-      "source": "import { init } from './core/lifecycle.js';\ninit(document);\nimport('./dynamic-sample.js').then((mod) => {\n  window.__DYNAMIC_LOADED__ = mod.message;\n  document.documentElement.setAttribute('data-dynamic', mod.message);\n});\n"
+      "source": "import { initShell, initPage } from './core/lifecycle.js';\ninitShell(document);\ninitPage(document);\nimport('./dynamic-sample.js').then((mod) => {\n  window.__DYNAMIC_LOADED__ = mod.message;\n  document.documentElement.setAttribute('data-dynamic', mod.message);\n});\n"
     }
   ]
 }

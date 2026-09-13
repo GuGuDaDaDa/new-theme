@@ -1,5 +1,7 @@
 /** Progressive whole-card navigation without replacing real article links. */
 
+import { navigate } from '../core/navigation.js';
+
 const instances = new WeakMap();
 
 /**
@@ -51,7 +53,7 @@ function openCard(card) {
   card.dispatchEvent(
     new CustomEvent('night:article-open', { bubbles: true, detail: { url } }),
   );
-  card.ownerDocument.defaultView.location.assign(url);
+  navigate(url);
 }
 
 /**
