@@ -1,6 +1,7 @@
 /** Progressive same-document navigation over Hugo's complete HTML pages. */
 import { initDialog } from './dialog.js';
 import { t } from './i18n.js';
+import { createId } from './ids.js';
 import { readSession, writeSession } from './storage.js';
 
 let visit;
@@ -32,7 +33,7 @@ export function initNavigation(root, initPage, initialPage) {
   function entry(url) {
     return {
       schema: 1,
-      entryId: crypto.randomUUID(),
+      entryId: createId(),
       url: url.href,
       scrollX: 0,
       scrollY: 0,

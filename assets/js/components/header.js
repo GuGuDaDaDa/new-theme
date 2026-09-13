@@ -3,6 +3,7 @@
 const instances = new WeakMap();
 const TOP_LIMIT = 24;
 const DIRECTION_THRESHOLD = 5;
+const REVEAL_DURATION = 380;
 
 /**
  * Initialize the sticky header once for a document.
@@ -21,6 +22,7 @@ export function initHeader(root) {
   let accumulated = 0;
   let direction = 0;
   let frame = 0;
+  let revealTimer = 0;
 
   /** Refresh the persistent header for the committed page. @returns {void} */
   function refresh() {
@@ -32,6 +34,14 @@ export function initHeader(root) {
     previousY = Math.max(0, window.scrollY);
     accumulated = 0;
     direction = 0;
+    if (header.classList.contains('header-hidden')) {
+      header.classList.add('header-reveal');
+      clearTimeout(revealTimer);
+      revealTimer = setTimeout(
+        () => header.classList.remove('header-reveal'),
+        REVEAL_DURATION,
+      );
+    }
     header.classList.remove('header-hidden');
     update();
   }
@@ -88,6 +98,7 @@ export function initHeader(root) {
 
   const cleanup = () => {
     controller.abort();
+    clearTimeout(revealTimer);
     if (frame) cancelAnimationFrame(frame);
     instances.delete(root);
   };

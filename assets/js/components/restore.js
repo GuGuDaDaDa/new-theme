@@ -4,6 +4,7 @@ import { readSession, writeSession, saveList } from '../core/storage.js';
 import { initPagination } from './pagination.js';
 import { initMasonry } from './masonry.js';
 import { t } from '../core/i18n.js';
+import { createId } from '../core/ids.js';
 
 /**
  * Merge theme metadata without overwriting other history namespaces.
@@ -25,7 +26,7 @@ function replaceNight(value) {
  */
 function windowMarker() {
   if (!window.name.startsWith('night-tab:'))
-    window.name = `night-tab:${crypto.randomUUID()}`;
+    window.name = `night-tab:${createId()}`;
   return window.name;
 }
 
@@ -114,7 +115,7 @@ function initList(list, marker) {
   const entryId =
     saved && previous?.window === marker && previous.entryId === saved.entryId
       ? saved.entryId
-      : crypto.randomUUID();
+      : createId();
   let restoreTarget = saved;
   if (saved) {
     anchorUrl = saved.anchorUrl;

@@ -1,4 +1,5 @@
 /** Browser entry point for persistent shell and replaceable page content. */
+import { createId } from './core/ids.js';
 import { initShell, initPage } from './core/lifecycle.js';
 import { initNavigation } from './core/navigation.js';
 
@@ -9,7 +10,7 @@ history.replaceState(
     ...history.state,
     nightNavigation: history.state?.nightNavigation || {
       schema: 1,
-      entryId: crypto.randomUUID(),
+      entryId: createId(),
       url: location.href,
       scrollX,
       scrollY,
