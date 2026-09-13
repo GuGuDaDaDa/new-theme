@@ -105,10 +105,10 @@
   margin-bottom: 0.7em;
 }
 
-/* Keep the disclosure controls at the first line when its text wraps. */
+/* Center the notice controls on the card; the body keeps a 32px band. */
 .prose .ai-warning {
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 12px;
   padding: 12px 20px;
   color: var(--muted);
@@ -127,7 +127,6 @@
   min-width: 20px;
   height: 20px;
   flex-shrink: 0;
-  margin-top: 6px;
   border: 1px solid var(--accent);
   border-radius: 50%;
   color: var(--accent);

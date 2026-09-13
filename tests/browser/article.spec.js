@@ -781,6 +781,11 @@ test('AI notices preserve reading alignment across viewports and without scripti
         const close = warning.querySelector('.ai-warning-close');
         const closeBox = close.getBoundingClientRect();
         const warningBox = warning.getBoundingClientRect();
+        const warningCenter = (warningBox.top + warningBox.bottom) / 2;
+        const centerDelta = (element) => {
+          const box = element.getBoundingClientRect();
+          return Math.abs((box.top + box.bottom) / 2 - warningCenter);
+        };
         return {
           textDelta: Math.abs(
             label.getBoundingClientRect().left -
@@ -794,9 +799,15 @@ test('AI notices preserve reading alignment across viewports and without scripti
             closeBox.right + 6 <= warningBox.right &&
             closeBox.top - 6 >= warningBox.top &&
             closeBox.bottom + 6 <= warningBox.bottom,
+          iconCenterDelta: centerDelta(
+            warning.querySelector('.ai-warning-icon'),
+          ),
+          closeCenterDelta: centerDelta(close),
         };
       });
       expect(alignment.textDelta).toBeLessThan(1);
+      expect(alignment.iconCenterDelta).toBeLessThan(1);
+      expect(alignment.closeCenterDelta).toBeLessThan(1);
       expect(alignment.overflow).toBe(false);
       expect(alignment.closeInside).toBe(true);
       await page.locator('.ai-summary-content p').click();
