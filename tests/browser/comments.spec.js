@@ -748,6 +748,45 @@ test('skips an unavailable emoji file and keeps the remaining packs', async ({
   await expect(page.locator('[data-emoji-grid] button')).toHaveCount(1);
 });
 
+test('flows same-line emoticons inline and keeps deliberate breaks', async ({
+  page,
+}) => {
+  const run = (count, offset = 0) =>
+    Array.from({ length: count }, (_, index) => {
+      const name = `e-${index + offset}`;
+      return `![${name}](</__comments/emoji/${name}.png>)`;
+    }).join(' ');
+  await openArticle(page, {
+    emoji: { 图片: imagePack('e', 15) },
+    list: () =>
+      listPayload([comment(1, { contentText: `${run(12)}\n${run(3, 12)}` })]),
+  });
+  const images = page.locator('#comment-1 .comment-body .comment-emoji');
+  await expect(images).toHaveCount(15);
+  expect(
+    await images
+      .first()
+      .evaluate((node) => globalThis.getComputedStyle(node).display),
+  ).toBe('inline-block');
+  const rows = await images.evaluateAll((nodes) =>
+    nodes.map((node) => Math.round(node.getBoundingClientRect().top)),
+  );
+  expect(new Set(rows.slice(0, 12)).size).toBe(1);
+  expect(new Set(rows.slice(12)).size).toBe(1);
+  expect(rows[0]).not.toBe(rows[12]);
+  expect(
+    await page.evaluate(() => {
+      const body = globalThis.document.querySelector(
+        '#comment-1 .comment-body',
+      );
+      const right = body.getBoundingClientRect().right;
+      return [...body.querySelectorAll('.comment-emoji')].every(
+        (node) => node.getBoundingClientRect().right <= right + 1,
+      );
+    }),
+  ).toBe(true);
+});
+
 test('degrades when the emoji file is unavailable', async ({ page }) => {
   await openArticle(page, { list: () => listPayload([comment(1)]) });
   await expect(page.locator('.comment-root')).toHaveCount(1);

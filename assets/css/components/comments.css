@@ -426,6 +426,7 @@ html[data-input-mode='pointer'] .comments input:active {
 }
 
 .comments .comment-body .comment-emoji {
+  display: inline-block;
   width: 28px;
   height: 28px;
   object-fit: contain;
