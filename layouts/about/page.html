@@ -52,5 +52,8 @@
         {{ end }}
       </nav>
     {{ end }}
+    {{ if site.Params.comments.about }}
+      {{ partial "article/comments.html" . }}
+    {{ end }}
   </article>
 {{ end }}

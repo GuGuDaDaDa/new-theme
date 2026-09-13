@@ -50,6 +50,15 @@ files = ['! **']
 source = 'assets'
 target = 'assets'
 
+# Comment module: uncomment api_base and set it to your comment Worker origin to publish comments.
+[params.comments]
+# api_base = 'https://your-comment-worker.example.workers.dev'
+# site_id = ''
+# emoji = 'https://example.com/OwO.json'
+# Standalone pages: set to true to show comments on /about/ or /friends/ (default off).
+about = true
+friends = true
+
 [params]
 description = '记录技术实践、游戏体验与个人观察。'
 footerText = '海雾深处，字字为灯'

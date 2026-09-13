@@ -80,3 +80,32 @@ export function saveList(snapshot) {
   while (keys.length > 20) writeSession(keys.shift(), null);
   writeSession('night:list-lru', keys);
 }
+
+/**
+ * Read optional local JSON, including browsers that deny the storage getter.
+ * @param {string} key - Storage key.
+ * @returns {object|null} Parsed value.
+ */
+export function readLocal(key) {
+  try {
+    return JSON.parse(window.localStorage.getItem(key));
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Write or remove optional local JSON.
+ * @param {string} key - Storage key.
+ * @param {object|null} value - Data, or null to remove.
+ * @returns {boolean} Whether storage succeeded.
+ */
+export function writeLocal(key, value) {
+  try {
+    if (value === null) window.localStorage.removeItem(key);
+    else window.localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch {
+    return false;
+  }
+}

@@ -38,5 +38,8 @@
         {{ end }}
       </div>
     {{ end }}
+    {{ if site.Params.comments.friends }}
+      {{ partial "article/comments.html" . }}
+    {{ end }}
   </article>
 {{ end }}

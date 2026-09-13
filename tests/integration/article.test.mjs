@@ -284,6 +284,7 @@ test('article footer carries the byline, one display date, and the copyright not
       'prose',
       'article-footer',
       'article-nav',
+      'comments',
     ],
   );
   const footer = $('.article-footer');

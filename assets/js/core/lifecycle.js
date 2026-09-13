@@ -123,6 +123,13 @@ export function initPage(root) {
           (module) => module.initSpoilers,
         ),
     ],
+    [
+      '[data-comments]',
+      () =>
+        import('../components/comments.js').then(
+          (module) => module.initComments,
+        ),
+    ],
   ]) {
     if (!root.querySelector(selector)) continue;
     let disposed = false;

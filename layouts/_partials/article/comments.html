@@ -1,0 +1,271 @@
+{{- $comments := site.Params.comments -}}
+{{- with $comments.api_base -}}
+  <section
+    class="comments"
+    id="comments"
+    aria-labelledby="comments-title"
+    data-comments
+    data-api-base="{{ . }}"
+    data-site-id="{{ $comments.site_id | default "" }}"
+    data-emoji="{{ $comments.emoji | default "" }}"
+    data-post-title="{{ $.Title }}"
+    data-post-url="{{ $.Permalink }}"
+  >
+    <div class="comments-heading">
+      <h2 id="comments-title">
+        {{ i18n "comments.title" }}<span
+          class="comment-count"
+          data-comment-count
+        ></span>
+      </h2>
+    </div>
+    <div data-composer-home>
+      <p class="reply-notice" data-reply-notice hidden>
+        <span
+          >{{ i18n "comments.replying" }} <strong data-reply-name></strong
+        ></span>
+        <span class="reply-notice-actions">
+          <button type="button" data-goto-reply>
+            {{- i18n "comments.gotoReply" -}}
+          </button>
+          <button type="button" data-cancel-reply>
+            {{- i18n "comments.cancelReply" -}}
+          </button>
+        </span>
+      </p>
+      <form class="composer" data-composer>
+        <fieldset data-composer-fields>
+          <legend class="sr-only" data-composer-title>
+            {{- i18n "comments.legend" -}}
+          </legend>
+          <div class="identity-fields">
+            <label for="comment-nickname"
+              >{{ i18n "comments.nickname" }}
+              <span class="muted">{{ i18n "comments.nicknameRequired" }}</span
+              ><input
+                id="comment-nickname"
+                name="nickname"
+                autocomplete="nickname"
+                required
+                placeholder="{{ i18n "comments.nicknamePlaceholder" }}"
+            /></label>
+            <label for="comment-email"
+              >{{ i18n "comments.email" }}
+              <span class="muted">{{ i18n "comments.emailOptional" }}</span
+              ><input
+                id="comment-email"
+                name="email"
+                type="email"
+                autocomplete="email"
+                placeholder="{{ i18n "comments.emailPlaceholder" }}"
+            /></label>
+            <label for="comment-website"
+              >{{ i18n "comments.website" }}
+              <span class="muted">{{ i18n "comments.websiteOptional" }}</span
+              ><input
+                id="comment-website"
+                name="website"
+                type="url"
+                autocomplete="url"
+                placeholder="{{ i18n "comments.websitePlaceholder" }}"
+            /></label>
+          </div>
+          <p class="admin-notice" data-admin-notice hidden>
+            {{ i18n "comments.adminNotice" }}
+          </p>
+          <div class="writing-box">
+            <div class="editor-toolbar">
+              <div
+                class="mode-buttons"
+                role="group"
+                aria-label="{{ i18n "comments.editMode" }}"
+              >
+                <button type="button" data-mode-edit aria-pressed="true">
+                  {{- i18n "comments.edit" -}}
+                </button>
+                <button type="button" data-mode-preview aria-pressed="false">
+                  {{- i18n "comments.preview" -}}
+                </button>
+              </div>
+              <div
+                class="format-buttons"
+                role="group"
+                aria-label="{{ i18n "comments.formatGroup" }}"
+              >
+                <button
+                  type="button"
+                  data-format="bold"
+                  aria-label="{{ i18n "comments.bold" }}"
+                  title="{{ i18n "comments.bold" }}"
+                >
+                  <b>B</b>
+                </button>
+                <button
+                  type="button"
+                  data-format="link"
+                  aria-label="{{ i18n "comments.link" }}"
+                  title="{{ i18n "comments.link" }}"
+                >
+                  ↗
+                </button>
+                <button
+                  type="button"
+                  data-format="quote"
+                  aria-label="{{ i18n "comments.quote" }}"
+                  title="{{ i18n "comments.quote" }}"
+                >
+                  ❞
+                </button>
+                <button
+                  type="button"
+                  data-format="code"
+                  aria-label="{{ i18n "comments.code" }}"
+                  title="{{ i18n "comments.code" }}"
+                >
+                  &lt;/&gt;
+                </button>
+              </div>
+            </div>
+            <label class="sr-only" for="comment-body">
+              {{- i18n "comments.bodyLabel" -}}
+            </label>
+            <textarea
+              id="comment-body"
+              name="body"
+              data-comment-body
+              required
+              rows="5"
+              placeholder="{{ i18n "comments.bodyPlaceholder" }}"
+              aria-describedby="markdown-help"
+            ></textarea>
+            <div
+              class="comment-body preview-body"
+              data-comment-preview
+              tabindex="0"
+              aria-label="{{ i18n "comments.previewLabel" }}"
+              hidden
+            ></div>
+            <div class="editor-bottom">
+              <button
+                type="button"
+                data-emoji-toggle
+                aria-expanded="false"
+                aria-controls="emoji-panel"
+              >
+                <span aria-hidden="true">☺</span> {{ i18n "comments.emoji" }}
+              </button>
+              <span id="markdown-help">{{ i18n "comments.markdownHelp" }}</span>
+            </div>
+            <section
+              class="emoji-panel"
+              id="emoji-panel"
+              data-emoji-panel
+              aria-label="{{ i18n "comments.emojiPanel" }}"
+              hidden
+            >
+              <div class="emoji-panel-head">
+                <strong>{{ i18n "comments.emojiPanel" }}</strong>
+                <button
+                  type="button"
+                  data-emoji-close
+                  aria-label="{{ i18n "comments.emojiClose" }}"
+                >
+                  ×
+                </button>
+              </div>
+              <div
+                class="emoji-categories"
+                data-emoji-categories
+                role="group"
+                aria-label="{{ i18n "comments.emojiPacks" }}"
+              ></div>
+              <div class="emoji-grid" data-emoji-grid></div>
+              <div class="emoji-pagination">
+                <button
+                  type="button"
+                  data-emoji-prev
+                  aria-label="{{ i18n "comments.emojiPrev" }}"
+                >
+                  ←
+                </button>
+                <span data-emoji-page role="status"></span>
+                <button
+                  type="button"
+                  data-emoji-next
+                  aria-label="{{ i18n "comments.emojiNext" }}"
+                >
+                  →
+                </button>
+              </div>
+              <p data-emoji-status role="status"></p>
+            </section>
+          </div>
+          <div class="composer-actions">
+            <label class="remember"
+              ><input
+                type="checkbox"
+                data-remember
+              />{{ i18n "comments.remember" }}</label
+            >
+            <button class="submit-button" type="submit" data-submit>
+              {{- i18n "comments.submit" -}}
+            </button>
+          </div>
+        </fieldset>
+        <p class="submit-status" data-submit-status role="status"></p>
+      </form>
+    </div>
+    <div class="list-status" data-list-status role="status"></div>
+    <ol class="comment-list" data-comment-list></ol>
+    <template data-owner-badge>
+      <svg viewBox="0 0 22 22" fill="currentColor" aria-hidden="true">
+        <path
+          d="M20.396 11c-.018-.646-.215-1.275-.57-1.816-.354-.54-.852-.972-1.438-1.246.223-.607.27-1.264.14-1.897-.131-.634-.437-1.218-.882-1.687-.47-.445-1.053-.75-1.687-.882-.633-.13-1.29-.083-1.897.14-.273-.587-.704-1.086-1.245-1.44S11.647 1.62 11 1.604c-.646.017-1.273.213-1.813.568s-.969.854-1.24 1.44c-.608-.223-1.267-.272-1.902-.14-.635.13-1.22.436-1.69.882-.445.47-.749 1.055-.878 1.688-.13.633-.08 1.29.144 1.896-.587.274-1.087.705-1.443 1.245-.356.54-.555 1.17-.574 1.817.02.647.218 1.276.574 1.817.356.54.856.972 1.443 1.245-.224.606-.274 1.263-.144 1.896.13.634.433 1.218.877 1.688.47.443 1.054.747 1.687.878.633.132 1.29.084 1.897-.136.274.586.705 1.084 1.246 1.439.54.354 1.17.551 1.816.569.647-.016 1.276-.213 1.817-.567s.972-.854 1.245-1.44c.604.239 1.266.296 1.903.164.636-.132 1.22-.447 1.68-.907.46-.46.776-1.044.908-1.681s.075-1.299-.165-1.903c.586-.274 1.084-.705 1.439-1.246.354-.54.551-1.17.569-1.816zM9.662 14.85l-3.429-3.428 1.293-1.302 2.072 2.072 4.4-4.794 1.347 1.246z"
+        ></path>
+      </svg>
+    </template>
+    <div class="load-row">
+      <button type="button" data-load-more hidden>
+        {{- i18n "comments.loadMore" -}}
+      </button>
+      <p class="muted" data-load-status role="status"></p>
+    </div>
+    <dialog
+      data-comments-auth-dialog
+      aria-labelledby="comments-admin-title"
+      data-search-exclude
+    >
+      <button
+        type="button"
+        class="icon close-dialog"
+        data-dialog-close
+        aria-label="{{ i18n "comments.adminKeyClose" }}"
+      >
+        <svg aria-hidden="true" viewBox="0 0 24 24">
+          <path d="m7 7 10 10M17 7 7 17" />
+        </svg>
+      </button>
+      <h2 id="comments-admin-title">{{ i18n "comments.adminKeyTitle" }}</h2>
+      <p class="admin-hint muted">{{ i18n "comments.adminKeyHint" }}</p>
+      <form class="admin-form" data-comments-auth-form>
+        <label for="comments-admin-key"
+          >{{ i18n "comments.adminKeyLabel" }}<input
+            id="comments-admin-key"
+            type="password"
+            autocomplete="current-password"
+            placeholder="{{ i18n "comments.adminKeyPlaceholder" }}"
+            data-admin-key
+        /></label>
+        <p class="submit-status" role="status" data-admin-status></p>
+        <div class="composer-actions">
+          <button type="button" data-admin-cancel>
+            {{- i18n "comments.adminKeyCancel" -}}
+          </button>
+          <button class="submit-button" type="submit" data-admin-confirm>
+            {{- i18n "comments.adminKeySubmit" -}}
+          </button>
+        </div>
+      </form>
+    </dialog>
+  </section>
+{{- end -}}

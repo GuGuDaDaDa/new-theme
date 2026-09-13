@@ -94,7 +94,16 @@ export async function buildSite({
   const workspace = path.join(sourceRoot, '.build');
   await mkdir(workspace, { recursive: true });
   const finalConfig = path.join(workspace, 'config.json');
-  await json(finalConfig, { baseURL: siteURL, params: { localPreview: true } });
+  await json(finalConfig, {
+    baseURL: siteURL,
+    params: {
+      localPreview: true,
+      comments: {
+        api_base: '/__comments',
+        emoji: '/__comments/emoji.json',
+      },
+    },
+  });
   const staging = await mkdtemp(path.join(workspace, 'site-'));
   const commonArgs = [
     '--source',

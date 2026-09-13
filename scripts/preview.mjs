@@ -48,7 +48,7 @@ const server = createServer(async (request, response) => {
     response.end(code === 404 ? '页面未找到' : '请求无效');
   }
 });
-server.listen(4173, '127.0.0.1', () =>
+server.listen(4173, '0.0.0.0', () =>
   console.log('Preview: http://localhost:4173/'),
 );
 process.once('SIGINT', () => server.close());

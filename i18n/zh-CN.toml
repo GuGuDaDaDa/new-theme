@@ -235,3 +235,151 @@ other = "第 {{ .Current }} 张，共 {{ .Total }} 张照片"
 [restore]
 [restore.stale]
 other = "内容已更新，已保留当前列表，请刷新后继续浏览。"
+
+[comments.title]
+other = "评论"
+[comments.replying]
+other = "正在回复"
+[comments.gotoReply]
+other = "前往回复框"
+[comments.cancelReply]
+other = "取消回复"
+[comments.legend]
+other = "留下你的想法"
+[comments.replyLegend]
+other = "回复 {{ .Name }}"
+[comments.nickname]
+other = "昵称"
+[comments.nicknameRequired]
+other = "必填"
+[comments.nicknamePlaceholder]
+other = "怎么称呼你"
+[comments.email]
+other = "邮箱"
+[comments.emailOptional]
+other = "选填 · 不公开"
+[comments.emailPlaceholder]
+other = "你的邮箱"
+[comments.website]
+other = "网址"
+[comments.websiteOptional]
+other = "选填"
+[comments.websitePlaceholder]
+other = "https://"
+[comments.editMode]
+other = "编辑模式"
+[comments.edit]
+other = "编辑"
+[comments.preview]
+other = "预览"
+[comments.previewLabel]
+other = "评论预览"
+[comments.previewEmpty]
+other = "写点什么，再来看看效果。"
+[comments.formatGroup]
+other = "Markdown 格式"
+[comments.bold]
+other = "加粗"
+[comments.link]
+other = "插入链接"
+[comments.quote]
+other = "插入引用"
+[comments.code]
+other = "插入代码块"
+[comments.sampleBold]
+other = "加粗文字"
+[comments.sampleLink]
+other = "链接文字"
+[comments.sampleQuote]
+other = "引用内容"
+[comments.sampleCode]
+other = "代码"
+[comments.bodyLabel]
+other = "评论内容"
+[comments.bodyPlaceholder]
+other = "分享你的想法，或补充一点经验…"
+[comments.emoji]
+other = "表情"
+[comments.markdownHelp]
+other = "支持 Markdown"
+[comments.emojiPanel]
+other = "选择表情"
+[comments.emojiClose]
+other = "关闭表情面板"
+[comments.emojiPacks]
+other = "表情包"
+[comments.emojiPrev]
+other = "上一页表情"
+[comments.emojiNext]
+other = "下一页表情"
+[comments.emojiImage]
+other = "图片表情"
+[comments.emojiUnavailable]
+other = "表情包暂时无法加载，请刷新重试。"
+[comments.remember]
+other = "在此设备记住我的信息"
+[comments.rememberFailed]
+other = "此设备未能记住信息，本次评论仍可继续。"
+[comments.submit]
+other = "发表评论"
+[comments.submitReply]
+other = "发表回复"
+[comments.submitting]
+other = "提交中…"
+[comments.statusInvalid]
+other = "请填写昵称和评论内容。"
+[comments.statusFailed]
+other = "提交失败，内容已保留，请重试。"
+[comments.statusSubmitted]
+other = "评论已发表。"
+[comments.statusPending]
+other = "已提交，等待审核。"
+[comments.ownerBadge]
+other = "博主"
+[comments.cardLabel]
+other = "{{ .Name }} 的评论"
+[comments.reply]
+other = "回复"
+[comments.replyTo]
+other = "回复 @{{ .Name }}"
+[comments.foldReplies]
+other = "展开其余 {{ .Count }} 条回复"
+[comments.unfoldReplies]
+other = "收起回复"
+[comments.foldingWhileReplying]
+other = "正在回复，结束后可收起"
+[comments.loading]
+other = "正在加载评论…"
+[comments.loadFailed]
+other = "评论暂时没有加载出来。"
+[comments.retry]
+other = "重试加载"
+[comments.empty]
+other = "还没有评论，来留下第一条想法吧。"
+[comments.allShown]
+other = "已显示全部评论"
+[comments.loadMore]
+other = "加载更多"
+
+[comments.adminNotice]
+other = "该邮箱是博主邮箱，提交时需要管理员密钥。"
+[comments.adminKeyTitle]
+other = "管理员验证"
+[comments.adminKeyHint]
+other = "请输入评论管理员密钥，验证后将以博主身份发表。"
+[comments.adminKeyLabel]
+other = "管理员密钥"
+[comments.adminKeyPlaceholder]
+other = "输入密钥"
+[comments.adminKeySubmit]
+other = "验证并发表"
+[comments.adminKeyCancel]
+other = "取消"
+[comments.adminKeyClose]
+other = "关闭管理员验证"
+[comments.adminKeyVerifying]
+other = "验证中…"
+[comments.adminKeyRequired]
+other = "请输入管理员密钥。"
+[comments.adminKeyFailed]
+other = "验证失败，请重试。"

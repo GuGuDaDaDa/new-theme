@@ -64,3 +64,19 @@ export function nextListPath(value, current, base) {
   }
   return internalPath(value, base);
 }
+
+/**
+ * Resolve a user-supplied URL that may only use HTTP(S).
+ * @param {string} value - Candidate URL.
+ * @param {string} base - Absolute document URL used for relative values.
+ * @returns {string} Absolute HTTP(S) URL, or an empty string.
+ */
+export function safeURL(value, base) {
+  if (!value) return '';
+  try {
+    const url = new URL(value, base);
+    return ['http:', 'https:'].includes(url.protocol) ? url.href : '';
+  } catch {
+    return '';
+  }
+}

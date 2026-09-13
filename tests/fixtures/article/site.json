@@ -166,6 +166,14 @@
       "source": "---\ntitle: 关于\n---\n\n关于页用于验证文章页脚的作者链接目标。\n"
     },
     {
+      "path": "friends/index.md",
+      "source": "---\ntitle: 友链\ntype: friends\n---\n\n友链页用于验证独立页面的评论开关。\n"
+    },
+    {
+      "path": "standalone/index.md",
+      "source": "---\ntitle: 普通独立页面\n---\n\n普通独立页面不挂载评论。\n"
+    },
+    {
       "path": "posts/complete-frontmatter/index.md",
       "source": "---\ntitle: 完整文章头\ndate: 2026-09-09T12:00:00+08:00\ncreated: 2026-09-09T11:00:00+08:00\npublishDate: 2026-09-09T12:00:00+08:00\nlastmod: 2026-09-09T12:00:00+08:00\ndescription: 手写的文章摘要优先于正文自动摘要。\nsummary: 不应覆盖 description 的显式摘要。\nfeatured: true\ntags: [文章详情, 正文]\ncover: https://images.example.test/article-horizontal.jpg\ncover_alt: 横向山谷标题图\ncover_position: 17% 83%\ntoc: true\ndraft: false\n---\n\n这是完整文章头的正文，用于确认标题、摘要、标签、日期、作者、阅读时长和标题图按照合同输出。\n\n{{< ai-summary >}}\n这是作者手写的内容提要，用于确认折叠、标签与正文排版。\n{{< /ai-summary >}}\n\n{{< ai-warning title=\"透明声明\" >}}\n本文部分内容在 AI 辅助下完成，所有文字均经过作者审校。\n{{< /ai-warning >}}\n"
     },
