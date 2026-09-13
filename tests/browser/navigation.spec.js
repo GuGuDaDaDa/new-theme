@@ -515,3 +515,65 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     })),
   ).toEqual({ dialog: 0, image: 0 });
 });
+
+test('image lightbox fits the preview and its caption without scrolling', async ({
+  page,
+}) => {
+  const viewports = [
+    { width: 1280, height: 900 },
+    { width: 1024, height: 700 },
+    { width: 390, height: 844 },
+  ];
+  const shots = [
+    '/posts/engineering-notes/',
+    '/posts/gallery-walk/',
+    '/posts/blender-mesh/',
+    '/posts/vibecoding/',
+  ];
+  for (const viewport of viewports) {
+    await page.setViewportSize(viewport);
+    for (const url of shots) {
+      await page.goto(url);
+      await page.locator('a[data-lightbox]').first().click();
+      await page.waitForFunction(() => {
+        const dialog = globalThis.document.querySelector(
+          '[data-lightbox-dialog]',
+        );
+        const image = dialog?.querySelector('[data-lightbox-content] img');
+        return Boolean(
+          dialog?.open &&
+          !dialog.hasAttribute('data-lightbox-flying') &&
+          image?.complete &&
+          image.naturalWidth,
+        );
+      });
+      const frame = await page.evaluate(() => {
+        const dialog = globalThis.document.querySelector(
+          '[data-lightbox-dialog]',
+        );
+        const image = dialog.querySelector('[data-lightbox-content] img');
+        const card = dialog.getBoundingClientRect();
+        const picture = image.getBoundingClientRect();
+        return {
+          scrollHeight: dialog.scrollHeight,
+          clientHeight: dialog.clientHeight,
+          naturalRatio: image.naturalWidth / image.naturalHeight,
+          paintedRatio: picture.width / picture.height,
+          inside:
+            picture.top >= card.top - 1 &&
+            picture.bottom <= card.bottom + 1 &&
+            picture.left >= card.left - 1 &&
+            picture.right <= card.right + 1,
+        };
+      });
+      const label = `${url} at ${viewport.width}x${viewport.height}`;
+      expect(frame.scrollHeight, label).toBeLessThanOrEqual(
+        frame.clientHeight + 1,
+      );
+      expect(frame.paintedRatio, label).toBeCloseTo(frame.naturalRatio, 2);
+      expect(frame.inside, label).toBe(true);
+      await page.keyboard.press('Escape');
+      await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
+    }
+  }
+});

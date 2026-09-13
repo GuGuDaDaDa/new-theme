@@ -64,6 +64,9 @@ dialog::backdrop {
   padding: 10px;
   overflow: auto;
   background: var(--bg);
+  /* Card padding, caption, status and original-image rows: the preview shares
+     the card's 85dvh budget with them, so it may only take what is left. */
+  --lightbox-chrome: 80px;
 }
 
 #image-dialog[data-lightbox-dialog] > .close-dialog {
@@ -82,7 +85,7 @@ dialog::backdrop {
 #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
   display: block;
   max-width: 100%;
-  max-height: 85vh;
+  max-height: calc(85dvh - var(--lightbox-chrome));
   width: auto;
   height: auto;
   margin: auto;
@@ -147,7 +150,7 @@ dialog::backdrop {
   }
 
   #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
-    max-height: 78vh;
+    max-height: calc(78dvh - var(--lightbox-chrome));
   }
 }
 
