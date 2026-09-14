@@ -370,6 +370,11 @@ test('image lightbox flies the card out of its trigger and skips the flight when
   for (const [url, trigger, exactSize] of triggers) {
     await page.goto(url);
     cardColor ||= await settledCardColor(page);
+    // TOC articles smooth-scroll, so the trigger keeps moving while the preview
+    // measures it; settle the viewport before opening.
+    await page.addStyleTag({
+      content: 'html { scroll-behavior: auto !important; }',
+    });
     const flying = page.waitForFunction(() =>
       globalThis.document
         .querySelector('[data-lightbox-dialog]')

@@ -374,6 +374,9 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
     if (width <= 390) {
       await page.locator('[data-hero-choice]').nth(2).click();
       const longTitle = await page.locator('[data-hero]').evaluate((hero) => {
+        // Firefox computes in 1/60px app units, so the same edge measured through
+        // different paths can differ by 1e-5px.
+        const tolerance = 0.5;
         const heroBox = hero.getBoundingClientRect();
         const panelBox = hero
           .querySelector('.hero-panel')
@@ -384,11 +387,12 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
         return {
           height: heroBox.height,
           panelInside:
-            panelBox.top >= heroBox.top && panelBox.bottom <= heroBox.bottom,
+            panelBox.top >= heroBox.top - tolerance &&
+            panelBox.bottom <= heroBox.bottom + tolerance,
           selectionInside:
-            selectionBox.top >= heroBox.top &&
-            selectionBox.bottom <= heroBox.bottom,
-          ordered: panelBox.bottom <= selectionBox.top,
+            selectionBox.top >= heroBox.top - tolerance &&
+            selectionBox.bottom <= heroBox.bottom + tolerance,
+          ordered: panelBox.bottom <= selectionBox.top + tolerance,
         };
       });
       expect(longTitle.height).toBeGreaterThan(expectedHero);
