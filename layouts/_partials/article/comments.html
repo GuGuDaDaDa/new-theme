@@ -106,7 +106,16 @@
                   aria-label="{{ i18n "comments.bold" }}"
                   title="{{ i18n "comments.bold" }}"
                 >
-                  <b>B</b>
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M7 12h7a4 4 0 0 1 0 8H7V4h6a4 4 0 0 1 0 8" />
+                  </svg>
                 </button>
                 <button
                   type="button"
@@ -114,7 +123,18 @@
                   aria-label="{{ i18n "comments.link" }}"
                   title="{{ i18n "comments.link" }}"
                 >
-                  ↗
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="m10 13 4-4m-6 2-3 3a4 4 0 0 0 6 6l3-3m-4-10 3-3a4 4 0 0 1 6 6l-3 3"
+                    />
+                  </svg>
                 </button>
                 <button
                   type="button"
@@ -122,7 +142,18 @@
                   aria-label="{{ i18n "comments.quote" }}"
                   title="{{ i18n "comments.quote" }}"
                 >
-                  ❞
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M4 5h6v7H4zM10 12c0 4-2 6-5 7M14 5h6v7h-6zM20 12c0 4-2 6-5 7"
+                    />
+                  </svg>
                 </button>
                 <button
                   type="button"
@@ -130,7 +161,16 @@
                   aria-label="{{ i18n "comments.code" }}"
                   title="{{ i18n "comments.code" }}"
                 >
-                  &lt;/&gt;
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="m7 7-5 5 5 5m10-10 5 5-5 5M14 4l-4 16" />
+                  </svg>
                 </button>
               </div>
             </div>
@@ -160,7 +200,32 @@
                 aria-expanded="false"
                 aria-controls="emoji-panel"
               >
-                <span aria-hidden="true">☺</span> {{ i18n "comments.emoji" }}
+                <svg
+                  class="comment-control-icon"
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <circle cx="12" cy="12" r="9" />
+                  <path d="M8 14a4 4 0 0 0 8 0" />
+                  <circle
+                    cx="9"
+                    cy="9"
+                    r="1"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                  <circle
+                    cx="15"
+                    cy="9"
+                    r="1"
+                    fill="currentColor"
+                    stroke="none"
+                  />
+                </svg>
+                {{ i18n "comments.emoji" }}
               </button>
               <span id="markdown-help">{{ i18n "comments.markdownHelp" }}</span>
             </div>
@@ -178,7 +243,16 @@
                   data-emoji-close
                   aria-label="{{ i18n "comments.emojiClose" }}"
                 >
-                  ×
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="m6 6 12 12M18 6 6 18" />
+                  </svg>
                 </button>
               </div>
               <div
@@ -194,7 +268,16 @@
                   data-emoji-prev
                   aria-label="{{ i18n "comments.emojiPrev" }}"
                 >
-                  ←
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M20 12H4m6-6-6 6 6 6" />
+                  </svg>
                 </button>
                 <span data-emoji-page role="status"></span>
                 <button
@@ -202,7 +285,16 @@
                   data-emoji-next
                   aria-label="{{ i18n "comments.emojiNext" }}"
                 >
-                  →
+                  <svg
+                    class="comment-control-icon"
+                    width="20"
+                    height="20"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path d="M4 12h16m-6-6 6 6-6 6" />
+                  </svg>
                 </button>
               </div>
               <p data-emoji-status role="status"></p>

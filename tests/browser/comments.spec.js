@@ -21,7 +21,7 @@ const definition = {
     {
       path: 'posts/demo/index.md',
       source:
-        '---\ntitle: 评论演示文章\ndate: 2026-09-09T12:00:00+08:00\n---\n\n这是用于评论浏览器用例的正文段落，用来形成阅读栏并验证评论模块与正文的对齐。\n',
+        '---\ntitle: 评论演示文章\ndate: 2026-09-09T12:00:00+08:00\n---\n\n这是用于评论浏览器用例的正文段落，用来形成阅读栏并验证评论模块与正文的对齐。{{< fnref 1 >}} 同一来源再次引用。{{< fnref 1 >}}\n\n{{< refers >}}\n{{< refer num="1" source="参考来源" >}}引用返回图标应与正文及回跳序号对齐。{{< /refer >}}\n{{< /refers >}}\n',
     },
   ],
 };
@@ -357,6 +357,17 @@ test('previews restricted markdown without dropping the draft', async ({
 }) => {
   await openArticle(page, { list: () => listPayload([comment(1)]) });
   await expect(page.locator('.comment-root')).toHaveCount(1);
+  for (const [format, expected] of [
+    ['bold', '**选中文本**'],
+    ['link', '[选中文本](https://)'],
+    ['quote', '\n> 选中文本\n'],
+    ['code', '\n\n```\n选中文本\n```\n\n'],
+  ]) {
+    await page.locator('[data-comment-body]').fill('选中文本');
+    await page.locator('[data-comment-body]').selectText();
+    await page.locator(`[data-format="${format}"] svg`).click();
+    await expect(page.locator('[data-comment-body]')).toHaveValue(expected);
+  }
   await page
     .locator('[data-comment-body]')
     .fill('**加粗** <img src=x onerror=alert(1)>');
@@ -688,7 +699,7 @@ test('renders the OwO panel, paginates packs and inserts image emoticons', async
     '/__comments/emoji.json /__comments/emoji-extra.json',
   );
   await expect(page.locator('[data-emoji-toggle]')).toBeVisible();
-  await page.locator('[data-emoji-toggle]').click();
+  await page.locator('[data-emoji-toggle] svg').click();
   await expect(page.locator('[data-emoji-categories] button')).toHaveText([
     '图片',
     '颜文字',
@@ -696,11 +707,11 @@ test('renders the OwO panel, paginates packs and inserts image emoticons', async
   ]);
   await expect(page.locator('[data-emoji-grid] button')).toHaveCount(24);
   await expect(page.locator('[data-emoji-page]')).toHaveText('1 / 2');
-  await page.locator('[data-emoji-next]').click();
+  await page.locator('[data-emoji-next] svg').click();
   await expect(page.locator('[data-emoji-grid] button')).toHaveCount(6);
   await expect(page.locator('[data-emoji-page]')).toHaveText('2 / 2');
   await expect(page.locator('[data-emoji-next]')).toBeDisabled();
-  await page.locator('[data-emoji-prev]').click();
+  await page.locator('[data-emoji-prev] svg').click();
   await page.locator('[data-emoji-grid] button').first().click();
   await expect(page.locator('[data-emoji-panel]')).toBeHidden();
   await expect(page.locator('[data-comment-body]')).toHaveValue(
@@ -798,8 +809,9 @@ test('degrades when the emoji file is unavailable', async ({ page }) => {
 
 test('keeps the reading column aligned without horizontal overflow', async ({
   page,
-}) => {
+}, testInfo) => {
   await openArticle(page, {
+    emoji: { 图片: imagePack('picture', 30) },
     list: () =>
       listPayload([
         comment(1, {
@@ -850,7 +862,35 @@ test('keeps the reading column aligned without horizontal overflow', async ({
         1,
       );
     }
+    if ([320, 390, 768, 1440].includes(width)) {
+      for (const theme of ['light', 'dark']) {
+        await page.evaluate((value) => {
+          globalThis.document.documentElement.dataset.theme = value;
+        }, theme);
+        await page.locator('[data-emoji-toggle] svg').click();
+        await expect(page.locator('[data-emoji-panel]')).toBeVisible();
+        await page.locator('.writing-box').screenshot({
+          path: testInfo.outputPath(`editor-${width}-${theme}.png`),
+        });
+        await page.locator('[data-emoji-close] svg').click();
+        await expect(page.locator('[data-emoji-panel]')).toBeHidden();
+        await page.locator('[data-references]').screenshot({
+          path: testInfo.outputPath(`references-${width}-${theme}.png`),
+        });
+      }
+    }
   }
+  await expect(page.locator('.fn-backref')).toHaveCount(2);
+  for (const link of await page.locator('.fn-backref').all()) {
+    const target = await link.getAttribute('href');
+    await link.locator('svg').click();
+    await expect(page).toHaveURL(new RegExp(`${target}$`));
+  }
+  await page.locator('.reply-button').first().click();
+  await expect(page.locator('.comment-root [data-composer]')).toBeVisible();
+  await page.locator('.writing-box').screenshot({
+    path: testInfo.outputPath('reply-editor-desktop-dark.png'),
+  });
 });
 
 test('keeps the focus ring for keyboard input only', async ({ page }) => {

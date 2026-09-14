@@ -116,6 +116,14 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
   white-space: nowrap;
 }
 
+.prose .fn-backref-icon {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  vertical-align: -3px;
+  margin-right: 2px;
+}
+
 /* Desktop source previews are interactive cards, not tooltip descriptions. */
 #note-preview[data-reference-preview] {
   position: fixed;

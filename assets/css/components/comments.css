@@ -159,6 +159,28 @@
   color: var(--muted);
 }
 
+.comments .format-buttons button,
+.comments [data-emoji-toggle],
+.comments [data-emoji-close],
+.comments [data-emoji-prev],
+.comments [data-emoji-next] {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+}
+
+.comments .comment-control-icon {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
 .comments [data-comment-body] {
   display: block;
   border: 0;
@@ -193,12 +215,7 @@ html[data-input-mode='pointer'] .comments input:active {
 
 .comments [data-emoji-toggle] {
   font-size: 13px;
-}
-
-.comments [data-emoji-toggle] span {
-  font-size: 20px;
-  vertical-align: -1px;
-  margin-right: 4px;
+  gap: 4px;
 }
 
 .comments #markdown-help {

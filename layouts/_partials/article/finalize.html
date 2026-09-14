@@ -17,7 +17,7 @@
     {{- if eq .num $num -}}
       {{- $index := add (len $links) 1 -}}
       {{- $label := i18n "references.backref" (dict "Num" $num "Index" $index) -}}
-      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="%s" data-search-exclude>↩%d</a>` .id $label $index) -}}
+      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="%s" data-search-exclude>%s%d</a>` .id $label (partial "article/backref-icon.html" .) $index) -}}
     {{- end -}}
   {{- end -}}
   {{- if and (not .noref) (not $links) -}}
