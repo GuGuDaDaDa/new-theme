@@ -577,3 +577,28 @@ test('image lightbox fits the preview and its caption without scrolling', async 
     }
   }
 });
+
+test('scripted content focus keeps no ring for keyboard navigation', async ({
+  page,
+}) => {
+  await start(page);
+  await page.locator('a[href="/about/"]').first().focus();
+  await page.keyboard.press('Enter');
+  await expect(page).toHaveURL('/about/');
+  await retained(page);
+  const main = page.locator('#main');
+  await expect(main).toBeFocused();
+  expect(await main.evaluate((node) => node.matches(':focus-visible'))).toBe(
+    true,
+  );
+  await expect(main).toHaveCSS('outline-style', 'none');
+  await page.keyboard.press('Tab');
+  const next = await page.evaluate(() => ({
+    outlineStyle: globalThis.getComputedStyle(globalThis.document.activeElement)
+      .outlineStyle,
+    outlineWidth: globalThis.getComputedStyle(globalThis.document.activeElement)
+      .outlineWidth,
+  }));
+  expect(next.outlineStyle).toBe('solid');
+  expect(next.outlineWidth).toBe('3px');
+});

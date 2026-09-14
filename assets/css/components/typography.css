@@ -54,6 +54,11 @@ input:focus-visible,
   outline-offset: 5px;
 }
 
+/* Scripted focus on the content layer is a scroll anchor, not a keyboard widget. */
+main[tabindex]:focus-visible {
+  outline: none;
+}
+
 ::selection {
   background: var(--accent);
   color: var(--bg);
