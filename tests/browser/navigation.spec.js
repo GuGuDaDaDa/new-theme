@@ -607,3 +607,43 @@ test('scripted content focus keeps no ring for keyboard navigation', async ({
   expect(next.outlineStyle).toBe('solid');
   expect(next.outlineWidth).toBe('3px');
 });
+
+test('friends placeholder renders one grid aligned with the reading column', async ({
+  page,
+}) => {
+  await page.goto('/friends/');
+  const grid = page.locator('.prose .friends-grid');
+  await expect(grid).toHaveCount(1);
+  await expect(page.locator('.friends-grid')).toHaveCount(1);
+  const card = grid.locator('.friend-card').first();
+  await expect(card).toHaveCSS('text-decoration-line', 'none');
+  const metrics = await page.evaluate(() => {
+    const prose = globalThis.document.querySelector('.prose');
+    const gridNode = globalThis.document.querySelector('.prose .friends-grid');
+    const paragraph = globalThis.document.querySelector('.prose > p');
+    const firstCard = globalThis.document.querySelector(
+      '.prose .friends-grid .friend-card',
+    );
+    return {
+      proseLeft: prose.getBoundingClientRect().left,
+      gridLeft: gridNode.getBoundingClientRect().left,
+      textColor: globalThis.getComputedStyle(paragraph).color,
+      cardColor: globalThis.getComputedStyle(firstCard).color,
+      documentWidth: globalThis.document.documentElement.scrollWidth,
+      viewportWidth: globalThis.window.innerWidth,
+    };
+  });
+  expect(metrics.gridLeft).toBeCloseTo(metrics.proseLeft, 0);
+  expect(metrics.cardColor).toBe(metrics.textColor);
+  expect(metrics.documentWidth).toBeLessThanOrEqual(metrics.viewportWidth);
+  const cards = grid.locator('.friend-card');
+  const first = await cards.nth(0).boundingBox();
+  const second = await cards.nth(1).boundingBox();
+  expect(Math.abs(second.y - first.y)).toBeLessThan(1);
+  expect(second.x).toBeGreaterThan(first.x);
+  await page.setViewportSize({ width: 390, height: 844 });
+  const stacked = await cards.nth(0).boundingBox();
+  const stackedBelow = await cards.nth(1).boundingBox();
+  expect(stackedBelow.y - stacked.y).toBeGreaterThan(50);
+  expect(stackedBelow.x).toBeCloseTo(stacked.x, 0);
+});

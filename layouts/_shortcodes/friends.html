@@ -1,0 +1,7 @@
+{{- $key := partial "data/shortcode-key.html" . -}}
+{{- .Page.Store.SetInMap "night-friends" $key true -}}
+{{- if gt (len (.Page.Store.GetSortedMapValues "night-friends")) 1 -}}
+  {{- errorf "friends: only one placeholder is allowed (%s)" .Page.Params._night.sourcePath -}}
+{{- else -}}
+  {{- partial "friends/grid.html" .Page -}}
+{{- end -}}

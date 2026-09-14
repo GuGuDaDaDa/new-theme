@@ -9,34 +9,8 @@
       </div>
     </header>
     <div class="prose">{{ partial "article/body.html" . }}</div>
-    {{ $friends := hugo.Data.friends }}
-    {{ if not $friends }}
-      <p class="friends-empty">{{ i18n "friends.empty" }}</p>
-    {{ else }}
-      <div class="friends-grid">
-        {{ range $friend := $friends }}
-          <a
-            class="friend-card"
-            href="{{ $friend.url }}"
-            rel="noopener noreferrer"
-          >
-            {{ with $friend.avatar }}
-              <img
-                src="{{ . | relURL }}"
-                alt=""
-                width="56"
-                height="56"
-                loading="lazy"
-              />
-            {{ end }}
-            <span
-              ><strong>{{ $friend.name }}</strong>{{ with $friend.description }}
-                <small>{{ . }}</small>
-              {{ end }}</span
-            >
-          </a>
-        {{ end }}
-      </div>
+    {{ if not (.Store.GetSortedMapValues "night-friends") }}
+      {{ partial "friends/grid.html" . }}
     {{ end }}
     {{ if site.Params.comments.friends }}
       {{ partial "article/comments.html" . }}

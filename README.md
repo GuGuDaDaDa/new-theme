@@ -194,9 +194,11 @@ hugo new content posts/my-note/index.md
 {{< ai-warning title="透明声明" >}}AI 辅助声明，默认展开且可关闭。{{< /ai-warning >}}
 
 {{< spoiler >}}默认被黑色方块遮住的文字{{< /spoiler >}}
+
+{{< friends >}}                     友链页里的占位符，决定友链网格出现的位置
 ```
 
-约束：`photo.src` 必须是 bundle 内资源或 HTTPS 地址，`photos` 为空时省略并给出构建警告；`fnref` 为正整数，`refer.num` 必填且同页唯一，`url` 只接受 HTTPS，编号重复、缺少被引用条目或非 `noref` 条目无人引用都会构建报错。
+约束：`photo.src` 必须是 bundle 内资源或 HTTPS 地址，`photos` 为空时省略并给出构建警告；`fnref` 为正整数，`refer.num` 必填且同页唯一，`url` 只接受 HTTPS，编号重复、缺少被引用条目或非 `noref` 条目无人引用都会构建报错；`friends` 只用于友链页正文，每页最多一个，重复构建报错。
 
 `ai-summary` 与 `ai-warning` 共用同一套卡片样式：浅底、1px 细边框、2px 块圆角、前置装饰标志，以及比正文更小的次级字号（标签 11px、摘要正文 13px、声明 12px；移动端摘要 12px、声明 11px），折叠箭头与关闭按钮保持圆形控件。`ai-summary` 默认折叠，头部显示 `AI 摘要` 标签；`ai-warning` 是一行声明条，可选 `title` 作为加粗前导（后接 `·`），不显示固定的 `warning` 文案——缺 `title` 时只显示正文，正文写成多段时自然换行。两个区块的装饰标志、标签行与控件不进入搜索索引，正文区仍可被搜索。
 
@@ -214,7 +216,7 @@ hugo new content posts/my-note/index.md
 - **剧透**：`{{< spoiler >}}` 包裹的行内文字默认被黑色方块遮盖，桌面悬停显示、点击固定或隐藏，移动端点击切换，键盘 Enter／Space 切换。
 - **搜索**：导航按钮打开弹窗并聚焦输入框，按需加载 Fuse.js 与 `/index.json`，150ms 防抖，每批 20 条，Escape 与关闭按钮退出并把焦点交回入口。
 - **主题**：单按钮循环「浅色 → 深色 → 跟随系统」，手动选择存入 localStorage，首次绘制前确定主题避免闪色。
-- **其他**：关于页（`content/about/index.md`，头像取页内 `avatar` 页面资源，缺省回退 `params.avatar`；另有 `description` 与页内覆盖社交字段）、友链页（`data/friends.yaml`，`name` 与 `url` 为必填字符串，`url` 只接受 http/https，`avatar` 可选 http/https 或站内根路径，另有可选 `description`）、404 页含搜索入口、文章页 SEO（canonical、OG、Twitter Card、JSON-LD、sitemap）。
+- **其他**：关于页（`content/about/index.md`，头像取页内 `avatar` 页面资源，缺省回退 `params.avatar`；另有 `description` 与页内覆盖社交字段）、友链页（`data/friends.yaml`，`name` 与 `url` 为必填字符串，`url` 只接受 http/https，`avatar` 可选 http/https 或站内根路径，另有可选 `description`；网格位置由 `content/friends/index.md` 正文里的 `{{< friends >}}` 占位符决定，不写占位符时网格仍出现在正文之后）、404 页含搜索入口、文章页 SEO（canonical、OG、Twitter Card、JSON-LD、sitemap）。
 
 ## 9. 定制主题
 
