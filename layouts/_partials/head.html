@@ -2,6 +2,8 @@
 <meta name="night-base" content="{{ site.Home.RelPermalink }}" />
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
+{{/* The synchronous theme script below waits for CSS before body parsing. */}}
+{{ partial "head/css.html" . }}
 {{ partial "head/theme-init.html" . }}
 {{- $page := . -}}
 {{- $pager := false -}}
@@ -27,5 +29,4 @@
 {{- end }}
 {{ partial "head/metadata.html" (dict "page" $page "pager" $pager "title" (delimit $parts " · ")) }}
 {{ partial "head/analytics.html" . }}
-{{ partial "head/css.html" . }}
 {{ partial "head/js.html" . }}

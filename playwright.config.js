@@ -7,13 +7,21 @@ export default defineConfig({
   use: {
     baseURL: 'http://127.0.0.1:4173',
     trace: 'retain-on-failure',
-    launchOptions: {
-      executablePath:
-        process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
-        '/home/gugudada/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
-    },
   },
-  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+  projects: [
+    {
+      name: 'chromium',
+      use: {
+        ...devices['Desktop Chrome'],
+        launchOptions: {
+          executablePath:
+            process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH ||
+            '/home/gugudada/.cache/ms-playwright/chromium-1234/chrome-linux64/chrome',
+        },
+      },
+    },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+  ],
   webServer: {
     command: 'npm run preview',
     url: 'http://127.0.0.1:4173',

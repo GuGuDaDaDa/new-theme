@@ -177,7 +177,13 @@ test('article matches desktop and mobile reading geometry in both themes', async
       expect(geometry.coverHeight).toBeLessThanOrEqual(width > 768 ? 420 : 360);
       expect(geometry.titleSize).toBe(width > 768 ? '42px' : '31px');
       expect(geometry.proseSize).toBe(width > 768 ? '17px' : '16px');
-      expect(geometry.proseLineHeight).toBe(width > 768 ? '29.24px' : '26.4px');
+      // Firefox quantizes layout to 1/60px.
+      expect(
+        Math.abs(
+          Number.parseFloat(geometry.proseLineHeight) -
+            (width > 768 ? 29.24 : 26.4),
+        ),
+      ).toBeLessThan(0.02);
       const headingGaps = await page
         .locator('.article-heading')
         .evaluate((heading) => {
@@ -471,6 +477,7 @@ test('article footer and navigation keep the reading column and stack on mobile'
 test('spoiler text stays covered until hover, click, tap, or keyboard activation', async ({
   page,
   browser,
+  browserName,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
@@ -525,7 +532,7 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
   const touchContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     hasTouch: true,
-    isMobile: true,
+    isMobile: browserName !== 'firefox',
   });
   const touchPage = await touchContext.newPage();
   await touchPage.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);

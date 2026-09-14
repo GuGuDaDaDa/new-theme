@@ -14,6 +14,84 @@ import { buildSite } from '../../scripts/build.mjs';
 
 const projectRoot = process.cwd();
 
+for (const pathname of ['/', '/posts/engineering-notes/']) {
+  for (const scenario of [
+    'light',
+    'dark-slow-module',
+    'no-js',
+    'early-layout',
+  ]) {
+    test(`cold navigation paints styled content: ${pathname} ${scenario}`, async ({
+      browser,
+    }, testInfo) => {
+      const context = await browser.newContext({
+        javaScriptEnabled: scenario !== 'no-js',
+        colorScheme: scenario === 'dark-slow-module' ? 'dark' : 'light',
+      });
+      try {
+        const page = await context.newPage();
+        if (scenario === 'early-layout') {
+          // Model an injected/third-party script reading layout before CSS arrives.
+          // This is a controlled compatibility trigger, not attribution to a real extension.
+          await page.addInitScript(() => {
+            const timer = setInterval(() => {
+              globalThis.document.body?.getBoundingClientRect();
+              if (globalThis.document.readyState === 'complete')
+                clearInterval(timer);
+            }, 20);
+          });
+        }
+        await page.route('**/compiled*.css', async (route) => {
+          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await route.continue();
+        });
+        if (scenario === 'dark-slow-module') {
+          await page.route('**/js/main-*.js', async (route) => {
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+            await route.continue();
+          });
+        }
+        await page.goto(pathname);
+        // Read paint timing only after loading; do not force layout while CSS is pending.
+        await page.waitForFunction(
+          () =>
+            performance.getEntriesByName('first-contentful-paint').length > 0,
+        );
+        const timing = await page.evaluate(() => {
+          const resources = performance.getEntriesByType('resource');
+          return {
+            paint: performance.getEntriesByName('first-contentful-paint')[0]
+              .startTime,
+            css: resources.find((entry) =>
+              entry.name.includes('/css/compiled.'),
+            )?.responseEnd,
+            main: resources.find((entry) => entry.name.includes('/js/main-'))
+              ?.responseEnd,
+          };
+        });
+        await testInfo.attach('cold-load-timing', {
+          body: JSON.stringify(timing),
+          contentType: 'application/json',
+        });
+        expect(timing.css).toBeGreaterThanOrEqual(1000);
+        expect(timing.paint).toBeGreaterThanOrEqual(timing.css);
+        if (scenario === 'dark-slow-module') {
+          expect(timing.paint).toBeLessThan(timing.main);
+        }
+        await expect(page.locator('body')).toHaveCSS('margin-top', '0px');
+        await expect(page.locator('body')).toHaveCSS(
+          'background-color',
+          scenario === 'dark-slow-module'
+            ? 'rgb(27, 32, 40)'
+            : 'rgb(247, 248, 250)',
+        );
+      } finally {
+        await context.close();
+      }
+    });
+  }
+}
+
 /** Wait for scroll work queued through requestAnimationFrame. @param {import('@playwright/test').Page} page - Active page. @returns {Promise<void>} Completion. */
 async function waitForScrollFrame(page) {
   await page.evaluate(
@@ -232,6 +310,7 @@ test('no-JavaScript shell preserves content and real navigation while hiding the
 test('supported widths and both themes keep full-width chrome, touch targets, and contrast', async ({
   page,
   browser,
+  browserName,
 }) => {
   const widths = [320, 360, 390, 768, 1024, 1440, 1920];
   await page.goto('/');
@@ -324,7 +403,7 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
   const touchContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     hasTouch: true,
-    isMobile: true,
+    isMobile: browserName !== 'firefox',
   });
   const touchPage = await touchContext.newPage();
   await touchPage.goto('/');
@@ -437,6 +516,7 @@ weight = 30
 test('search dialog hides the automatic focus ring for pointer and touch opens', async ({
   page,
   browser,
+  browserName,
 }) => {
   const input = page.locator('[data-search-input]');
   await page.goto('/');
@@ -466,7 +546,7 @@ test('search dialog hides the automatic focus ring for pointer and touch opens',
   const touchContext = await browser.newContext({
     viewport: { width: 390, height: 844 },
     hasTouch: true,
-    isMobile: true,
+    isMobile: browserName !== 'firefox',
   });
   const touchPage = await touchContext.newPage();
   try {
