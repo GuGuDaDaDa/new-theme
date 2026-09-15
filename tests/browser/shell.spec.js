@@ -134,10 +134,34 @@ test('head synchronously resolves first-paint theme modes without the main modul
   browser,
 }) => {
   const cases = [
-    { stored: 'light', system: 'dark', mode: 'light', theme: 'light' },
-    { stored: 'dark', system: 'light', mode: 'dark', theme: 'dark' },
-    { stored: 'system', system: 'dark', mode: 'system', theme: 'dark' },
-    { stored: 'unknown', system: 'dark', mode: 'system', theme: 'dark' },
+    {
+      stored: 'light',
+      system: 'dark',
+      mode: 'light',
+      theme: 'light',
+      icon: 'sun',
+    },
+    {
+      stored: 'dark',
+      system: 'light',
+      mode: 'dark',
+      theme: 'dark',
+      icon: 'moon',
+    },
+    {
+      stored: 'system',
+      system: 'dark',
+      mode: 'system',
+      theme: 'dark',
+      icon: 'system',
+    },
+    {
+      stored: 'unknown',
+      system: 'dark',
+      mode: 'system',
+      theme: 'dark',
+      icon: 'system',
+    },
   ];
 
   for (const item of cases) {
@@ -157,6 +181,11 @@ test('head synchronously resolves first-paint theme modes without the main modul
       item.theme,
     );
     await expect(page.locator('html')).toHaveCSS('color-scheme', item.theme);
+    await expect(page.locator('html')).not.toHaveAttribute('data-js', 'ready');
+    const control = page.locator('[data-theme-control]');
+    await expect(control).toBeVisible();
+    await expect(control).toHaveCSS('width', '44px');
+    await expect(control.locator(`.theme-icon-${item.icon}`)).toBeVisible();
     await context.close();
   }
 });
@@ -331,6 +360,9 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
         footerWidth: globalThis.document
           .querySelector('.footer')
           .getBoundingClientRect().width,
+        navWeight: globalThis.getComputedStyle(
+          globalThis.document.querySelector('.header nav > a'),
+        ).fontWeight,
         targets: [
           ...globalThis.document.querySelectorAll(
             '.brand, .header nav > a, [data-theme-trigger]',
@@ -351,6 +383,7 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
         expect(target.width).toBeGreaterThanOrEqual(44);
         expect(target.height).toBeGreaterThanOrEqual(44);
       }
+      expect(geometry.navWeight).toBe('500');
       for (const link of await page.locator('.footer-links > a').all()) {
         await expect(link).toHaveCSS('padding', '0px');
         await expect(link).toHaveCSS('margin', '0px');

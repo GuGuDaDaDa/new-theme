@@ -1,8 +1,9 @@
+/* The control follows the synchronous head theme script instead of the deferred module, so it paints with the first frame. */
 .theme-control {
   display: none;
 }
 
-[data-js='ready'] .theme-control {
+[data-theme-mode] .theme-control {
   display: block;
 }
 

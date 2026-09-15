@@ -91,6 +91,9 @@
   justify-content: center;
   min-width: 44px;
   min-height: 44px;
+  /* Flex centers the line box, not the CJK ink, so the label needs a half-value optical nudge onto the icon ink centre. */
+  padding-block-start: 4px;
+  font-weight: 500;
 }
 
 .icon {
@@ -188,6 +191,7 @@
   }
 
   .header nav > a {
+    padding-block-start: 2px;
     padding-inline: 4px;
   }
 }
