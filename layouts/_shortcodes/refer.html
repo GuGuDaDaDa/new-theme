@@ -44,7 +44,6 @@
   <span class="fn-item-num" data-search-exclude>[{{ $num }}]</span>
   <div>
     <div data-reference-content>
-      {{- .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML -}}
       {{- with $source -}}
         {{- if $url }}
           <a
@@ -59,6 +58,7 @@
         {{ end -}}
         {{- " " -}}
       {{- end -}}
+      {{- .Page.RenderString (dict "display" "block") .Inner | replaceRE ` data-article-heading` "" | safeHTML -}}
       {{- with $url }}
         <a
           class="fn-source"
