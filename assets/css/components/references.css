@@ -88,9 +88,9 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 
 .prose .fn-item-link {
   display: block;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
   text-decoration: none;
 }
 
@@ -100,7 +100,9 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 
 .prose .fn-item p {
   margin: 6px 0;
-  font-size: 13px;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
 }
 
 .prose .fn-source {
@@ -150,18 +152,20 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 #note-preview .note-source-title,
 #note-preview .fn-item-link {
   display: block;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.55;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.65;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
 #note-preview p {
   margin: 10px 0;
-  font-size: 13px;
-  line-height: 1.65;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 #note-preview .fn-source {
@@ -224,18 +228,20 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 #note-dialog[data-reference-dialog] .fn-item-link {
   display: block;
   margin-bottom: 9px;
-  color: var(--accent);
-  font-size: 14px;
-  font-weight: 600;
-  line-height: 1.55;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.65;
   text-decoration: underline;
   text-underline-offset: 4px;
 }
 
 #note-dialog[data-reference-dialog] p {
   margin: 10px 0;
-  font-size: 13px;
-  line-height: 1.65;
+  color: var(--accent);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 #note-dialog[data-reference-dialog] .fn-source {
