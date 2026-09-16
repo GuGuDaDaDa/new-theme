@@ -68,6 +68,7 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 
 .prose .fn-item {
   display: flex;
+  align-items: baseline;
   gap: 12px;
   padding: 12px 0;
   line-height: 1.65;
@@ -76,7 +77,6 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 
 .prose .fn-item-num {
   flex-shrink: 0;
-  padding-top: 2px;
   color: var(--accent);
   font-size: 12px;
   font-weight: 600;
@@ -103,6 +103,10 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
   color: var(--accent);
   font-size: 14px;
   font-weight: 600;
+}
+
+.prose .fn-item [data-reference-content] > p:first-child {
+  margin-top: 0;
 }
 
 .prose .fn-source {
