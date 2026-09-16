@@ -6,6 +6,7 @@
   {{- errorf "Only one refers container is allowed (%s)" .Params._night.sourcePath -}}
 {{- end -}}
 {{- $seen := slice -}}
+{{- $backrefIcon := partial "article/backref-icon.html" . | strings.TrimSpace -}}
 {{- range $notes -}}
   {{- if in $seen .num -}}
     {{- errorf "Duplicate refer number %s (%s)" .num .position -}}
@@ -17,7 +18,7 @@
     {{- if eq .num $num -}}
       {{- $index := add (len $links) 1 -}}
       {{- $label := i18n "references.backref" (dict "Num" $num "Index" $index) -}}
-      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="%s" data-search-exclude>%s%d</a>` .id $label (partial "article/backref-icon.html" .) $index) -}}
+      {{- $links = $links | append (printf `<a class="fn-backref" href="#%s" aria-label="%s" data-search-exclude>%s%d</a>` .id $label $backrefIcon $index) -}}
     {{- end -}}
   {{- end -}}
   {{- if and (not .noref) (not $links) -}}
