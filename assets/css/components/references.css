@@ -87,6 +87,7 @@ html[data-input-mode='pointer'] .prose .note-ref:focus {
 }
 
 .prose .fn-item-link {
+  display: block;
   color: var(--accent);
   font-size: 14px;
   font-weight: 600;
