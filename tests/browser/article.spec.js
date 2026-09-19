@@ -176,12 +176,12 @@ test('article matches desktop and mobile reading geometry in both themes', async
       expect(geometry.coverBackground).toBe('rgba(0, 0, 0, 0)');
       expect(geometry.coverHeight).toBeLessThanOrEqual(width > 768 ? 420 : 360);
       expect(geometry.titleSize).toBe(width > 768 ? '42px' : '31px');
-      expect(geometry.proseSize).toBe(width > 768 ? '17px' : '16px');
+      expect(geometry.proseSize).toBe(width > 768 ? '18px' : '17px');
       // Firefox quantizes layout to 1/60px.
       expect(
         Math.abs(
           Number.parseFloat(geometry.proseLineHeight) -
-            (width > 768 ? 28.9 : 26.4),
+            (width > 768 ? 32.4 : 30.6),
         ),
       ).toBeLessThan(0.02);
       const headingGaps = await page
@@ -501,7 +501,7 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
   // A fine pointer reveals the text only while it hovers the cover.
   await spoiler.hover();
   await expect(spoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-  await expect(spoiler).toHaveCSS('color', 'rgb(37, 43, 52)');
+  await expect(spoiler).toHaveCSS('color', 'rgb(48, 49, 46)');
   await page.mouse.move(0, 0);
   await expect(spoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
 
@@ -565,7 +565,7 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
     });
   expect(noScriptStyles).toEqual({
     background: 'rgba(0, 0, 0, 0)',
-    color: 'rgb(37, 43, 52)',
+    color: 'rgb(48, 49, 46)',
   });
   await noScriptContext.close();
 });
@@ -597,7 +597,9 @@ test('spoiler cover keeps the reading column in both themes and viewports', asyn
       }));
       expect(geometry.documentWidth).toBeLessThanOrEqual(geometry.viewport);
       expect(geometry.coverHeight).toBeLessThan(geometry.paragraphHeight);
-      expect(geometry.padding).toBe(width > 768 ? '1.7px 4.25px' : '1.6px 4px');
+      expect(geometry.padding).toBe(
+        width > 768 ? '1.8px 4.5px' : '1.7px 4.25px',
+      );
       await spoiler.scrollIntoViewIfNeeded();
       await page.screenshot({
         path: path.join(screenshotDir, `spoiler-${size}-${theme}.png`),

@@ -25,7 +25,7 @@ test('home renders compiled CSS and JavaScript and links to a readable post', as
   await expect(page.locator('#latest-title')).toHaveText('最新文章');
   await expect(page.locator('body')).toHaveCSS(
     'background-color',
-    'rgb(247, 248, 250)',
+    'rgb(243, 240, 233)',
   );
 
   const css = network.find((r) => r.url.includes('/css/compiled.'));

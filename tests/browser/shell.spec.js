@@ -82,8 +82,8 @@ for (const pathname of ['/', '/posts/engineering-notes/']) {
         await expect(page.locator('body')).toHaveCSS(
           'background-color',
           scenario === 'dark-slow-module'
-            ? 'rgb(27, 32, 40)'
-            : 'rgb(247, 248, 250)',
+            ? 'rgb(34, 35, 32)'
+            : 'rgb(243, 240, 233)',
         );
       } finally {
         await context.close();

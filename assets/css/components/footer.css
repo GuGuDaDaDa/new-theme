@@ -1,8 +1,9 @@
 .footer {
+  --focus: #a0bec2;
   width: 100%;
   margin-top: 64px;
-  background: linear-gradient(145deg, #1c293a, #182332);
-  color: #bfcedd;
+  background: linear-gradient(145deg, #292d29, #222622);
+  color: #c5c8be;
 }
 
 .footer-inner {
@@ -18,7 +19,7 @@
 
 @media (hover: hover) {
   .footer a:hover {
-    color: #fff;
+    color: #f8f6f1;
   }
 }
 
@@ -26,7 +27,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-  color: #f0f5fa;
+  color: #eeede6;
   font-family: 'Trebuchet MS', var(--font);
   font-size: 25px;
   font-weight: 600;
@@ -35,7 +36,7 @@
 .footer-brand svg {
   width: 40px;
   height: 40px;
-  color: #d3e5f3;
+  color: #b7cfcc;
 }
 
 .footer-brand img {
@@ -48,7 +49,7 @@
 .footer-about p {
   max-width: 34em;
   margin: 18px 0 0;
-  color: #bcccdc;
+  color: #c1c5ba;
   font-size: 13px;
   line-height: 1.9;
 }
@@ -63,14 +64,14 @@
 
 .footer-links h2 {
   margin: 6px 0 7px;
-  color: #f0f5fa;
+  color: #eeede6;
   font-size: 13px;
   font-weight: 600;
 }
 
 .footer-links > span {
   margin-top: 3px;
-  color: #9eb1c5;
+  color: #adb3a5;
   font-size: 11px;
 }
 
@@ -81,8 +82,8 @@
   gap: 22px;
   margin-top: 8px;
   padding-top: 20px;
-  border-top: 1px solid #ffffff1a;
-  color: #aebfd0;
+  border-top: 1px solid #eeede61a;
+  color: #b7bdaf;
   font-size: 11px;
 }
 

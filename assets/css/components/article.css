@@ -94,9 +94,9 @@ main.article-layout {
 .prose {
   min-width: 0;
   overflow-wrap: anywhere;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 400;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .prose > :first-child {
@@ -336,8 +336,8 @@ main.article-layout {
   }
 
   .prose {
-    font-size: 16px;
-    line-height: 1.65;
+    font-size: 17px;
+    line-height: 1.8;
     letter-spacing: 0;
   }
 

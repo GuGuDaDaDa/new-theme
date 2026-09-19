@@ -118,9 +118,9 @@ p {
   max-width: 740px;
   margin-inline: auto;
   overflow-wrap: anywhere;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 400;
-  line-height: 1.7;
+  line-height: 1.8;
 }
 
 .skip {
@@ -152,8 +152,8 @@ p {
   }
 
   .prose {
-    font-size: 16px;
-    line-height: 1.65;
+    font-size: 17px;
+    line-height: 1.8;
   }
 }
 
