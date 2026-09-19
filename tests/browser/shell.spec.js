@@ -617,7 +617,7 @@ test('logo markup keeps the styled size before the stylesheet arrives', async ({
   await page.goto('/');
   await expect(brand).toHaveCSS('width', '47px');
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(brand).toHaveCSS('width', '35px');
+  await expect(brand).toHaveCSS('width', '32px');
 });
 
 test('custom brand assets replace the built-in marks and keep the shell sizes', async ({
@@ -742,11 +742,11 @@ favicon = '/brand/favicon.png'`,
       await expect(avatar).toHaveCSS('height', '112px');
 
       await page.setViewportSize({ width: 390, height: 844 });
-      await expect(page.locator('.brand img')).toHaveCSS('width', '35px');
+      await expect(page.locator('.brand img')).toHaveCSS('width', '32px');
       await expect(avatar).toHaveCSS('width', '88px');
 
       await page.setViewportSize({ width: 360, height: 800 });
-      await expect(page.locator('.brand img')).toHaveCSS('width', '30px');
+      await expect(page.locator('.brand img')).toHaveCSS('width', '28px');
     } finally {
       await context.close();
     }

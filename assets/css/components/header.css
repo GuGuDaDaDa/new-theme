@@ -82,7 +82,7 @@
   display: flex;
   align-items: center;
   gap: 26px;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 .header nav > a {
@@ -155,7 +155,7 @@
 
 @media (max-width: 768px) {
   .header {
-    height: 72px;
+    height: 64px;
   }
 
   .header-inner {
@@ -168,17 +168,17 @@
   }
 
   .brand svg {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
   }
 
   .brand img {
-    width: 35px;
-    height: 35px;
+    width: 32px;
+    height: 32px;
   }
 
   .brand > span {
-    font-size: 23px;
+    font-size: 21px;
   }
 
   .brand small {
@@ -202,15 +202,15 @@
   }
 
   .brand > span {
-    font-size: 20px;
+    font-size: 19px;
   }
 
   .brand svg {
-    width: 30px;
+    width: 28px;
   }
 
   .brand img {
-    width: 30px;
+    width: 28px;
   }
 
   .header nav {

@@ -181,7 +181,7 @@ test('article matches desktop and mobile reading geometry in both themes', async
       expect(
         Math.abs(
           Number.parseFloat(geometry.proseLineHeight) -
-            (width > 768 ? 29.24 : 26.4),
+            (width > 768 ? 28.9 : 26.4),
         ),
       ).toBeLessThan(0.02);
       const headingGaps = await page

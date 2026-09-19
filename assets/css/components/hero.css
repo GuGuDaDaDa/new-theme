@@ -233,12 +233,12 @@
 
 @media (max-width: 768px) {
   .home-page main:has(> .hero) {
-    margin-top: -72px;
+    margin-top: -64px;
   }
 
   .hero {
     min-height: 640px;
-    padding-top: 72px;
+    padding-top: 64px;
   }
 
   .hero-cover {

@@ -340,7 +340,7 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
     await page.setViewportSize({ width, height });
     await page.goto(fixtureBaseURL);
     await waitForHero(page);
-    await expect(page.locator('[data-hero]')).toHaveCSS('padding-top', '72px');
+    await expect(page.locator('[data-hero]')).toHaveCSS('padding-top', '64px');
     await expect(page.locator('.hero-read')).toHaveCSS('padding', '7px 15px');
     await expect(page.locator('.hero-read')).toHaveCSS('height', '38px');
     await expect(page.locator('[data-hero]')).toHaveCSS(
