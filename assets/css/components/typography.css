@@ -16,6 +16,10 @@ body {
   color: var(--text);
   font: 16px/1.65 var(--font);
   -webkit-font-smoothing: antialiased;
+  line-break: strict;
+  font-feature-settings:
+    'halt' on,
+    'chws' on;
 }
 
 a {
@@ -117,7 +121,11 @@ p {
 .prose {
   max-width: 740px;
   margin-inline: auto;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
+  line-break: strict;
+  font-feature-settings:
+    'halt' on,
+    'chws' on;
   font-size: 18px;
   font-weight: 400;
   line-height: 1.8;
