@@ -1,6 +1,6 @@
 .home-page main:has(> .hero) {
   max-width: none;
-  margin-top: -88px;
+  margin-top: -60px;
   padding: 0;
 }
 
@@ -10,7 +10,7 @@
   flex-direction: column;
   isolation: isolate;
   min-height: 440px;
-  padding-top: 88px;
+  padding-top: 60px;
   overflow: hidden;
   background: #263241;
   color: #fff;
@@ -233,12 +233,12 @@
 
 @media (max-width: 768px) {
   .home-page main:has(> .hero) {
-    margin-top: -64px;
+    margin-top: -52px;
   }
 
   .hero {
     min-height: 640px;
-    padding-top: 64px;
+    padding-top: 52px;
   }
 
   .hero-cover {

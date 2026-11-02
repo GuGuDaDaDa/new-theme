@@ -605,19 +605,18 @@ test('logo markup keeps the styled size before the stylesheet arrives', async ({
   // Simulate the slow-network first frame: no compiled stylesheet at all.
   await page.route('**/compiled*.css', (route) => route.abort());
   await page.goto('/');
-  const brand = page.locator('.brand svg');
-  await expect(brand).toHaveAttribute('width', '47');
-  await expect(brand).toHaveAttribute('height', '47');
-  await expect(brand).toHaveCSS('width', '47px');
+  const brand = page.locator('.brand');
+  await expect(brand).toHaveAttribute('href', '/');
+  await expect(brand.locator('span')).toHaveText('BuGuLog');
   await expect(page.locator('.footer-brand svg')).toHaveCSS('width', '40px');
 
   // With the stylesheet applied the responsive rules still win.
   await page.unroute('**/compiled*.css');
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto('/');
-  await expect(brand).toHaveCSS('width', '47px');
+  await expect(page.locator('.brand > span')).toHaveCSS('font-size', '19px');
   await page.setViewportSize({ width: 390, height: 844 });
-  await expect(brand).toHaveCSS('width', '32px');
+  await expect(page.locator('.brand > span')).toHaveCSS('font-size', '17px');
 });
 
 test('custom brand assets replace the built-in marks and keep the shell sizes', async ({
@@ -706,8 +705,8 @@ favicon = '/brand/favicon.png'`,
       await page.goto(baseURL);
       const brandImage = page.locator('.brand img');
       await expect(brandImage).toHaveCount(1);
-      await expect(brandImage).toHaveAttribute('width', '47');
-      await expect(brandImage).toHaveAttribute('height', '47');
+      await expect(brandImage).toHaveAttribute('width', '32');
+      await expect(brandImage).toHaveAttribute('height', '32');
       await expect(brandImage).toHaveAttribute('alt', '');
       await expect(brandImage).toHaveAttribute('src', /\/brand\/logo\.svg$/);
       await expect(page.locator('.brand svg')).toHaveCount(0);
@@ -715,8 +714,8 @@ favicon = '/brand/favicon.png'`,
         'aria-label',
         new RegExp(title),
       );
-      await expect(brandImage).toHaveCSS('width', '47px');
-      await expect(brandImage).toHaveCSS('height', '47px');
+      await expect(brandImage).toHaveCSS('width', '32px');
+      await expect(brandImage).toHaveCSS('height', '32px');
       await expect(page.locator('.footer-brand img')).toHaveCSS(
         'width',
         '40px',

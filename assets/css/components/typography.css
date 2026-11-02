@@ -3,7 +3,7 @@
 }
 
 html {
-  scroll-padding-top: 105px;
+  scroll-padding-top: 76px;
 }
 
 body {
@@ -147,7 +147,7 @@ p {
 
 @media (max-width: 768px) {
   html {
-    scroll-padding-top: 74px;
+    scroll-padding-top: 64px;
   }
 
   main {
