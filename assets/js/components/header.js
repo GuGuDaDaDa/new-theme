@@ -28,11 +28,6 @@ export function initHeader(root) {
 
   /** Refresh the persistent header for the committed page. @returns {void} */
   function refresh() {
-    header.classList.toggle(
-      'header-overlay',
-      root.body.classList.contains('home-page') &&
-        Boolean(root.querySelector('.hero')),
-    );
     previousY = Math.max(0, window.scrollY);
     accumulated = 0;
     direction = 0;

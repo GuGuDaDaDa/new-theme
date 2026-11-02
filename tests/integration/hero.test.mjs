@@ -106,7 +106,7 @@ for (const count of fixture.counts) {
       const { html, $ } = await readPage(site.build.publicDir, 'index.html');
       const visible = Math.min(count, 3);
       assert.equal($('[data-hero]').length, count ? 1 : 0);
-      assert.equal($('.header').hasClass('header-overlay'), Boolean(count));
+      assert.equal($('.header').hasClass('header-overlay'), false);
       assert.equal($('.section-title > h2').length, count ? 1 : 0);
       assert.equal($('.section-title > h1').length, count ? 0 : 1);
       assert.equal($('[data-hero-choice]').length, visible > 1 ? visible : 0);

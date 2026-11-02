@@ -1,6 +1,6 @@
 .home-page main:has(> .hero) {
   max-width: none;
-  margin-top: -60px;
+  margin-top: 0;
   padding: 0;
 }
 
@@ -9,85 +9,76 @@
   display: flex;
   flex-direction: column;
   isolation: isolate;
-  min-height: 440px;
-  padding-top: 60px;
-  overflow: hidden;
-  background: #263241;
-  color: #fff;
-}
-
-.hero-cover {
-  position: absolute;
-  inset: 0;
-  z-index: -2;
   width: 100%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-}
-
-.hero::after {
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  background: linear-gradient(
-    90deg,
-    rgb(13 23 37 / 86%),
-    rgb(13 23 37 / 65%) 56%,
-    rgb(13 23 37 / 34%)
-  );
-  content: '';
+  overflow: hidden;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+  color: var(--text);
 }
 
 .hero-inner {
   display: grid;
-  grid-template-columns: 320px minmax(0, 1fr);
+  grid-template-columns: minmax(260px, 22%) minmax(0, 1fr) minmax(360px, 34%);
   align-items: center;
-  gap: 80px;
+  gap: clamp(28px, 3.5vw, 56px);
   width: 100%;
-  max-width: 1280px;
   flex: 1;
-  margin: auto;
-  padding: 24px 40px 40px;
+  padding: 44px clamp(32px, 4.5vw, 72px);
+}
+
+.hero-inner:not(:has(.hero-selection)) {
+  grid-template-columns: minmax(0, 1fr) minmax(360px, 42%);
+}
+
+.hero-selection {
+  min-width: 0;
+  border-right: 1px solid var(--line);
+  padding-right: clamp(20px, 2.5vw, 36px);
 }
 
 .hero-selection h2 {
   margin: 0 0 14px;
-  color: #dbe5ef;
-  font-size: 18px;
-  font-weight: 500;
-  letter-spacing: 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
 }
 
 .hero-choices {
   display: grid;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 10px;
+  min-width: 0;
 }
 
 .hero-choices button {
   display: flex;
+  width: 100%;
   min-width: 0;
-  min-height: 72px;
+  min-height: 68px;
   align-items: center;
   gap: 14px;
-  padding: 7px 8px;
-  border-radius: 2px;
-  color: #fff;
+  padding: 10px 12px;
+  border-radius: 3px;
+  color: var(--text);
   text-align: left;
   line-height: 1.5;
+  overflow: hidden;
 }
 
 .hero-choices button[aria-pressed='true'] {
-  background: rgb(255 255 255 / 7%);
+  background: var(--soft);
+  box-shadow: inset 2px 0 0 var(--accent);
 }
 
 .hero-choice-thumb {
   display: block;
   flex: 0 0 auto;
-  width: 84px;
-  height: 58px;
+  width: 72px;
+  height: 50px;
   overflow: hidden;
-  background: #344355;
+  background: var(--bg);
+  border: 1px solid var(--line);
   border-radius: 2px;
 }
 
@@ -101,8 +92,8 @@
   display: block;
   width: 24px;
   height: 2px;
-  margin: 28px auto 0;
-  background: #9dc5e8;
+  margin: 23px auto 0;
+  background: var(--accent);
   opacity: 0.55;
   content: '';
 }
@@ -110,23 +101,32 @@
 .choice-copy {
   display: block;
   min-width: 0;
+  flex: 1;
+  overflow: hidden;
   font-size: 14px;
 }
 
 .choice-copy > span {
   display: block;
   overflow: hidden;
+  color: var(--text);
   font-size: 14px;
+  font-weight: 500;
   line-height: 1.5;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
+.hero-choices button[aria-pressed='true'] .choice-copy > span {
+  font-weight: 600;
+}
+
 .choice-copy small {
   display: block;
-  margin-top: 6px;
-  color: #c0cddd;
+  margin-top: 4px;
+  color: var(--muted);
   font-size: 11px;
+  line-height: 1.5;
 }
 
 .hero-panel {
@@ -134,37 +134,36 @@
   min-width: 0;
 }
 
-.hero-panel:only-child {
-  grid-column: 2;
-}
-
 .hero-panel .meta {
   display: flex;
   flex-wrap: wrap;
-  gap: 20px;
+  gap: 16px;
   margin: 0;
-  color: #c6d5e4;
+  color: var(--muted);
   font-size: 12px;
   line-height: 1.5;
 }
 
 .hero-panel h1 {
-  margin: 14px 0 15px;
-  font-size: 40px;
-  font-weight: 600;
+  margin: 12px 0 15px;
+  color: var(--text);
+  font-size: clamp(26px, 2.4vw, 36px);
+  font-weight: 700;
   line-height: 1.35;
+  letter-spacing: -0.02em;
+  overflow-wrap: break-word;
 }
 
 .hero-panel h1 a:hover {
-  color: #dbe9f7;
+  color: var(--accent);
 }
 
 .hero-panel > p {
   max-width: 36em;
   margin: 0;
-  color: #e0e8f0;
-  font-size: 16px;
-  line-height: 1.7;
+  color: var(--muted);
+  font-size: 15.5px;
+  line-height: 1.78;
 }
 
 .hero-read {
@@ -176,10 +175,16 @@
   justify-content: center;
   margin-top: 25px;
   padding: 8px 18px;
-  background: rgb(255 255 255 / 13%);
-  border-radius: 2px;
-  color: #fff;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+  color: var(--text);
   font-size: 13px;
+  font-weight: 500;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .hero-read::after {
@@ -192,19 +197,46 @@
 }
 
 .hero-read:hover {
-  background: rgb(255 255 255 / 20%);
-  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--surface);
+}
+
+.hero-art {
+  position: relative;
+  width: 100%;
+  min-width: 0;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+.hero-cover {
+  width: 100%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+}
+
+.hero-cover-empty .hero-art::after {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 40px;
+  height: 2px;
+  background: var(--accent);
+  opacity: 0.45;
+  transform: translate(-50%, -50%);
+  content: '';
 }
 
 .hero-fallback {
-  position: absolute;
-  right: 16px;
-  bottom: 8px;
-  left: 16px;
-  z-index: 1;
   display: flex;
   justify-content: center;
   gap: 20px;
+  padding: 0 16px 14px;
+  color: var(--muted);
   font-size: 12px;
 }
 
@@ -216,85 +248,79 @@
 
 @media (hover: hover) {
   .hero-choices button:hover {
-    background: rgb(255 255 255 / 13%);
+    background: var(--soft);
   }
 }
 
 @media (min-width: 769px) and (max-width: 1100px) {
   .hero-inner {
-    grid-template-columns: 275px minmax(0, 1fr);
-    gap: 40px;
+    grid-template-columns: 220px minmax(0, 1fr) 260px;
+    gap: 24px;
+    padding: 28px;
+  }
+
+  .hero-inner:not(:has(.hero-selection)) {
+    grid-template-columns: minmax(0, 1fr) 280px;
+  }
+
+  .hero-selection {
+    padding-right: 18px;
   }
 
   .hero-panel h1 {
-    font-size: 34px;
+    font-size: 22px;
   }
 }
 
 @media (max-width: 768px) {
-  .home-page main:has(> .hero) {
-    margin-top: -52px;
+  .hero-inner,
+  .hero-inner:not(:has(.hero-selection)) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+    padding: 18px 18px 20px;
   }
 
-  .hero {
-    min-height: 640px;
-    padding-top: 52px;
+  .hero-art {
+    order: 0;
+    aspect-ratio: 16 / 10;
   }
 
   .hero-cover {
     object-position: 58% 50%;
   }
 
-  .hero::after {
-    background: linear-gradient(
-      180deg,
-      rgb(13 23 37 / 50%),
-      rgb(13 23 37 / 21%) 28%,
-      rgb(13 23 37 / 79%) 72%,
-      rgb(13 23 37 / 95%)
-    );
-  }
-
-  .hero-inner {
-    display: flex;
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-end;
-    gap: 0;
-    padding: 0;
-  }
-
   .hero-panel {
-    order: 0;
-    grid-column: auto;
+    order: 1;
     max-width: none;
-    padding: 24px 20px 32px;
+  }
+
+  .hero-panel .meta {
+    font-size: 11.5px;
   }
 
   .hero-panel h1 {
-    margin: 10px 0 12px;
-    font-size: 29px;
+    margin: 8px 0 10px;
+    font-size: 22px;
   }
 
   .hero-panel > p {
     font-size: 14px;
-  }
-
-  .hero-panel .meta {
-    font-size: 11px;
+    line-height: 1.65;
   }
 
   .hero-read {
     min-height: 38px;
     padding: 7px 15px;
-    margin-top: 18px;
+    margin-top: 16px;
     font-size: 12px;
   }
 
   .hero-selection {
-    order: 1;
-    padding: 18px 14px 13px;
-    background: rgb(13 23 37 / 50%);
+    order: 2;
+    border-right: 0;
+    border-top: 1px solid var(--line);
+    padding-right: 0;
+    padding-top: 12px;
   }
 
   .hero-selection h2 {
@@ -302,21 +328,26 @@
   }
 
   .hero-choices {
-    display: flex;
-    justify-content: center;
-    gap: 9px;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .hero-choices button {
-    flex: 1;
     flex-direction: column;
     align-items: center;
     justify-content: flex-start;
-    gap: 7px;
+    gap: 6px;
     min-width: 0;
     min-height: 0;
     height: auto;
     padding: 6px 4px;
+    text-align: center;
+  }
+
+  .hero-choices button[aria-pressed='true'] {
+    box-shadow: none;
+    outline: 1px solid var(--accent);
   }
 
   .hero-choice-thumb {
@@ -349,16 +380,13 @@
 }
 
 @media (max-width: 360px) {
-  .hero {
-    min-height: 600px;
-  }
-
-  .hero-panel {
-    padding-inline: 16px;
+  .hero-inner,
+  .hero-inner:not(:has(.hero-selection)) {
+    padding-inline: 14px;
   }
 
   .hero-panel h1 {
-    font-size: 26px;
+    font-size: 20px;
   }
 
   .home-page main:has(> .hero) > .latest {

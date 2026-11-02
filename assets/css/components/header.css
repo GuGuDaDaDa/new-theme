@@ -108,30 +108,10 @@
   stroke-linejoin: round;
 }
 
-.header.header-overlay:not(.header-scrolled) {
-  background: transparent;
-  border-color: transparent;
-  box-shadow: none;
-  color: #fff;
-}
-
-.header.header-overlay:not(.header-scrolled) .brand > span {
-  color: #fff;
-}
-
 @media (hover: hover) {
   .icon:hover {
     background: var(--soft);
     color: var(--text);
-  }
-
-  .header.header-overlay:not(.header-scrolled) a:hover {
-    color: #d4e5f3;
-  }
-
-  .header.header-overlay:not(.header-scrolled) .icon:hover {
-    background: #ffffff18;
-    color: #fff;
   }
 }
 

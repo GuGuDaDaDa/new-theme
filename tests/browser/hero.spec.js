@@ -302,51 +302,56 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(fixtureBaseURL);
   await waitForHero(page);
-  await expect(page.locator('[data-hero]')).toHaveCSS('height', '440px');
+  const desktopHero = await page.locator('[data-hero]').evaluate((hero) => {
+    const rect = hero.getBoundingClientRect();
+    const cols = [
+      hero.querySelector('.hero-selection'),
+      hero.querySelector('.hero-panel'),
+      hero.querySelector('.hero-art'),
+    ].map((col) => ({
+      clientW: col.clientWidth,
+      scrollW: col.scrollWidth,
+      box: col.getBoundingClientRect(),
+    }));
+    return {
+      left: rect.left,
+      width: rect.width,
+      viewport: globalThis.innerWidth,
+      cols,
+    };
+  });
+  expect(desktopHero.left).toBe(0);
+  expect(Math.abs(desktopHero.width - desktopHero.viewport)).toBeLessThan(1);
+  for (const col of desktopHero.cols) {
+    expect(col.scrollW).toBeLessThanOrEqual(col.clientW);
+  }
   await expect(page.locator('.hero-read')).toHaveCSS('padding', '8px 18px');
-  await expect(page.locator('.hero-read')).toHaveCSS('height', '40px');
+  await expect(page.locator('.hero-read')).toHaveCSS('min-height', '40px');
   await expect(page.locator('.hero-read')).toHaveCSS('margin-top', '25px');
   await expect(page.locator('.choice-copy small').first()).toHaveCSS(
     'line-height',
     '16.5px',
   );
-  await expect(page.locator('[data-header]')).toHaveClass(/header-overlay/);
+  await expect(page.locator('[data-header]')).not.toHaveClass(/header-overlay/);
   await expect(page.locator('[data-header]')).not.toHaveClass(
     /header-scrolled/,
   );
-  await page.waitForTimeout(450);
-  expect(
-    await page
-      .locator('[data-header]')
-      .evaluate(
-        (element) => globalThis.getComputedStyle(element).backgroundColor,
-      ),
-  ).toBe('rgba(0, 0, 0, 0)');
   await page.evaluate(() => globalThis.scrollTo(0, 180));
   await expect(page.locator('[data-header]')).toHaveClass(/header-scrolled/);
-  expect(
-    await page
-      .locator('[data-header]')
-      .evaluate(
-        (element) => globalThis.getComputedStyle(element).backgroundColor,
-      ),
-  ).not.toBe('rgba(0, 0, 0, 0)');
 
-  for (const [width, height, expectedHero] of [
-    [390, 844, 640],
-    [360, 800, 600],
-    [320, 720, 600],
+  for (const [width, height] of [
+    [390, 844],
+    [360, 800],
+    [320, 720],
   ]) {
     await page.setViewportSize({ width, height });
     await page.goto(fixtureBaseURL);
     await waitForHero(page);
-    await expect(page.locator('[data-hero]')).toHaveCSS('padding-top', '52px');
     await expect(page.locator('.hero-read')).toHaveCSS('padding', '7px 15px');
-    await expect(page.locator('.hero-read')).toHaveCSS('height', '38px');
-    await expect(page.locator('[data-hero]')).toHaveCSS(
-      'height',
-      `${expectedHero}px`,
-    );
+    await expect(page.locator('.hero-read')).toHaveCSS('min-height', '38px');
+    const initialHeight = await page
+      .locator('[data-hero]')
+      .evaluate((hero) => hero.getBoundingClientRect().height);
     const geometry = await page.locator('[data-hero]').evaluate((hero) => {
       const image = hero.querySelector('.hero-choice-thumb');
       const title = hero.querySelector('.choice-copy > span');
@@ -395,7 +400,7 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
           ordered: panelBox.bottom <= selectionBox.top + tolerance,
         };
       });
-      expect(longTitle.height).toBeGreaterThan(expectedHero);
+      expect(longTitle.height).toBeGreaterThan(initialHeight);
       expect(longTitle.panelInside).toBe(true);
       expect(longTitle.selectionInside).toBe(true);
       expect(longTitle.ordered).toBe(true);
@@ -410,6 +415,7 @@ test('hero has no serious accessibility violations and records visual evidence',
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(fixtureBaseURL);
   await waitForHero(page);
+  await page.waitForTimeout(450);
   const axeSource = await readFile(
     path.join(projectRoot, 'node_modules/axe-core/axe.min.js'),
     'utf8',

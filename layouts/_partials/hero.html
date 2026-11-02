@@ -25,27 +25,11 @@
   {{- end -}}
   {{- $active := index $items 0 -}}
   {{- $activeCover := $active.cover -}}
-  <section class="hero" aria-label="{{ i18n "hero.region" }}" data-hero>
-    <img
-      class="hero-cover"
-      data-hero-cover
-      alt=""
-      loading="eager"
-      decoding="async"
-      fetchpriority="high"
-      {{- if $activeCover.url }}
-        src="{{ $activeCover.url }}"
-        {{- with $activeCover.srcset }}
-          srcset="{{ delimit . ", " }}" sizes="100vw"
-        {{- end }}
-        {{- if and $activeCover.width $activeCover.height }}
-          width="{{ $activeCover.width }}" height="{{ $activeCover.height }}"
-        {{- end }}
-        style="object-position: {{ $activeCover.position }}"
-      {{- else }}
-        hidden
-      {{- end }}
-    />
+  <section
+    class="hero{{ if not $activeCover.url }}hero-cover-empty{{ end }}"
+    aria-label="{{ i18n "hero.region" }}"
+    data-hero
+  >
     <div class="hero-inner">
       {{ if gt (len $items) 1 }}
         <div class="hero-selection">
@@ -109,6 +93,29 @@
         <a class="hero-read" href="{{ $active.url }}" data-hero-read
           >{{ i18n "hero.read" }}</a
         >
+      </div>
+      <div class="hero-art">
+        <img
+          class="hero-cover"
+          data-hero-cover
+          alt=""
+          loading="eager"
+          decoding="async"
+          fetchpriority="high"
+          {{- if $activeCover.url }}
+            src="{{ $activeCover.url }}"
+            {{- with $activeCover.srcset }}
+              srcset="{{ delimit . ", " }}" sizes="100vw"
+            {{- end }}
+            {{- if and $activeCover.width $activeCover.height }}
+              width="{{ $activeCover.width }}"
+              height="{{ $activeCover.height }}"
+            {{- end }}
+            style="object-position: {{ $activeCover.position }}"
+          {{- else }}
+            hidden
+          {{- end }}
+        />
       </div>
     </div>
     {{ if gt (len $items) 1 }}
