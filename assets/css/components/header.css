@@ -41,16 +41,8 @@
   display: inline-flex;
   flex-shrink: 0;
   align-items: center;
-  gap: 10px;
   min-height: 44px;
   min-width: 44px;
-}
-
-.brand img {
-  display: block;
-  width: 32px;
-  height: 32px;
-  object-fit: contain;
 }
 
 .brand > span {
@@ -143,7 +135,6 @@
   }
 }
 
-.header .brand img,
 .header nav a,
 .header nav .icon {
   transition:
@@ -159,15 +150,6 @@
   .header-inner {
     gap: 10px;
     padding-inline: 18px;
-  }
-
-  .brand {
-    gap: 6px;
-  }
-
-  .brand img {
-    width: 32px;
-    height: 32px;
   }
 
   .brand > span {
@@ -195,11 +177,6 @@
 
   .brand > span {
     font-size: 16px;
-  }
-
-  .brand img {
-    width: 28px;
-    height: 28px;
   }
 
   .header nav {

@@ -23,32 +23,9 @@
   }
 }
 
-.footer-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  color: #eeede6;
-  font-family: 'Trebuchet MS', var(--font);
-  font-size: 25px;
-  font-weight: 600;
-}
-
-.footer-brand svg {
-  width: 40px;
-  height: 40px;
-  color: #b7cfcc;
-}
-
-.footer-brand img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  object-fit: contain;
-}
-
 .footer-about p {
   max-width: 34em;
-  margin: 18px 0 0;
+  margin: 6px 0 0;
   color: #c1c5ba;
   font-size: 13px;
   line-height: 1.9;
@@ -107,12 +84,8 @@
   }
 
   .footer-about p {
-    margin-top: 12px;
+    margin-top: 0;
     font-size: 12px;
-  }
-
-  .footer-brand {
-    font-size: 23px;
   }
 
   .footer-links h2 {

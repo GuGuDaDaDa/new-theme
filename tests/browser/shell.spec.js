@@ -608,7 +608,8 @@ test('logo markup keeps the styled size before the stylesheet arrives', async ({
   const brand = page.locator('.brand');
   await expect(brand).toHaveAttribute('href', '/');
   await expect(brand.locator('span')).toHaveText('BuGuLog');
-  await expect(page.locator('.footer-brand svg')).toHaveCSS('width', '40px');
+  await expect(page.locator('.brand svg, .brand img')).toHaveCount(0);
+  await expect(page.locator('.footer-brand')).toHaveCount(0);
 
   // With the stylesheet applied the responsive rules still win.
   await page.unroute('**/compiled*.css');
@@ -703,29 +704,14 @@ favicon = '/brand/favicon.png'`,
     const page = await context.newPage();
     try {
       await page.goto(baseURL);
-      const brandImage = page.locator('.brand img');
-      await expect(brandImage).toHaveCount(1);
-      await expect(brandImage).toHaveAttribute('width', '32');
-      await expect(brandImage).toHaveAttribute('height', '32');
-      await expect(brandImage).toHaveAttribute('alt', '');
-      await expect(brandImage).toHaveAttribute('src', /\/brand\/logo\.svg$/);
+      await expect(page.locator('.brand img')).toHaveCount(0);
       await expect(page.locator('.brand svg')).toHaveCount(0);
       await expect(page.locator('.brand')).toHaveAttribute(
         'aria-label',
         new RegExp(title),
       );
-      await expect(brandImage).toHaveCSS('width', '32px');
-      await expect(brandImage).toHaveCSS('height', '32px');
-      await expect(page.locator('.footer-brand img')).toHaveCSS(
-        'width',
-        '40px',
-      );
-      await expect(page.locator('.footer-brand img')).toHaveCSS(
-        'height',
-        '40px',
-      );
-      await expect(page.locator('.footer-brand svg')).toHaveCount(0);
-      await expect(page.locator('.footer-brand > span')).toHaveText(title);
+      await expect(page.locator('.brand > span')).toHaveText(title);
+      await expect(page.locator('.footer-brand')).toHaveCount(0);
       await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
         'href',
         /\/brand\/favicon\.png$/,
@@ -741,11 +727,7 @@ favicon = '/brand/favicon.png'`,
       await expect(avatar).toHaveCSS('height', '112px');
 
       await page.setViewportSize({ width: 390, height: 844 });
-      await expect(page.locator('.brand img')).toHaveCSS('width', '32px');
       await expect(avatar).toHaveCSS('width', '88px');
-
-      await page.setViewportSize({ width: 360, height: 800 });
-      await expect(page.locator('.brand img')).toHaveCSS('width', '28px');
     } finally {
       await context.close();
     }
