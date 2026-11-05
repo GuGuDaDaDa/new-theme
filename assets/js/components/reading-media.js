@@ -1,6 +1,7 @@
-/** Lightweight image entry points; original-image rendering is loaded on demand. */
+/** Lightweight image entry points and synchronous lightbox open transition. */
 import { initDialog } from '../core/dialog.js';
 import { t } from '../core/i18n.js';
+import { initLightbox } from './lightbox.js';
 
 const instances = new WeakMap();
 
@@ -18,11 +19,9 @@ export function initReadingMedia(root) {
   const content = dialog.querySelector('[data-lightbox-content]');
   const status = dialog.querySelector('[data-lightbox-status]');
   const caption = dialog.querySelector('[data-lightbox-caption]');
-  let request = 0;
   let disposeImage = () => {};
-  /** Invalidate any import or image still in flight. @returns {void} */
+  /** Invalidate any image still in flight. @returns {void} */
   function cancel() {
-    request += 1;
     disposeImage();
     disposeImage = () => {};
     dialog.removeAttribute('data-lightbox-loading');
@@ -46,7 +45,7 @@ export function initReadingMedia(root) {
   );
   root.addEventListener(
     'click',
-    async (event) => {
+    (event) => {
       const trigger = event.target.closest('a[data-lightbox]');
       if (
         !trigger ||
@@ -68,7 +67,6 @@ export function initReadingMedia(root) {
         return;
       event.preventDefault();
       cancel();
-      const current = request;
       const img = trigger.querySelector('img');
       const width =
         Number(img?.getAttribute('width')) || img?.naturalWidth || 960;
@@ -81,23 +79,12 @@ export function initReadingMedia(root) {
       caption.hidden = !caption.textContent;
       status.textContent = t('lightbox.loading');
       dialog.setAttribute('data-lightbox-loading', '');
-      dialog.setAttribute('data-lightbox-opening', '');
       modal.open(trigger);
-      try {
-        const { initLightbox } = await import('./lightbox.js');
-        if (request !== current || !dialog.open) return;
-        disposeImage = initLightbox(dialog, {
-          url: trigger.dataset.lightboxSrc || url.href,
-          alt: img?.alt || caption.textContent,
-          source: img,
-        });
-      } catch {
-        if (request === current && dialog.open) {
-          dialog.removeAttribute('data-lightbox-loading');
-          dialog.removeAttribute('data-lightbox-opening');
-          status.textContent = t('lightbox.unavailable');
-        }
-      }
+      disposeImage = initLightbox(dialog, {
+        url: trigger.dataset.lightboxSrc || url.href,
+        alt: img?.alt || caption.textContent,
+        source: img,
+      });
     },
     { signal },
   );

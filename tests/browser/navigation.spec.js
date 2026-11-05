@@ -460,11 +460,23 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   }
 
-  // The loading phase keeps the exact settled frame size without jumping on load.
+  // Slow image network: the card flies once with the placeholder, then reveals the image in place without re-flying or resizing.
+  let releaseImage;
+  const heldImage = new Promise((resolve) => {
+    releaseImage = resolve;
+  });
   await page.goto(triggers[0][0]);
-  const loadingState = await page.evaluate(() => {
+  await page.route('**/posts/vibecoding/*.webp', async (route) => {
+    await heldImage;
+    await route.continue();
+  });
+  await page.locator('a[data-lightbox]').first().click();
+  await page.waitForFunction(() => {
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    globalThis.document.querySelector('a[data-lightbox]').click();
+    return dialog?.open && !dialog.hasAttribute('data-lightbox-flying');
+  });
+  const loadingLanded = await page.evaluate(() => {
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
     const cardBox = dialog.getBoundingClientRect();
     const contentBox = dialog
       .querySelector('[data-lightbox-content]')
@@ -472,28 +484,43 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     return {
       background: globalThis.getComputedStyle(dialog).backgroundColor,
       loading: dialog.hasAttribute('data-lightbox-loading'),
-      opening: dialog.hasAttribute('data-lightbox-opening'),
       flying: dialog.hasAttribute('data-lightbox-flying'),
+      animations: dialog.getAnimations().length,
       cardWidth: cardBox.width,
       cardHeight: cardBox.height,
       placeholderHeight: contentBox.height,
     };
   });
-  expect(loadingState.background).toBe(cardColor);
-  expect(loadingState.loading).toBe(true);
-  expect(loadingState.opening).toBe(true);
-  expect(loadingState.flying).toBe(false);
-  expect(loadingState.placeholderHeight).toBeGreaterThanOrEqual(220);
+  expect(loadingLanded.background).toBe(cardColor);
+  expect(loadingLanded.loading).toBe(true);
+  expect(loadingLanded.flying).toBe(false);
+  expect(loadingLanded.animations).toBe(0);
+  expect(loadingLanded.placeholderHeight).toBeGreaterThanOrEqual(220);
+
+  releaseImage();
   await page.waitForFunction(() => {
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    return (
-      !dialog.hasAttribute('data-lightbox-loading') &&
-      !dialog.hasAttribute('data-lightbox-flying')
-    );
+    return !dialog.hasAttribute('data-lightbox-loading');
   });
-  const settledBox = await page.locator('[data-lightbox-dialog]').boundingBox();
-  expect(Math.abs(settledBox.width - loadingState.cardWidth)).toBeLessThan(1);
-  expect(Math.abs(settledBox.height - loadingState.cardHeight)).toBeLessThan(1);
+  const settledState = await page.evaluate(() => {
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    const cardBox = dialog.getBoundingClientRect();
+    return {
+      flying: dialog.hasAttribute('data-lightbox-flying'),
+      animations: dialog.getAnimations().length,
+      cardWidth: cardBox.width,
+      cardHeight: cardBox.height,
+    };
+  });
+  expect(settledState.flying).toBe(false);
+  expect(settledState.animations).toBe(0);
+  expect(
+    Math.abs(settledState.cardWidth - loadingLanded.cardWidth),
+  ).toBeLessThan(1);
+  expect(
+    Math.abs(settledState.cardHeight - loadingLanded.cardHeight),
+  ).toBeLessThan(1);
+  await page.unroute('**/posts/vibecoding/*.webp');
   await expect(
     page.locator('[data-lightbox-dialog] [data-dialog-close]'),
   ).toHaveCSS('opacity', '1');
