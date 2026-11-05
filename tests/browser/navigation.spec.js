@@ -460,11 +460,12 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   }
 
-  // The loading phase keeps a sized placeholder and spinner without collapsing.
+  // The loading phase keeps the exact settled frame size without jumping on load.
   await page.goto(triggers[0][0]);
   const loadingState = await page.evaluate(() => {
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
     globalThis.document.querySelector('a[data-lightbox]').click();
+    const cardBox = dialog.getBoundingClientRect();
     const contentBox = dialog
       .querySelector('[data-lightbox-content]')
       .getBoundingClientRect();
@@ -473,6 +474,8 @@ test('image lightbox flies the card out of its trigger and skips the flight when
       loading: dialog.hasAttribute('data-lightbox-loading'),
       opening: dialog.hasAttribute('data-lightbox-opening'),
       flying: dialog.hasAttribute('data-lightbox-flying'),
+      cardWidth: cardBox.width,
+      cardHeight: cardBox.height,
       placeholderHeight: contentBox.height,
     };
   });
@@ -481,6 +484,16 @@ test('image lightbox flies the card out of its trigger and skips the flight when
   expect(loadingState.opening).toBe(true);
   expect(loadingState.flying).toBe(false);
   expect(loadingState.placeholderHeight).toBeGreaterThanOrEqual(220);
+  await page.waitForFunction(() => {
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    return (
+      !dialog.hasAttribute('data-lightbox-loading') &&
+      !dialog.hasAttribute('data-lightbox-flying')
+    );
+  });
+  const settledBox = await page.locator('[data-lightbox-dialog]').boundingBox();
+  expect(Math.abs(settledBox.width - loadingState.cardWidth)).toBeLessThan(1);
+  expect(Math.abs(settledBox.height - loadingState.cardHeight)).toBeLessThan(1);
   await expect(
     page.locator('[data-lightbox-dialog] [data-dialog-close]'),
   ).toHaveCSS('opacity', '1');
@@ -563,6 +576,7 @@ test('image lightbox fits the preview and its caption without scrolling', async 
           clientHeight: dialog.clientHeight,
           naturalRatio: image.naturalWidth / image.naturalHeight,
           paintedRatio: picture.width / picture.height,
+          cardWidthDelta: card.width - picture.width,
           inside:
             picture.top >= card.top - 1 &&
             picture.bottom <= card.bottom + 1 &&
@@ -575,6 +589,7 @@ test('image lightbox fits the preview and its caption without scrolling', async 
         frame.clientHeight + 1,
       );
       expect(frame.paintedRatio, label).toBeCloseTo(frame.naturalRatio, 2);
+      expect(frame.cardWidthDelta, label).toBeCloseTo(20, 0);
       expect(frame.inside, label).toBe(true);
       await page.keyboard.press('Escape');
       await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();

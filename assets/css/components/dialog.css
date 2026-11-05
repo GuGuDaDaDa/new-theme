@@ -58,15 +58,19 @@ dialog::backdrop {
 }
 
 #image-dialog[data-lightbox-dialog] {
+  --lightbox-w: 960;
+  --lightbox-h: 600;
+  /* Card padding and caption row: the preview shares the card's 85dvh budget
+     with them, so it may only take what is left. */
+  --lightbox-chrome: 56px;
+  --lightbox-max-w: calc(min(1200px, 95vw) - 20px);
+  --lightbox-max-h: calc(85dvh - var(--lightbox-chrome));
   position: fixed;
-  width: min(1200px, 95vw);
-  max-width: 95vw;
+  width: fit-content;
+  max-width: min(1200px, 95vw);
   padding: 10px;
   overflow: auto;
   background: var(--bg);
-  /* Card padding, caption and status rows: the preview shares
-     the card's 85dvh budget with them, so it may only take what is left. */
-  --lightbox-chrome: 56px;
 }
 
 #image-dialog[data-lightbox-dialog] > .close-dialog {
@@ -78,20 +82,23 @@ dialog::backdrop {
 #image-dialog[data-lightbox-dialog] [data-lightbox-content] {
   position: relative;
   display: grid;
-  min-width: 0;
-  min-height: 220px;
+  width: min(
+    calc(var(--lightbox-w) * 1px),
+    var(--lightbox-max-w),
+    calc(var(--lightbox-max-h) * var(--lightbox-w) / var(--lightbox-h))
+  );
+  min-width: 180px;
+  min-height: 120px;
+  aspect-ratio: var(--lightbox-w) / var(--lightbox-h);
   place-items: center;
+  margin-inline: auto;
+  border-radius: 3px;
+  overflow: hidden;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-loading]
   [data-lightbox-content] {
-  width: 100%;
-  aspect-ratio: var(--lightbox-aspect, 16 / 10);
-  max-height: calc(85dvh - var(--lightbox-chrome));
-  margin-inline: auto;
   background: var(--soft);
-  border-radius: 3px;
-  overflow: hidden;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-loading]
@@ -116,13 +123,12 @@ dialog::backdrop {
 
 #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
   display: block;
-  max-width: 100%;
-  max-height: calc(85dvh - var(--lightbox-chrome));
-  width: auto;
-  height: auto;
+  width: 100%;
+  height: 100%;
   margin: auto;
   border-radius: 3px;
   object-fit: contain;
+  transition: opacity 0.16s ease;
 }
 
 #image-dialog[data-lightbox-dialog] [data-lightbox-caption],
@@ -132,6 +138,14 @@ dialog::backdrop {
   font-size: 11px;
   line-height: 1.6;
   text-align: center;
+}
+
+#image-dialog[data-lightbox-dialog][data-lightbox-loading]
+  [data-lightbox-status] {
+  position: absolute;
+  inset: calc(50% + 22px) 16px auto;
+  margin: 0;
+  pointer-events: none;
 }
 
 #image-dialog[data-lightbox-dialog] [data-lightbox-status]:empty {
@@ -174,18 +188,17 @@ dialog::backdrop {
     [data-lightbox-content]::after {
     animation: none;
   }
+
+  #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
+    transition: none;
+  }
 }
 
 @media (max-width: 768px) {
   #image-dialog[data-lightbox-dialog] {
-    width: 95vw;
+    --lightbox-max-w: calc(95vw - 20px);
+    --lightbox-max-h: calc(78dvh - var(--lightbox-chrome));
     max-width: 95vw;
-  }
-
-  #image-dialog[data-lightbox-dialog][data-lightbox-loading]
-    [data-lightbox-content],
-  #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
-    max-height: calc(78dvh - var(--lightbox-chrome));
   }
 }
 

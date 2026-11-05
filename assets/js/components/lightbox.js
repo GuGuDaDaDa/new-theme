@@ -71,8 +71,8 @@ export function initLightbox(root, image) {
   const status = root.querySelector('[data-lightbox-status]');
   const img = new Image();
   let animation = null;
-  /** Put the card in place when no flight runs. @returns {void} */
-  const showCard = () => {
+  /** Reveal the loaded image inside the already-sized frame. @returns {void} */
+  const showImage = () => {
     root.removeAttribute('data-lightbox-loading');
     root.removeAttribute('data-lightbox-opening');
   };
@@ -82,12 +82,12 @@ export function initLightbox(root, image) {
   img.addEventListener(
     'load',
     () => {
+      if (img.naturalWidth && img.naturalHeight) {
+        root.style.setProperty('--lightbox-w', String(img.naturalWidth));
+        root.style.setProperty('--lightbox-h', String(img.naturalHeight));
+      }
       status.textContent = '';
-      showCard();
-      animation = zoomFromSource(root, img, image.source);
-      if (!animation) return;
-      root.setAttribute('data-lightbox-flying', '');
-      animation.finished.then(landCard, landCard);
+      showImage();
     },
     { signal },
   );
@@ -95,12 +95,18 @@ export function initLightbox(root, image) {
     'error',
     () => {
       img.remove();
-      showCard();
+      showImage();
       status.textContent = t('lightbox.failed');
     },
     { signal },
   );
   content.replaceChildren(img);
+  root.removeAttribute('data-lightbox-opening');
+  animation = zoomFromSource(root, img, image.source);
+  if (animation) {
+    root.setAttribute('data-lightbox-flying', '');
+    animation.finished.then(landCard, landCard);
+  }
   img.src = image.url;
   const cleanup = () => {
     controller.abort();

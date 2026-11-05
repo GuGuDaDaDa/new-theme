@@ -71,11 +71,12 @@ export function initReadingMedia(root) {
       const current = request;
       const img = trigger.querySelector('img');
       const width =
-        img?.naturalWidth || Number(img?.getAttribute('width')) || 16;
+        Number(img?.getAttribute('width')) || img?.naturalWidth || 960;
       const height =
-        img?.naturalHeight || Number(img?.getAttribute('height')) || 10;
+        Number(img?.getAttribute('height')) || img?.naturalHeight || 600;
       content.replaceChildren();
-      content.style.setProperty('--lightbox-aspect', `${width} / ${height}`);
+      dialog.style.setProperty('--lightbox-w', String(width));
+      dialog.style.setProperty('--lightbox-h', String(height));
       caption.textContent = trigger.dataset.caption || img?.alt || '';
       caption.hidden = !caption.textContent;
       status.textContent = t('lightbox.loading');
