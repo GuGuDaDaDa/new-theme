@@ -1,8 +1,10 @@
 html:has(dialog[open]) {
   overflow: hidden;
+  padding-right: var(--scrollbar-gap, 0px);
 }
 
 dialog {
+  inset-inline: 0 var(--scrollbar-gap, 0px);
   margin: auto;
   width: min(600px, calc(100% - 32px));
   max-width: calc(100% - 32px);

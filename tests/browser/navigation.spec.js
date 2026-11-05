@@ -641,6 +641,70 @@ test('image lightbox fits the preview and its caption without scrolling', async 
       await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
     }
   }
+
+  // Classic non-overlay scrollbar (e.g. Edge on Windows): locking scroll on open must not shift page layout.
+  await page.setViewportSize({ width: 1280, height: 720 });
+  await page.goto('/posts/vibecoding/');
+  await page.addStyleTag({
+    content:
+      'html:not(:has(dialog[open])) { overflow-y: scroll; scrollbar-gutter: stable; }',
+  });
+  const beforeOpen = await page.evaluate(() => {
+    const prose = globalThis.document.querySelector('.prose');
+    const brand = globalThis.document.querySelector('.brand');
+    return {
+      gap:
+        globalThis.window.innerWidth -
+        globalThis.document.documentElement.getBoundingClientRect().width,
+      bodyWidth: globalThis.document.body.getBoundingClientRect().width,
+      proseLeft: prose.getBoundingClientRect().left,
+      brandLeft: brand.getBoundingClientRect().left,
+    };
+  });
+  await page.locator('a[data-lightbox]').first().click();
+  await page.waitForFunction(() => {
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    return dialog?.open && !dialog.hasAttribute('data-lightbox-flying');
+  });
+  const duringOpen = await page.evaluate(() => {
+    const prose = globalThis.document.querySelector('.prose');
+    const brand = globalThis.document.querySelector('.brand');
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    const card = dialog.getBoundingClientRect();
+    return {
+      scrollbarGapVar:
+        globalThis.document.documentElement.style.getPropertyValue(
+          '--scrollbar-gap',
+        ),
+      bodyWidth: globalThis.document.body.getBoundingClientRect().width,
+      proseLeft: prose.getBoundingClientRect().left,
+      brandLeft: brand.getBoundingClientRect().left,
+      dialogCenter: card.left + card.width / 2,
+      bodyCenter: globalThis.document.body.getBoundingClientRect().width / 2,
+    };
+  });
+  if (beforeOpen.gap > 0) {
+    expect(duringOpen.scrollbarGapVar).toBe(`${beforeOpen.gap}px`);
+  }
+  expect(duringOpen.bodyWidth).toBeCloseTo(beforeOpen.bodyWidth, 1);
+  expect(duringOpen.proseLeft).toBeCloseTo(beforeOpen.proseLeft, 1);
+  expect(duringOpen.brandLeft).toBeCloseTo(beforeOpen.brandLeft, 1);
+  expect(duringOpen.dialogCenter).toBeCloseTo(duringOpen.bodyCenter, 1);
+  await page.keyboard.press('Escape');
+  await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
+  const afterClose = await page.evaluate(() => ({
+    scrollbarGapVar:
+      globalThis.document.documentElement.style.getPropertyValue(
+        '--scrollbar-gap',
+      ),
+    bodyWidth: globalThis.document.body.getBoundingClientRect().width,
+    proseLeft: globalThis.document
+      .querySelector('.prose')
+      .getBoundingClientRect().left,
+  }));
+  expect(afterClose.scrollbarGapVar).toBe('');
+  expect(afterClose.bodyWidth).toBeCloseTo(beforeOpen.bodyWidth, 1);
+  expect(afterClose.proseLeft).toBeCloseTo(beforeOpen.proseLeft, 1);
 });
 
 test('scripted content focus keeps no ring for keyboard navigation', async ({

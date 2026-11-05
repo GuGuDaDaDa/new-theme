@@ -18,6 +18,7 @@ export function initDialog(dialog) {
   function restore() {
     if (active.get(root) !== api) return;
     active.delete(root);
+    root.documentElement.style.removeProperty('--scrollbar-gap');
     const target = trigger?.isConnected ? trigger : root.querySelector('#main');
     target?.focus({ preventScroll: true });
   }
@@ -93,7 +94,22 @@ export function initDialog(dialog) {
       if (previous && previous !== api) previous.close();
       trigger = entry;
       active.set(root, api);
-      if (!dialog.open) dialog.showModal();
+      if (!dialog.open) {
+        const view = root.defaultView;
+        const gap = view
+          ? Math.max(
+              0,
+              view.innerWidth -
+                root.documentElement.getBoundingClientRect().width,
+            )
+          : 0;
+        if (gap > 0) {
+          root.documentElement.style.setProperty('--scrollbar-gap', `${gap}px`);
+        } else {
+          root.documentElement.style.removeProperty('--scrollbar-gap');
+        }
+        dialog.showModal();
+      }
       focus.focus({ preventScroll: true });
     },
     close,
