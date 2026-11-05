@@ -72,7 +72,10 @@ export function initLightbox(root, image) {
   const img = new Image();
   let animation = null;
   /** Put the card in place when no flight runs. @returns {void} */
-  const showCard = () => root.removeAttribute('data-lightbox-opening');
+  const showCard = () => {
+    root.removeAttribute('data-lightbox-loading');
+    root.removeAttribute('data-lightbox-opening');
+  };
   /** Hand the frame's controls back once the card has landed. @returns {void} */
   const landCard = () => root.removeAttribute('data-lightbox-flying');
   img.alt = image.alt;
@@ -91,6 +94,7 @@ export function initLightbox(root, image) {
   img.addEventListener(
     'error',
     () => {
+      img.remove();
       showCard();
       status.textContent = t('lightbox.failed');
     },

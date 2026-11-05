@@ -143,8 +143,6 @@ other = "这篇手记"
 other = "图片预览"
 [lightbox.close]
 other = "关闭图片预览"
-[lightbox.original]
-other = "查看原图"
 [lightbox.openCover]
 other = "放大标题图片"
 [lightbox.openImage]
@@ -152,9 +150,9 @@ other = "放大图片{{ with .Alt }}：{{ . }}{{ end }}"
 [lightbox.loading]
 other = "图片加载中…"
 [lightbox.unavailable]
-other = "图片预览暂不可用，请通过下方链接查看原图。"
+other = "图片预览暂不可用，请稍后重试。"
 [lightbox.failed]
-other = "图片加载失败，可通过下方链接查看原图。"
+other = "图片加载失败，请稍后重试。"
 
 [references]
 [references.dialog]

@@ -290,10 +290,7 @@ test('page media and references reinitialize cleanly after repeated partial visi
     await expect(
       page.locator('[data-lightbox-dialog] [data-lightbox-content] img'),
     ).toHaveAttribute('src', /\.webp$/);
-    await expect(page.locator('[data-lightbox-original]')).toHaveAttribute(
-      'href',
-      /\.(png|jpg)$/,
-    );
+    await expect(page.locator('[data-lightbox-original]')).toHaveCount(0);
     await page.keyboard.press('Escape');
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
     await page.locator('[data-article-back]').click();
@@ -417,11 +414,7 @@ test('image lightbox flies the card out of its trigger and skips the flight when
       opening: false,
       flying: true,
     });
-    for (const selector of [
-      '[data-dialog-close]',
-      '[data-lightbox-caption]',
-      '[data-lightbox-original]',
-    ]) {
+    for (const selector of ['[data-dialog-close]', '[data-lightbox-caption]']) {
       await expect(
         page.locator(`[data-lightbox-dialog] ${selector}`),
       ).toHaveCSS('opacity', '0');
@@ -467,21 +460,27 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   }
 
-  // The loading phase keeps the card out of the way and its controls readable.
+  // The loading phase keeps a sized placeholder and spinner without collapsing.
   await page.goto(triggers[0][0]);
-  expect(
-    await page.evaluate(() => {
-      const dialog = globalThis.document.querySelector(
-        '[data-lightbox-dialog]',
-      );
-      globalThis.document.querySelector('a[data-lightbox]').click();
-      return {
-        background: globalThis.getComputedStyle(dialog).backgroundColor,
-        opening: dialog.hasAttribute('data-lightbox-opening'),
-        flying: dialog.hasAttribute('data-lightbox-flying'),
-      };
-    }),
-  ).toEqual({ background: 'rgba(0, 0, 0, 0)', opening: true, flying: false });
+  const loadingState = await page.evaluate(() => {
+    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    globalThis.document.querySelector('a[data-lightbox]').click();
+    const contentBox = dialog
+      .querySelector('[data-lightbox-content]')
+      .getBoundingClientRect();
+    return {
+      background: globalThis.getComputedStyle(dialog).backgroundColor,
+      loading: dialog.hasAttribute('data-lightbox-loading'),
+      opening: dialog.hasAttribute('data-lightbox-opening'),
+      flying: dialog.hasAttribute('data-lightbox-flying'),
+      placeholderHeight: contentBox.height,
+    };
+  });
+  expect(loadingState.background).toBe(cardColor);
+  expect(loadingState.loading).toBe(true);
+  expect(loadingState.opening).toBe(true);
+  expect(loadingState.flying).toBe(false);
+  expect(loadingState.placeholderHeight).toBeGreaterThanOrEqual(220);
   await expect(
     page.locator('[data-lightbox-dialog] [data-dialog-close]'),
   ).toHaveCSS('opacity', '1');

@@ -15,9 +15,9 @@ export function initReadingMedia(root) {
   const modal = initDialog(dialog);
   const controller = new AbortController();
   const { signal } = controller;
+  const content = dialog.querySelector('[data-lightbox-content]');
   const status = dialog.querySelector('[data-lightbox-status]');
   const caption = dialog.querySelector('[data-lightbox-caption]');
-  const original = dialog.querySelector('[data-lightbox-original]');
   let request = 0;
   let disposeImage = () => {};
   /** Invalidate any import or image still in flight. @returns {void} */
@@ -25,6 +25,9 @@ export function initReadingMedia(root) {
     request += 1;
     disposeImage();
     disposeImage = () => {};
+    dialog.removeAttribute('data-lightbox-loading');
+    dialog.removeAttribute('data-lightbox-opening');
+    dialog.removeAttribute('data-lightbox-flying');
   }
   dialog.addEventListener(
     'close',
@@ -67,12 +70,18 @@ export function initReadingMedia(root) {
       cancel();
       const current = request;
       const img = trigger.querySelector('img');
+      const width =
+        img?.naturalWidth || Number(img?.getAttribute('width')) || 16;
+      const height =
+        img?.naturalHeight || Number(img?.getAttribute('height')) || 10;
+      content.replaceChildren();
+      content.style.setProperty('--lightbox-aspect', `${width} / ${height}`);
       caption.textContent = trigger.dataset.caption || img?.alt || '';
       caption.hidden = !caption.textContent;
-      original.href = url.href;
       status.textContent = t('lightbox.loading');
-      modal.open(trigger);
+      dialog.setAttribute('data-lightbox-loading', '');
       dialog.setAttribute('data-lightbox-opening', '');
+      modal.open(trigger);
       try {
         const { initLightbox } = await import('./lightbox.js');
         if (request !== current || !dialog.open) return;
@@ -83,6 +92,7 @@ export function initReadingMedia(root) {
         });
       } catch {
         if (request === current && dialog.open) {
+          dialog.removeAttribute('data-lightbox-loading');
           dialog.removeAttribute('data-lightbox-opening');
           status.textContent = t('lightbox.unavailable');
         }
