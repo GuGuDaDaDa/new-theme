@@ -460,12 +460,16 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   }
 
-  // Slow image network: the card flies once with the placeholder, then reveals the image in place without re-flying or resizing.
+  // Slow image network: the card flies once with the thumbnail preview, then swaps in the full image in place without re-flying or resizing.
   let releaseImage;
   const heldImage = new Promise((resolve) => {
     releaseImage = resolve;
   });
   await page.goto(triggers[0][0]);
+  await page.waitForFunction(() => {
+    const img = globalThis.document.querySelector('a[data-lightbox] img');
+    return Boolean(img?.complete && img.naturalWidth);
+  });
   await page.route('**/posts/vibecoding/*.webp', async (route) => {
     await heldImage;
     await route.continue();
@@ -476,7 +480,10 @@ test('image lightbox flies the card out of its trigger and skips the flight when
     return dialog?.open && !dialog.hasAttribute('data-lightbox-flying');
   });
   const loadingLanded = await page.evaluate(() => {
+    const trigger = globalThis.document.querySelector('a[data-lightbox]');
+    const thumb = trigger.querySelector('img');
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    const preview = dialog.querySelector('[data-lightbox-content] img');
     const cardBox = dialog.getBoundingClientRect();
     const contentBox = dialog
       .querySelector('[data-lightbox-content]')
@@ -486,6 +493,13 @@ test('image lightbox flies the card out of its trigger and skips the flight when
       loading: dialog.hasAttribute('data-lightbox-loading'),
       flying: dialog.hasAttribute('data-lightbox-flying'),
       animations: dialog.getAnimations().length,
+      thumbSrc: thumb.currentSrc || thumb.src,
+      fullSrc: new URL(
+        trigger.dataset.lightboxSrc || trigger.href,
+        globalThis.location.href,
+      ).href,
+      previewSrc: preview.src,
+      previewOpacity: globalThis.getComputedStyle(preview).opacity,
       cardWidth: cardBox.width,
       cardHeight: cardBox.height,
       placeholderHeight: contentBox.height,
@@ -495,6 +509,8 @@ test('image lightbox flies the card out of its trigger and skips the flight when
   expect(loadingLanded.loading).toBe(true);
   expect(loadingLanded.flying).toBe(false);
   expect(loadingLanded.animations).toBe(0);
+  expect(loadingLanded.previewSrc).toBe(loadingLanded.thumbSrc);
+  expect(loadingLanded.previewOpacity).toBe('1');
   expect(loadingLanded.placeholderHeight).toBeGreaterThanOrEqual(220);
 
   releaseImage();
@@ -504,16 +520,19 @@ test('image lightbox flies the card out of its trigger and skips the flight when
   });
   const settledState = await page.evaluate(() => {
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
+    const preview = dialog.querySelector('[data-lightbox-content] img');
     const cardBox = dialog.getBoundingClientRect();
     return {
       flying: dialog.hasAttribute('data-lightbox-flying'),
       animations: dialog.getAnimations().length,
+      previewSrc: preview.src,
       cardWidth: cardBox.width,
       cardHeight: cardBox.height,
     };
   });
   expect(settledState.flying).toBe(false);
   expect(settledState.animations).toBe(0);
+  expect(settledState.previewSrc).toBe(loadingLanded.fullSrc);
   expect(
     Math.abs(settledState.cardWidth - loadingLanded.cardWidth),
   ).toBeLessThan(1);

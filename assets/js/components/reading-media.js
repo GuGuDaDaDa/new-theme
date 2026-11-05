@@ -1,6 +1,5 @@
 /** Lightweight image entry points and synchronous lightbox open transition. */
 import { initDialog } from '../core/dialog.js';
-import { t } from '../core/i18n.js';
 import { initLightbox } from './lightbox.js';
 
 const instances = new WeakMap();
@@ -77,7 +76,7 @@ export function initReadingMedia(root) {
       dialog.style.setProperty('--lightbox-h', String(height));
       caption.textContent = trigger.dataset.caption || img?.alt || '';
       caption.hidden = !caption.textContent;
-      status.textContent = t('lightbox.loading');
+      status.textContent = '';
       dialog.setAttribute('data-lightbox-loading', '');
       modal.open(trigger);
       disposeImage = initLightbox(dialog, {

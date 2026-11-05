@@ -101,26 +101,6 @@ dialog::backdrop {
   background: var(--soft);
 }
 
-#image-dialog[data-lightbox-dialog][data-lightbox-loading]
-  [data-lightbox-content]
-  img {
-  opacity: 0;
-}
-
-#image-dialog[data-lightbox-dialog][data-lightbox-loading]
-  [data-lightbox-content]::after {
-  position: absolute;
-  inset: 0;
-  width: 32px;
-  height: 32px;
-  margin: auto;
-  border: 2.5px solid var(--line);
-  border-top-color: var(--accent);
-  border-radius: 50%;
-  animation: lightbox-spin 0.75s linear infinite;
-  content: '';
-}
-
 #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
   display: block;
   width: 100%;
@@ -128,7 +108,6 @@ dialog::backdrop {
   margin: auto;
   border-radius: 3px;
   object-fit: contain;
-  transition: opacity 0.16s ease;
 }
 
 #image-dialog[data-lightbox-dialog] [data-lightbox-caption],
@@ -140,14 +119,6 @@ dialog::backdrop {
   text-align: center;
 }
 
-#image-dialog[data-lightbox-dialog][data-lightbox-loading]
-  [data-lightbox-status] {
-  position: absolute;
-  inset: calc(50% + 22px) 16px auto;
-  margin: 0;
-  pointer-events: none;
-}
-
 #image-dialog[data-lightbox-dialog] [data-lightbox-status]:empty {
   display: none;
 }
@@ -156,12 +127,6 @@ dialog::backdrop {
 @keyframes lightbox-open {
   from {
     opacity: 0;
-  }
-}
-
-@keyframes lightbox-spin {
-  to {
-    transform: rotate(360deg);
   }
 }
 
@@ -179,17 +144,6 @@ dialog::backdrop {
   #image-dialog[data-lightbox-dialog][data-lightbox-flying]
     :is(.close-dialog, [data-lightbox-caption]) {
     opacity: 0;
-    transition: none;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #image-dialog[data-lightbox-dialog][data-lightbox-loading]
-    [data-lightbox-content]::after {
-    animation: none;
-  }
-
-  #image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
     transition: none;
   }
 }

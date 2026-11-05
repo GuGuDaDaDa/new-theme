@@ -69,51 +69,67 @@ export function initLightbox(root, image) {
   const { signal } = controller;
   const content = root.querySelector('[data-lightbox-content]');
   const status = root.querySelector('[data-lightbox-status]');
-  const img = new Image();
+  const preview = new Image();
+  const full = new Image();
   let animation = null;
-  /** Reveal the loaded image inside the already-sized frame. @returns {void} */
-  const showImage = () => {
+  const thumbUrl =
+    image.source?.complete && image.source.naturalWidth
+      ? image.source.currentSrc || image.source.src
+      : '';
+  /** Mark the full-resolution image as settled. @returns {void} */
+  const finishLoading = () => {
     root.removeAttribute('data-lightbox-loading');
     root.removeAttribute('data-lightbox-opening');
   };
   /** Hand the frame's controls back once the card has landed. @returns {void} */
   const landCard = () => root.removeAttribute('data-lightbox-flying');
-  img.alt = image.alt;
-  img.addEventListener(
-    'load',
-    () => {
-      if (img.naturalWidth && img.naturalHeight) {
-        root.style.setProperty('--lightbox-w', String(img.naturalWidth));
-        root.style.setProperty('--lightbox-h', String(img.naturalHeight));
-      }
-      status.textContent = '';
-      showImage();
-    },
-    { signal },
-  );
-  img.addEventListener(
-    'error',
-    () => {
-      img.remove();
-      showImage();
-      status.textContent = t('lightbox.failed');
-    },
-    { signal },
-  );
-  content.replaceChildren(img);
-  root.removeAttribute('data-lightbox-opening');
-  animation = zoomFromSource(root, img, image.source);
+  preview.alt = image.alt;
+  if (thumbUrl) {
+    preview.src = thumbUrl;
+  }
+  content.replaceChildren(preview);
+  animation = zoomFromSource(root, preview, image.source);
   if (animation) {
     root.setAttribute('data-lightbox-flying', '');
     animation.finished.then(landCard, landCard);
   }
-  img.src = image.url;
+  if (thumbUrl && thumbUrl === image.url) {
+    finishLoading();
+  } else {
+    full.decoding = 'async';
+    full.addEventListener(
+      'load',
+      () => {
+        if (full.naturalWidth && full.naturalHeight) {
+          root.style.setProperty('--lightbox-w', String(full.naturalWidth));
+          root.style.setProperty('--lightbox-h', String(full.naturalHeight));
+        }
+        preview.src = image.url;
+        status.textContent = '';
+        finishLoading();
+      },
+      { signal },
+    );
+    full.addEventListener(
+      'error',
+      () => {
+        finishLoading();
+        if (!thumbUrl) {
+          preview.remove();
+          status.textContent = t('lightbox.failed');
+        }
+      },
+      { signal },
+    );
+    full.src = image.url;
+  }
   const cleanup = () => {
     controller.abort();
     animation?.cancel();
     animation = null;
-    img.removeAttribute('src');
-    img.remove();
+    full.removeAttribute('src');
+    preview.removeAttribute('src');
+    preview.remove();
     instances.delete(root);
   };
   instances.set(root, cleanup);
