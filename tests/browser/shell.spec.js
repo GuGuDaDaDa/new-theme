@@ -82,7 +82,7 @@ for (const pathname of ['/', '/posts/engineering-notes/']) {
         await expect(page.locator('body')).toHaveCSS(
           'background-color',
           scenario === 'dark-slow-module'
-            ? 'rgb(34, 35, 32)'
+            ? 'rgb(18, 20, 23)'
             : 'rgb(243, 240, 233)',
         );
       } finally {
@@ -609,7 +609,10 @@ test('logo markup keeps the styled size before the stylesheet arrives', async ({
   await expect(brand).toHaveAttribute('href', '/');
   await expect(brand.locator('span')).toHaveText('BuGuLog');
   await expect(page.locator('.brand svg, .brand img')).toHaveCount(0);
-  await expect(page.locator('.footer-brand')).toHaveCount(0);
+  await expect(page.locator('.footer-brand > span')).toHaveText('BuGuLog');
+  await expect(
+    page.locator('.footer-brand svg, .footer-brand img'),
+  ).toHaveCount(0);
 
   // With the stylesheet applied the responsive rules still win.
   await page.unroute('**/compiled*.css');
@@ -711,7 +714,10 @@ favicon = '/brand/favicon.png'`,
         new RegExp(title),
       );
       await expect(page.locator('.brand > span')).toHaveText(title);
-      await expect(page.locator('.footer-brand')).toHaveCount(0);
+      await expect(page.locator('.footer-brand > span')).toHaveText(title);
+      await expect(
+        page.locator('.footer-brand svg, .footer-brand img'),
+      ).toHaveCount(0);
       await expect(page.locator('link[rel="icon"]')).toHaveAttribute(
         'href',
         /\/brand\/favicon\.png$/,

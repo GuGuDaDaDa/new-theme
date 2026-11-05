@@ -304,10 +304,11 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
   await waitForHero(page);
   const desktopHero = await page.locator('[data-hero]').evaluate((hero) => {
     const rect = hero.getBoundingClientRect();
+    const innerRect = hero.querySelector('.hero-inner').getBoundingClientRect();
     const cols = [
-      hero.querySelector('.hero-selection'),
-      hero.querySelector('.hero-panel'),
       hero.querySelector('.hero-art'),
+      hero.querySelector('.hero-panel'),
+      hero.querySelector('.hero-selection'),
     ].map((col) => ({
       clientW: col.clientWidth,
       scrollW: col.scrollWidth,
@@ -316,12 +317,20 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
     return {
       left: rect.left,
       width: rect.width,
+      innerWidth: innerRect.width,
       viewport: globalThis.innerWidth,
       cols,
     };
   });
   expect(desktopHero.left).toBe(0);
   expect(Math.abs(desktopHero.width - desktopHero.viewport)).toBeLessThan(1);
+  expect(desktopHero.innerWidth).toBeLessThanOrEqual(1280.5);
+  expect(desktopHero.cols[0].box.right).toBeLessThanOrEqual(
+    desktopHero.cols[1].box.left,
+  );
+  expect(desktopHero.cols[1].box.right).toBeLessThanOrEqual(
+    desktopHero.cols[2].box.left,
+  );
   for (const col of desktopHero.cols) {
     expect(col.scrollW).toBeLessThanOrEqual(col.clientW);
   }

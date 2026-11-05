@@ -18,12 +18,12 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #222320;
-  --surface: #2a2c28;
-  --text: #dddcd4;
-  --muted: #adaea4;
-  --accent: #a0bec2;
-  --soft: #32352f;
-  --line: #4b4f45;
-  --focus: #a0bec2;
+  --bg: #121417;
+  --surface: #181b20;
+  --text: #edf0f5;
+  --muted: #9aa3b0;
+  --accent: #9dc5e8;
+  --soft: #21262d;
+  --line: #2d333b;
+  --focus: #acd3f4;
 }
