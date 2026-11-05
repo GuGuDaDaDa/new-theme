@@ -19,7 +19,7 @@ export function initPage(root) {
 
   const cleanups = [];
   const pending = [];
-  if (root.querySelector('[data-lightbox]')) {
+  if (root.querySelector('[data-lightbox], [data-code-copy]')) {
     try {
       cleanups.push(initReadingMedia(root));
     } catch (error) {

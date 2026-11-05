@@ -138,6 +138,12 @@ other = "文章目录"
 [toc.heading]
 other = "这篇手记"
 
+[code]
+[code.copy]
+other = "复制"
+[code.copied]
+other = "已复制"
+
 [lightbox]
 [lightbox.dialog]
 other = "图片预览"

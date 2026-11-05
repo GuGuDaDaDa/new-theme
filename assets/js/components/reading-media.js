@@ -1,8 +1,10 @@
 /** Lightweight image entry points and synchronous lightbox open transition. */
 import { initDialog } from '../core/dialog.js';
+import { t } from '../core/i18n.js';
 import { initLightbox } from './lightbox.js';
 
 const instances = new WeakMap();
+const copyTimers = new WeakMap();
 
 /**
  * Bind image enhancement and cancellable lazy lightbox loading.
@@ -45,7 +47,26 @@ export function initReadingMedia(root) {
   root.addEventListener(
     'click',
     (event) => {
-      const trigger = event.target.closest('a[data-lightbox]');
+      const target = event.target instanceof Element ? event.target : null;
+      const copyButton = target?.closest('[data-code-copy]');
+      if (copyButton) {
+        const block = copyButton.closest('[data-code-block]');
+        const code = block?.querySelector('pre code')?.textContent ?? '';
+        navigator.clipboard?.writeText(code)?.catch(() => {});
+        const label = copyButton.querySelector('[data-copy-label]');
+        if (label) label.textContent = t('code.copied');
+        copyButton.setAttribute('data-copied', '');
+        clearTimeout(copyTimers.get(copyButton));
+        copyTimers.set(
+          copyButton,
+          window.setTimeout(() => {
+            copyButton.removeAttribute('data-copied');
+            if (label) label.textContent = t('code.copy');
+          }, 1600),
+        );
+        return;
+      }
+      const trigger = target?.closest('a[data-lightbox]');
       if (
         !trigger ||
         event.defaultPrevented ||

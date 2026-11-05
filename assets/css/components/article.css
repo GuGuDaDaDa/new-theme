@@ -92,6 +92,20 @@ main.article-layout {
 }
 
 .prose {
+  --code-bg: #ebe6dc;
+  --code-header-bg: #e2ddd1;
+  --code-border: #d5cfc2;
+  --code-text: #262724;
+  --code-muted: #56544e;
+  --code-btn-hover: #d8d2c5;
+  --syn-kw: #23537d;
+  --syn-fn: #1f6357;
+  --syn-type: #6d437a;
+  --syn-str: #8f3d2b;
+  --syn-num: #7c521b;
+  --syn-cmt: #5c5952;
+  --syn-op: #4c5258;
+  --syn-attr: #2f5d62;
   min-width: 0;
   overflow-wrap: break-word;
   line-break: strict;
@@ -101,6 +115,23 @@ main.article-layout {
   font-size: 18px;
   font-weight: 400;
   line-height: 1.8;
+}
+
+[data-theme='dark'] .prose {
+  --code-bg: #16191e;
+  --code-header-bg: #1c2027;
+  --code-border: #2a3038;
+  --code-text: #e3e8f0;
+  --code-muted: #949fb0;
+  --code-btn-hover: #262c35;
+  --syn-kw: #9dc5e8;
+  --syn-fn: #8ec7b7;
+  --syn-type: #c5a8dc;
+  --syn-str: #dbb689;
+  --syn-num: #e2a488;
+  --syn-cmt: #8792a2;
+  --syn-op: #9aa4b2;
+  --syn-attr: #a5d0c5;
 }
 
 .prose > :first-child {
@@ -197,15 +228,18 @@ main.article-layout {
 
 .prose code {
   overflow-wrap: normal;
-  font-family: 'DejaVu Sans Mono', 'SFMono-Regular', Consolas, monospace;
+  font-family:
+    'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas,
+    'DejaVu Sans Mono', monospace;
   font-feature-settings: normal;
-  font-size: 0.88em;
+  font-size: 0.85em;
 }
 
 .prose :not(pre) > code {
-  padding: 0.12em 0.32em;
+  padding: 0.14em 0.38em;
   background: var(--soft);
-  border-radius: 2px;
+  border: 1px solid color-mix(in srgb, var(--line) 70%, transparent);
+  border-radius: 3px;
 }
 
 .prose pre,
@@ -216,14 +250,19 @@ main.article-layout {
 
 .prose pre {
   margin: 24px 0;
-  padding: 20px 24px;
-  background: var(--soft);
-  border-radius: 2px;
+  padding: 16px 20px;
+  border: 1px solid var(--code-border);
+  background: var(--code-bg);
+  color: var(--code-text);
+  border-radius: 4px;
   font-feature-settings: normal;
+  tab-size: 4;
   font:
-    14px/1.7 'DejaVu Sans Mono',
+    14px/1.7 'JetBrains Mono',
+    'Fira Code',
     'SFMono-Regular',
     Consolas,
+    'DejaVu Sans Mono',
     monospace;
 }
 
@@ -235,8 +274,157 @@ main.article-layout {
   margin: 24px 0;
 }
 
+.prose .code-block {
+  margin: 24px 0 28px;
+  border: 1px solid var(--code-border);
+  border-radius: 4px;
+  background: var(--code-bg);
+  overflow: hidden;
+}
+
+.prose .code-block .highlight,
+.prose .code-block pre {
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+}
+
+.prose .code-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 34px;
+  padding: 0 12px 0 16px;
+  background: var(--code-header-bg);
+  border-bottom: 1px solid var(--code-border);
+  user-select: none;
+}
+
+.prose .code-lang {
+  font-family:
+    'JetBrains Mono', 'Fira Code', 'SFMono-Regular', Consolas,
+    'DejaVu Sans Mono', monospace;
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--code-muted);
+  text-transform: lowercase;
+}
+
+.prose .code-copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 24px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--code-muted);
+  font: 500 11.5px/1 var(--font);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.prose .code-copy:hover {
+  background: var(--code-btn-hover);
+  color: var(--code-text);
+}
+
+.prose .code-copy[data-copied] {
+  color: var(--syn-fn);
+}
+
+.prose .code-copy svg {
+  width: 13px;
+  height: 13px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.prose .code-copy [data-copied-icon],
+.prose .code-copy[data-copied] [data-copy-icon] {
+  display: none;
+}
+
+.prose .code-copy[data-copied] [data-copied-icon] {
+  display: inline;
+}
+
 .prose pre code {
   font: inherit;
+  color: inherit;
+}
+
+.prose .chroma .line {
+  display: flex;
+}
+
+.prose .chroma :is(.k, .kc, .kd, .kn, .kp, .kr, .cp, .cpf) {
+  color: var(--syn-kw);
+  font-weight: 500;
+}
+
+.prose .chroma :is(.kt, .nc, .nd, .ne, .nn, .ni, .nl, .nt) {
+  color: var(--syn-type);
+}
+
+.prose .chroma :is(.nf, .fm, .gi) {
+  color: var(--syn-fn);
+}
+
+.prose .chroma :is(.na, .nb, .bp, .no, .nv, .vc, .vg, .vi, .vm, .py) {
+  color: var(--syn-attr);
+}
+
+.prose
+  .chroma
+  :is(
+    .s,
+    .sa,
+    .sb,
+    .sc,
+    .dl,
+    .sd,
+    .s2,
+    .se,
+    .sh,
+    .si,
+    .sx,
+    .sr,
+    .s1,
+    .ss,
+    .ld,
+    .gd
+  ) {
+  color: var(--syn-str);
+}
+
+.prose .chroma :is(.m, .mb, .mf, .mh, .mi, .il, .mo, .l) {
+  color: var(--syn-num);
+}
+
+.prose .chroma :is(.o, .ow, .p) {
+  color: var(--syn-op);
+}
+
+.prose .chroma :is(.c, .ch, .cm, .c1, .cs) {
+  color: var(--syn-cmt);
+  font-style: italic;
+}
+
+.prose .chroma .ge {
+  font-style: italic;
+}
+
+.prose .chroma .gs {
+  font-weight: 600;
 }
 
 .prose table {

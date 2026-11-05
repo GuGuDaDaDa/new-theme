@@ -1,6 +1,35 @@
-{{- $options := dict -}}
-{{- if not (transform.CanHighlight .Type) -}}
-  {{- $options = dict "type" "text" -}}
+{{- $lang := lower (strings.TrimSpace .Type) -}}
+{{- $lexer := $lang -}}
+{{- if not (transform.CanHighlight $lexer) -}}
+  {{- $lexer = "text" -}}
 {{- end -}}
-{{- $result := transform.HighlightCodeBlock . $options -}}
-{{- replace $result.Wrapped "<pre" "<pre tabindex=\"0\" data-article-code" 1 | safeHTML -}}
+{{- $highlighted := transform.Highlight .Inner $lexer (dict "noClasses" false) -}}
+{{- $wrapped := "" -}}
+{{- if strings.Contains $highlighted "<pre tabindex=" -}}
+  {{- $wrapped = replace $highlighted "<pre" "<pre data-article-code" 1 -}}
+{{- else -}}
+  {{- $wrapped = replace $highlighted "<pre" "<pre tabindex=\"0\" data-article-code" 1 -}}
+{{- end -}}
+<div class="code-block" data-code-block>
+  <div class="code-header" data-search-exclude>
+    <span class="code-lang">{{ default "code" $lang }}</span>
+    <button
+      class="code-copy"
+      type="button"
+      data-code-copy
+      aria-label="{{ i18n "code.copy" }}"
+    >
+      <svg viewBox="0 0 24 24" aria-hidden="true">
+        <g data-copy-icon>
+          <rect x="9" y="9" width="13" height="13" rx="2"></rect>
+          <path
+            d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
+          ></path>
+        </g>
+        <polyline data-copied-icon points="20 6 9 17 4 12"></polyline>
+      </svg>
+      <span data-copy-label>{{ i18n "code.copy" }}</span>
+    </button>
+  </div>
+  {{- $wrapped | safeHTML -}}
+</div>

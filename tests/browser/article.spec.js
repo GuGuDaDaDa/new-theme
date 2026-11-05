@@ -252,6 +252,19 @@ test('wide code and tables scroll locally without hiding page overflow', async (
       await page.locator(selector).evaluate((element) => element.scrollLeft),
     ).toBeGreaterThan(0);
   }
+
+  const codeBlock = page.locator('.prose [data-code-block]').first();
+  await expect(codeBlock).toHaveCSS('background-color', 'rgb(235, 230, 220)');
+  await expect(codeBlock.locator('.code-lang')).toHaveText('text');
+  const copyBtn = codeBlock.locator('[data-code-copy]');
+  await expect(copyBtn.locator('[data-copy-label]')).toHaveText('复制');
+  await copyBtn.click();
+  await expect(copyBtn).toHaveAttribute('data-copied', '');
+  await expect(copyBtn.locator('[data-copy-label]')).toHaveText('已复制');
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'dark';
+  });
+  await expect(codeBlock).toHaveCSS('background-color', 'rgb(22, 25, 30)');
 });
 
 test('long title, tag, and summary wrap inside a 320px article header', async ({
