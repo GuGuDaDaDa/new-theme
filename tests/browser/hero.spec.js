@@ -302,40 +302,43 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
   await page.setViewportSize({ width: 1440, height: 900 });
   await page.goto(fixtureBaseURL);
   await waitForHero(page);
+  await page.waitForTimeout(450);
+  await expect(page.locator('[data-hero]')).toHaveCSS('height', '440px');
+  await expect(page.locator('[data-hero]')).toHaveCSS('padding-top', '60px');
   const desktopHero = await page.locator('[data-hero]').evaluate((hero) => {
     const rect = hero.getBoundingClientRect();
-    const innerRect = hero.querySelector('.hero-inner').getBoundingClientRect();
-    const cols = [
-      hero.querySelector('.hero-art'),
-      hero.querySelector('.hero-panel'),
-      hero.querySelector('.hero-selection'),
-    ].map((col) => ({
-      clientW: col.clientWidth,
-      scrollW: col.scrollWidth,
-      box: col.getBoundingClientRect(),
-    }));
+    const cover = hero.querySelector('.hero-cover').getBoundingClientRect();
+    const selection = hero.querySelector('.hero-selection');
+    const panel = hero.querySelector('.hero-panel');
     return {
+      top: rect.top,
+      documentTop: rect.top + globalThis.scrollY,
       left: rect.left,
       width: rect.width,
-      innerWidth: innerRect.width,
       viewport: globalThis.innerWidth,
-      cols,
+      cover: {
+        top: cover.top,
+        left: cover.left,
+        right: cover.right,
+        bottom: cover.bottom,
+      },
+      selectionRight: selection.getBoundingClientRect().right,
+      panelLeft: panel.getBoundingClientRect().left,
+      art: hero.querySelector('.hero-art') === null,
     };
   });
+  expect(desktopHero.documentTop).toBe(0);
   expect(desktopHero.left).toBe(0);
   expect(Math.abs(desktopHero.width - desktopHero.viewport)).toBeLessThan(1);
-  expect(desktopHero.innerWidth).toBeLessThanOrEqual(1280.5);
-  expect(desktopHero.cols[0].box.right).toBeLessThanOrEqual(
-    desktopHero.cols[1].box.left,
-  );
-  expect(desktopHero.cols[1].box.right).toBeLessThanOrEqual(
-    desktopHero.cols[2].box.left,
-  );
-  for (const col of desktopHero.cols) {
-    expect(col.scrollW).toBeLessThanOrEqual(col.clientW);
-  }
+  expect(Math.abs(desktopHero.cover.top - desktopHero.top)).toBeLessThan(1);
+  expect(Math.abs(desktopHero.cover.left - desktopHero.left)).toBeLessThan(1);
+  expect(
+    Math.abs(desktopHero.cover.right - (desktopHero.left + desktopHero.width)),
+  ).toBeLessThan(1);
+  expect(desktopHero.art).toBe(true);
+  expect(desktopHero.selectionRight).toBeLessThanOrEqual(desktopHero.panelLeft);
   await expect(page.locator('.hero-read')).toHaveCSS('padding', '8px 18px');
-  await expect(page.locator('.hero-read')).toHaveCSS('min-height', '40px');
+  await expect(page.locator('.hero-read')).toHaveCSS('height', '40px');
   await expect(page.locator('.hero-read')).toHaveCSS('margin-top', '25px');
   await expect(page.locator('.choice-copy small').first()).toHaveCSS(
     'line-height',
@@ -345,19 +348,61 @@ test('desktop, mobile, and long-title geometry match the latest hero revisions',
   await expect(page.locator('[data-header]')).not.toHaveClass(
     /header-scrolled/,
   );
+  await page.waitForTimeout(700);
+  expect(
+    await page
+      .locator('[data-header]')
+      .evaluate(
+        (element) => globalThis.getComputedStyle(element).backgroundColor,
+      ),
+  ).toBe('rgba(0, 0, 0, 0)');
   await page.evaluate(() => globalThis.scrollTo(0, 180));
   await expect(page.locator('[data-header]')).toHaveClass(/header-scrolled/);
+  await page.waitForTimeout(700);
+  expect(
+    await page
+      .locator('[data-header]')
+      .evaluate(
+        (element) => globalThis.getComputedStyle(element).backgroundColor,
+      ),
+  ).not.toBe('rgba(0, 0, 0, 0)');
 
-  for (const [width, height] of [
-    [390, 844],
-    [360, 800],
-    [320, 720],
+  for (const [width, height, expectedHero] of [
+    [390, 844, 640],
+    [360, 800, 600],
+    [320, 720, 600],
   ]) {
     await page.setViewportSize({ width, height });
     await page.goto(fixtureBaseURL);
     await waitForHero(page);
+    await page.evaluate(() => globalThis.scrollTo(0, 0));
+    await page.waitForTimeout(450);
+    await expect(page.locator('[data-hero]')).toHaveCSS('padding-top', '52px');
+    await expect(page.locator('[data-hero]')).toHaveCSS(
+      'height',
+      `${expectedHero}px`,
+    );
+    expect(
+      await page
+        .locator('[data-hero]')
+        .evaluate(
+          (hero) => hero.getBoundingClientRect().top + globalThis.scrollY,
+        ),
+    ).toBe(0);
+    const coverBox = await page.locator('[data-hero]').evaluate((hero) => {
+      const heroBox = hero.getBoundingClientRect();
+      const cover = hero.querySelector('.hero-cover').getBoundingClientRect();
+      return {
+        top: Math.abs(cover.top - heroBox.top),
+        bottom: Math.abs(cover.bottom - heroBox.bottom),
+        width: Math.abs(cover.width - heroBox.width),
+      };
+    });
+    expect(coverBox.top).toBeLessThan(1);
+    expect(coverBox.bottom).toBeLessThan(1);
+    expect(coverBox.width).toBeLessThan(1);
     await expect(page.locator('.hero-read')).toHaveCSS('padding', '7px 15px');
-    await expect(page.locator('.hero-read')).toHaveCSS('min-height', '38px');
+    await expect(page.locator('.hero-read')).toHaveCSS('height', '38px');
     const initialHeight = await page
       .locator('[data-hero]')
       .evaluate((hero) => hero.getBoundingClientRect().height);

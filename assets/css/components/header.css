@@ -25,6 +25,19 @@
   --header-slide: 0.38s;
 }
 
+body.home-page:has(> main > .hero) .header:not(.header-scrolled) {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #fff;
+}
+
+body.home-page:has(> main > .hero) .header:not(.header-scrolled) .brand > span,
+body.home-page:has(> main > .hero) .header:not(.header-scrolled) nav > a,
+body.home-page:has(> main > .hero) .header:not(.header-scrolled) .icon {
+  color: #fff;
+}
+
 .header-inner {
   display: flex;
   align-items: center;
@@ -112,6 +125,18 @@
   .icon:hover {
     background: var(--soft);
     color: var(--text);
+  }
+
+  body.home-page:has(> main > .hero)
+    .header:not(.header-scrolled)
+    nav
+    > a:hover {
+    color: #d4e5f3;
+  }
+
+  body.home-page:has(> main > .hero) .header:not(.header-scrolled) .icon:hover {
+    background: rgb(255 255 255 / 9%);
+    color: #fff;
   }
 }
 
