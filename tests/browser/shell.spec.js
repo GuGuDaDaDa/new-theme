@@ -82,8 +82,8 @@ for (const pathname of ['/', '/posts/engineering-notes/']) {
         await expect(page.locator('body')).toHaveCSS(
           'background-color',
           scenario === 'dark-slow-module'
-            ? 'rgb(18, 20, 23)'
-            : 'rgb(243, 240, 233)',
+            ? 'rgb(10, 10, 10)'
+            : 'rgb(255, 255, 255)',
         );
       } finally {
         await context.close();
@@ -104,23 +104,32 @@ async function waitForScrollFrame(page) {
   );
 }
 
-/** Calculate relative luminance for a six-digit hex color. @param {string} hex - CSS hex color. @returns {number} Relative luminance. */
-function relativeLuminance(hex) {
+/** Calculate relative luminance for an opaque CSS hex or rgb() colour. @param {string} color - CSS color. @returns {number} Relative luminance. */
+function relativeLuminance(color) {
+  const value = color.trim();
   const normalized =
-    hex.length === 4
-      ? `#${[...hex.slice(1)].map((value) => value.repeat(2)).join('')}`
-      : hex;
-  const channels = normalized
-    .slice(1)
-    .match(/.{2}/g)
-    .map((value) => Number.parseInt(value, 16) / 255)
-    .map((value) =>
-      value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4,
+    value.startsWith('#') && value.length === 4
+      ? `#${[...value.slice(1)].map((channel) => channel.repeat(2)).join('')}`
+      : value;
+  const channels = (
+    normalized.startsWith('#')
+      ? normalized
+          .slice(1)
+          .match(/.{2}/g)
+          .map((channel) => Number.parseInt(channel, 16))
+      : normalized
+          .match(/[\d.]+/g)
+          .slice(0, 3)
+          .map(Number)
+  )
+    .map((channel) => channel / 255)
+    .map((channel) =>
+      channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4,
     );
   return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
 }
 
-/** Calculate WCAG contrast between two six-digit hex colors. @param {string} first - First CSS color. @param {string} second - Second CSS color. @returns {number} Contrast ratio. */
+/** Calculate WCAG contrast between two opaque CSS colours. @param {string} first - First CSS color. @param {string} second - Second CSS color. @returns {number} Contrast ratio. */
 function contrastRatio(first, second) {
   const brighter = Math.max(
     relativeLuminance(first),
@@ -448,6 +457,99 @@ test('supported widths and both themes keep full-width chrome, touch targets, an
   await touchContext.close();
 });
 
+test('neutral palette drives page, footer, and solid navigation surfaces in both themes', async ({
+  page,
+}) => {
+  const palette = {
+    light: {
+      page: 'rgb(255, 255, 255)',
+      surface: 'rgb(250, 250, 250)',
+      soft: 'rgb(245, 245, 245)',
+      text: 'rgb(23, 23, 23)',
+      muted: 'rgb(107, 107, 107)',
+      line: 'rgb(229, 229, 229)',
+    },
+    dark: {
+      page: 'rgb(10, 10, 10)',
+      surface: 'rgb(23, 23, 23)',
+      soft: 'rgb(38, 38, 38)',
+      text: 'rgb(245, 245, 245)',
+      muted: 'rgb(163, 163, 163)',
+      line: 'rgb(64, 64, 64)',
+    },
+  };
+
+  for (const theme of ['light', 'dark']) {
+    const expected = palette[theme];
+    await page.emulateMedia({ colorScheme: theme });
+    await page.goto('/posts/engineering-notes/');
+    await expect(page.locator('html')).toHaveAttribute('data-theme', theme);
+    await expect(page.locator('body')).toHaveCSS(
+      'background-color',
+      expected.page,
+    );
+
+    // Non-home pages keep the solid navigation derived from the shared tokens.
+    await expect(page.locator('[data-header]')).toHaveCSS(
+      'background-color',
+      expected.surface,
+    );
+    await expect(page.locator('[data-header] .brand > span')).toHaveCSS(
+      'color',
+      expected.text,
+    );
+    await expect(page.locator('[data-header] nav > a').first()).toHaveCSS(
+      'color',
+      expected.muted,
+    );
+
+    // The footer uses the soft surface instead of a fixed blue-grey band.
+    await expect(page.locator('.footer')).toHaveCSS(
+      'background-color',
+      expected.soft,
+    );
+    await expect(page.locator('.footer-brand')).toHaveCSS(
+      'color',
+      expected.text,
+    );
+    await expect(page.locator('.footer-links h2').first()).toHaveCSS(
+      'color',
+      expected.text,
+    );
+    await expect(page.locator('.footer-bottom')).toHaveCSS(
+      'color',
+      expected.muted,
+    );
+    await expect(page.locator('.footer-bottom')).toHaveCSS(
+      'border-top-color',
+      expected.line,
+    );
+
+    const tokens = await page.evaluate(() => {
+      const style = globalThis.getComputedStyle(
+        globalThis.document.documentElement,
+      );
+      return Object.fromEntries(
+        ['--bg', '--surface', '--text', '--muted', '--soft', '--focus'].map(
+          (name) => [name, style.getPropertyValue(name).trim()],
+        ),
+      );
+    });
+    expect(
+      contrastRatio(tokens['--text'], tokens['--bg']),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(tokens['--muted'], tokens['--soft']),
+    ).toBeGreaterThanOrEqual(4.5);
+    expect(
+      contrastRatio(tokens['--focus'], tokens['--bg']),
+    ).toBeGreaterThanOrEqual(3);
+    expect(
+      contrastRatio(tokens['--focus'], tokens['--surface']),
+    ).toBeGreaterThanOrEqual(3);
+  }
+});
+
 test('reduced motion and repeated pageshow retain a single usable enhancement', async ({
   page,
 }) => {
@@ -467,6 +569,54 @@ test('reduced motion and repeated pageshow retain a single usable enhancement', 
     'data-theme-mode',
     'light',
   );
+});
+
+test('theme token transitions animate surfaces and respect reduced motion', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
+  await page.goto('/');
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'light';
+  });
+  await page.waitForTimeout(450);
+  const light = await page.evaluate(
+    () => globalThis.getComputedStyle(globalThis.document.body).backgroundColor,
+  );
+
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'dark';
+  });
+  await page.waitForTimeout(120);
+  const midpoint = await page.evaluate(
+    () => globalThis.getComputedStyle(globalThis.document.body).backgroundColor,
+  );
+  await page.waitForTimeout(400);
+  const dark = await page.evaluate(
+    () => globalThis.getComputedStyle(globalThis.document.body).backgroundColor,
+  );
+
+  expect(light).toBe('rgb(255, 255, 255)');
+  expect(dark).toBe('rgb(10, 10, 10)');
+  expect(midpoint).not.toBe(light);
+  expect(midpoint).not.toBe(dark);
+
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'light';
+  });
+  await page.waitForTimeout(50);
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'dark';
+  });
+  await page.waitForTimeout(50);
+  expect(
+    await page.evaluate(
+      () =>
+        globalThis.getComputedStyle(globalThis.document.body).backgroundColor,
+    ),
+  ).toBe('rgb(10, 10, 10)');
 });
 
 test('first load plays the content entry animation and every opt-out keeps it still', async ({

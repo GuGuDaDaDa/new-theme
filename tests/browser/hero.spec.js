@@ -295,6 +295,92 @@ test('no-JavaScript output keeps the main feature and all candidates reachable',
   await context.close();
 });
 
+test('fixed hero palette stays neutral in both themes while the overlay header follows it', async ({
+  page,
+}) => {
+  await page.route('https://images.example.test/**', (route) => route.abort());
+  await page.setViewportSize({ width: 1440, height: 900 });
+
+  for (const theme of ['light', 'dark']) {
+    const surface =
+      theme === 'light' ? 'rgb(250, 250, 250)' : 'rgb(23, 23, 23)';
+    await page.emulateMedia({ colorScheme: theme });
+    // Re-opening the same URL restores the previous scroll offset, which would
+    // leave the header in its scrolled (solid) state; a blank hop avoids it.
+    await page.goto('about:blank');
+    await page.goto(fixtureBaseURL);
+    await waitForHero(page);
+    await page.waitForTimeout(700);
+
+    await expect(page.locator('[data-hero]')).toHaveCSS(
+      'background-color',
+      'rgb(17, 17, 17)',
+    );
+    await expect(page.locator('[data-hero]')).toHaveCSS(
+      'color',
+      'rgb(255, 255, 255)',
+    );
+    await expect(page.locator('.hero-panel > p')).toHaveCSS(
+      'color',
+      'rgb(229, 229, 229)',
+    );
+    await expect(page.locator('.hero-panel .meta')).toHaveCSS(
+      'color',
+      'rgb(212, 212, 212)',
+    );
+    const desktopOverlay = await page
+      .locator('[data-hero]')
+      .evaluate(
+        (hero) => globalThis.getComputedStyle(hero, '::after').backgroundImage,
+      );
+    expect(desktopOverlay).toContain('90deg');
+    expect(desktopOverlay).toContain('rgba(0, 0, 0, 0.72)');
+    expect(desktopOverlay).toContain('rgba(0, 0, 0, 0.22)');
+
+    // The transparent overlay header keeps white chrome in both themes.
+    const header = page.locator('[data-header]');
+    expect(
+      await header.evaluate(
+        (element) => globalThis.getComputedStyle(element).backgroundColor,
+      ),
+    ).toBe('rgba(0, 0, 0, 0)');
+    await expect(page.locator('[data-header] .brand > span')).toHaveCSS(
+      'color',
+      'rgb(255, 255, 255)',
+    );
+    await expect(page.locator('[data-header] .icon.search-trigger')).toHaveCSS(
+      'color',
+      'rgb(255, 255, 255)',
+    );
+
+    // Scrolling past the threshold restores the theme's solid surface.
+    await page.evaluate(() => globalThis.scrollTo(0, 180));
+    await expect(header).toHaveClass(/header-scrolled/);
+    await page.waitForTimeout(700);
+    await expect(header).toHaveCSS('background-color', surface);
+
+    // A missing cover keeps the neutral near-black base instead of blue-grey.
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(fixtureBaseURL);
+    await waitForHero(page);
+    await page.waitForTimeout(450);
+    const mobileOverlay = await page
+      .locator('[data-hero]')
+      .evaluate(
+        (hero) => globalThis.getComputedStyle(hero, '::after').backgroundImage,
+      );
+    expect(mobileOverlay).toContain('rgba(0, 0, 0, 0.12) 28%');
+    expect(mobileOverlay).toContain('rgba(0, 0, 0, 0.88)');
+    await page.locator('[data-hero-choice]').nth(2).click();
+    await expect(page.locator('[data-hero]')).toHaveClass(/hero-cover-empty/);
+    await expect(page.locator('[data-hero]')).toHaveCSS(
+      'background-color',
+      'rgb(17, 17, 17)',
+    );
+    await page.setViewportSize({ width: 1440, height: 900 });
+  }
+});
+
 test('desktop, mobile, and long-title geometry match the latest hero revisions', async ({
   page,
 }) => {

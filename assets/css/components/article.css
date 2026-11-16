@@ -92,12 +92,12 @@ main.article-layout {
 }
 
 .prose {
-  --code-bg: #ebe6dc;
-  --code-header-bg: #e2ddd1;
-  --code-border: #d5cfc2;
-  --code-text: #262724;
-  --code-muted: #56544e;
-  --code-btn-hover: #d8d2c5;
+  --code-bg: #f5f5f5;
+  --code-header-bg: #ededed;
+  --code-border: #e5e5e5;
+  --code-text: #171717;
+  --code-muted: #6b6b6b;
+  --code-btn-hover: #e5e5e5;
   --syn-kw: #23537d;
   --syn-fn: #1f6357;
   --syn-type: #6d437a;
@@ -118,12 +118,12 @@ main.article-layout {
 }
 
 [data-theme='dark'] .prose {
-  --code-bg: #16191e;
-  --code-header-bg: #1c2027;
-  --code-border: #2a3038;
-  --code-text: #e3e8f0;
-  --code-muted: #949fb0;
-  --code-btn-hover: #262c35;
+  --code-bg: #171717;
+  --code-header-bg: #1f1f1f;
+  --code-border: #404040;
+  --code-text: #f5f5f5;
+  --code-muted: #a3a3a3;
+  --code-btn-hover: #262626;
   --syn-kw: #9dc5e8;
   --syn-fn: #8ec7b7;
   --syn-type: #c5a8dc;

@@ -254,7 +254,7 @@ test('wide code and tables scroll locally without hiding page overflow', async (
   }
 
   const codeBlock = page.locator('.prose [data-code-block]').first();
-  await expect(codeBlock).toHaveCSS('background-color', 'rgb(235, 230, 220)');
+  await expect(codeBlock).toHaveCSS('background-color', 'rgb(245, 245, 245)');
   await expect(codeBlock.locator('.code-lang')).toHaveText('text');
   const copyBtn = codeBlock.locator('[data-code-copy]');
   await expect(copyBtn.locator('[data-copy-label]')).toHaveText('复制');
@@ -264,7 +264,7 @@ test('wide code and tables scroll locally without hiding page overflow', async (
   await page.evaluate(() => {
     globalThis.document.documentElement.dataset.theme = 'dark';
   });
-  await expect(codeBlock).toHaveCSS('background-color', 'rgb(22, 25, 30)');
+  await expect(codeBlock).toHaveCSS('background-color', 'rgb(23, 23, 23)');
 });
 
 test('long title, tag, and summary wrap inside a 320px article header', async ({
@@ -507,16 +507,16 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
       cursor: style.cursor,
     };
   });
-  expect(styles.background).toBe('rgb(13, 17, 23)');
+  expect(styles.background).toBe('rgb(23, 23, 23)');
   expect(styles.color).toBe('rgba(0, 0, 0, 0)');
   expect(styles.cursor).toBe('pointer');
 
   // A fine pointer reveals the text only while it hovers the cover.
   await spoiler.hover();
   await expect(spoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
-  await expect(spoiler).toHaveCSS('color', 'rgb(48, 49, 46)');
+  await expect(spoiler).toHaveCSS('color', 'rgb(23, 23, 23)');
   await page.mouse.move(0, 0);
-  await expect(spoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await expect(spoiler).toHaveCSS('background-color', 'rgb(23, 23, 23)');
 
   // Clicking pins the revealed state and pins the covered state back.
   await spoiler.click();
@@ -527,7 +527,7 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
   await expect(spoiler).toHaveAttribute('data-spoiler-state', 'hidden');
   await expect(spoiler).toHaveAttribute('aria-expanded', 'false');
   // The explicit hide wins over the pointer that is still over the cover.
-  await expect(spoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await expect(spoiler).toHaveCSS('background-color', 'rgb(23, 23, 23)');
   await spoiler.click();
   await expect(spoiler).toHaveAttribute('data-spoiler-state', 'shown');
 
@@ -555,13 +555,13 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
       () => globalThis.matchMedia('(hover: hover)').matches,
     ),
   ).toBe(false);
-  await expect(touchSpoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await expect(touchSpoiler).toHaveCSS('background-color', 'rgb(23, 23, 23)');
   await touchSpoiler.tap();
   await expect(touchSpoiler).toHaveAttribute('aria-expanded', 'true');
   await expect(touchSpoiler).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
   await touchSpoiler.tap();
   await expect(touchSpoiler).toHaveAttribute('aria-expanded', 'false');
-  await expect(touchSpoiler).toHaveCSS('background-color', 'rgb(13, 17, 23)');
+  await expect(touchSpoiler).toHaveCSS('background-color', 'rgb(23, 23, 23)');
   await touchContext.close();
 
   // Without scripting the text must stay readable instead of covered forever.
@@ -578,7 +578,7 @@ test('spoiler text stays covered until hover, click, tap, or keyboard activation
     });
   expect(noScriptStyles).toEqual({
     background: 'rgba(0, 0, 0, 0)',
-    color: 'rgb(48, 49, 46)',
+    color: 'rgb(23, 23, 23)',
   });
   await noScriptContext.close();
 });

@@ -79,17 +79,17 @@
 
 /* Enhanced walls use the photo-stack reference geometry and material surface. */
 .photo-stack.is-enhanced {
-  --ps-bg: #e8e5e0;
+  --ps-bg: #e8e8e8;
   --ps-grain: rgba(0, 0, 0, 0.025);
   --ps-highlight: rgba(255, 255, 255, 0.45);
-  --ps-photo-border: #fafaf8;
+  --ps-photo-border: #fafafa;
   --ps-shadow-near: rgba(0, 0, 0, 0.1);
   --ps-shadow-mid: rgba(0, 0, 0, 0.07);
   --ps-shadow-far: rgba(0, 0, 0, 0.04);
   --ps-nav-bg: rgba(255, 255, 255, 0.7);
-  --ps-nav-fg: #3a3a3a;
+  --ps-nav-fg: #171717;
   --ps-nav-hover-bg: rgba(255, 255, 255, 0.9);
-  --ps-counter-fg: #6b6560;
+  --ps-counter-fg: #616161;
 
   position: relative;
   width: 100%;
@@ -197,7 +197,7 @@
   max-width: 100%;
   height: 100%;
   border-radius: 1px;
-  background: #d5d0c8;
+  background: #d4d4d4;
   object-fit: cover;
 }
 
@@ -206,7 +206,7 @@
   flex: 0 0 auto;
   padding-top: 5px;
   overflow: hidden;
-  color: #68635e;
+  color: #616161;
   font-size: 0.72rem;
   letter-spacing: 0.04em;
   line-height: 1.65;
@@ -402,17 +402,17 @@
 }
 
 [data-theme='dark'] .photo-stack.is-enhanced {
-  --ps-bg: #25282e;
+  --ps-bg: #262626;
   --ps-grain: transparent;
   --ps-highlight: transparent;
-  --ps-photo-border: #f2f0ec;
+  --ps-photo-border: #f5f5f5;
   --ps-shadow-near: rgba(0, 0, 0, 0.4);
   --ps-shadow-mid: rgba(0, 0, 0, 0.25);
   --ps-shadow-far: rgba(0, 0, 0, 0.15);
-  --ps-nav-bg: rgba(40, 42, 48, 0.75);
-  --ps-nav-fg: #d0ccc6;
-  --ps-nav-hover-bg: rgba(50, 53, 60, 0.9);
-  --ps-counter-fg: #9a948c;
+  --ps-nav-bg: rgba(38, 38, 38, 0.75);
+  --ps-nav-fg: #e5e5e5;
+  --ps-nav-hover-bg: rgba(64, 64, 64, 0.9);
+  --ps-counter-fg: #a3a3a3;
   box-shadow: 0 3px 14px #00000030;
 }
 

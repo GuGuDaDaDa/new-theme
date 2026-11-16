@@ -1,9 +1,8 @@
 .footer {
-  --focus: #acd3f4;
   width: 100%;
   margin-top: 64px;
-  background: linear-gradient(145deg, #1c293a, #182332);
-  color: #bfcedd;
+  background: var(--soft);
+  color: var(--text);
 }
 
 .footer-inner {
@@ -19,14 +18,14 @@
 
 @media (hover: hover) {
   .footer a:hover {
-    color: #fff;
+    color: var(--accent);
   }
 }
 
 .footer-brand {
   display: inline-flex;
   align-items: center;
-  color: #f0f5fa;
+  color: var(--text);
   font-size: 22px;
   font-weight: 650;
   line-height: 1.25;
@@ -36,7 +35,7 @@
 .footer-about p {
   max-width: 34em;
   margin: 14px 0 0;
-  color: #bcccdc;
+  color: var(--muted);
   font-size: 13px;
   line-height: 1.9;
 }
@@ -51,14 +50,14 @@
 
 .footer-links h2 {
   margin: 4px 0 7px;
-  color: #f0f5fa;
+  color: var(--text);
   font-size: 13px;
   font-weight: 600;
 }
 
 .footer-links > span {
   margin-top: 3px;
-  color: #9eb1c5;
+  color: var(--muted);
   font-size: 11px;
 }
 
@@ -69,8 +68,8 @@
   gap: 22px;
   margin-top: 8px;
   padding-top: 20px;
-  border-top: 1px solid #ffffff1a;
-  color: #aebfd0;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
   font-size: 11px;
 }
 

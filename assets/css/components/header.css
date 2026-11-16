@@ -131,7 +131,7 @@ body.home-page:has(> main > .hero) .header:not(.header-scrolled) .icon {
     .header:not(.header-scrolled)
     nav
     > a:hover {
-    color: #d4e5f3;
+    color: #e5e5e5;
   }
 
   body.home-page:has(> main > .hero) .header:not(.header-scrolled) .icon:hover {

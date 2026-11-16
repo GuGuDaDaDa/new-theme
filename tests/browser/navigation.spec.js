@@ -350,6 +350,35 @@ async function settledCardColor(page) {
   });
 }
 
+test('photo stack material surface stays neutral while the paper print stays white', async ({
+  page,
+}) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/posts/gallery-walk/');
+  const wall = page.locator('.photo-stack.is-enhanced').first();
+  const counter = page
+    .locator('.photo-stack.is-enhanced .stack-counter')
+    .first();
+  await expect(wall).toBeVisible();
+
+  await expect(wall).toHaveCSS('background-color', 'rgb(232, 232, 232)');
+  await expect(page.locator('.photo-print').first()).toHaveCSS(
+    'background-color',
+    'rgb(250, 250, 250)',
+  );
+  await expect(counter).toHaveCSS('color', 'rgb(97, 97, 97)');
+
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'dark';
+  });
+  await expect(wall).toHaveCSS('background-color', 'rgb(38, 38, 38)');
+  await expect(page.locator('.photo-print').first()).toHaveCSS(
+    'background-color',
+    'rgb(245, 245, 245)',
+  );
+  await expect(counter).toHaveCSS('color', 'rgb(163, 163, 163)');
+});
+
 test('image lightbox flies the card out of its trigger and skips the flight when reduced', async ({
   page,
 }) => {
