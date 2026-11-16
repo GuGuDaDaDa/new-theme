@@ -1,22 +1,54 @@
+# Dependencies
 node_modules/
 .npm-cache/
+
+# Build output
+dist/
+dist-dev/
+dist-ssr/
+*.local
+public/
 .generated/
 .build/
-public/
 resources/_gen/
-exampleSite/resources/
+exampleSite/public/
+exampleSite/resources/_gen/
 .hugo_build.lock
-.env
-.env.*
-!.env.example
-*.log
-coverage/
-playwright-report/
-test-results/
-.DS_Store
 
-## codex
-docs/
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Editor / IDE
+.idea/
+.vscode/
+*.swp
+
+# Agent tooling（历史配置，保留忽略以免误提交）
+.agents/
 .agent/
 .codex/
 AGENTS.md
+
+# 本地 Issue/规格草稿（个人工作区，不入库）
+.scratch/
+
+# DOCS
+docs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env (local overrides only, base env files are committed)
+.env.local
+.env.*.local
+
+# Test
+coverage/
+playwright-report/
+test-results/
