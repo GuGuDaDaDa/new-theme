@@ -1,0 +1,69 @@
+{{- $url := strings.TrimSpace .url -}}
+{{- $page := .page -}}
+{{- $parsedResult := try (urls.Parse $url) -}}
+{{- if $parsedResult.Err -}}
+  {{- warnf "web card: invalid URL %s (%s)" $url $page.Params._night.sourcePath -}}
+  {{- return (dict "ok" false) -}}
+{{- end -}}
+{{- $parsed := $parsedResult.Value -}}
+{{- if or (ne $parsed.Scheme "https") (not $parsed.Host) $parsed.User -}}
+  {{- warnf "web card: unsupported URL %s (%s)" $url $page.Params._night.sourcePath -}}
+  {{- return (dict "ok" false) -}}
+{{- end -}}
+{{- $site := urls.Parse site.BaseURL -}}
+{{- if and $site.Host (eq (strings.ToLower $parsed.Host) (strings.ToLower $site.Host)) -}}
+  {{- return (dict "ok" false) -}}
+{{- end -}}
+{{- $fetchURL := index (strings.Split $url "#") 0 -}}
+{{- $repoPath := strings.TrimSuffix "/" $parsed.Path -}}
+{{- $repoParts := split (strings.TrimPrefix "/" $repoPath) "/" -}}
+{{- $isGitHubRepo := and (eq (strings.ToLower $parsed.Hostname) "github.com") (not $parsed.RawQuery) (eq (len $repoParts) 2) -}}
+{{- $options := dict "timeout" "8s" "headers" (dict "User-Agent" "night-theme") -}}
+{{- if $isGitHubRepo -}}
+  {{- $apiURL := partial "web-card/github-url.html" (dict "path" $repoPath) -}}
+  {{- $options = dict "timeout" "8s" "headers" (dict "Accept" "application/vnd.github+json" "User-Agent" "night-theme") -}}
+  {{- $result := try (resources.GetRemote $apiURL $options) -}}
+  {{- if $result.Err -}}
+    {{- warnf "web card: GitHub metadata failed for %s: %s (%s)" $url $result.Err $page.Params._night.sourcePath -}}
+    {{- return (dict "ok" false) -}}
+  {{- else if not $result.Value -}}
+    {{- warnf "web card: GitHub repository not found: %s (%s)" $url $page.Params._night.sourcePath -}}
+    {{- return (dict "ok" false) -}}
+  {{- end -}}
+  {{- $decoded := try (transform.Unmarshal $result.Value.Content) -}}
+  {{- if $decoded.Err -}}
+    {{- warnf "web card: invalid GitHub metadata for %s: %s (%s)" $url $decoded.Err $page.Params._night.sourcePath -}}
+    {{- return (dict "ok" false) -}}
+  {{- end -}}
+  {{- $data := $decoded.Value -}}
+  {{- $title := index $data "full_name" | default "" -}}
+  {{- if not $title }}{{ return (dict "ok" false) }}{{ end -}}
+  {{- $description := index $data "description" | default "" -}}
+  {{- $icon := "" -}}
+  {{- with index $data "owner" -}}
+    {{- $candidate := index . "avatar_url" | default "" -}}
+    {{- if and (eq (printf "%T" $candidate) "string") (strings.HasPrefix $candidate "https://") }}
+      {{ $icon = $candidate }}
+    {{ end -}}
+  {{- end -}}
+  {{- return (dict "ok" true "kind" "github" "title" $title "description" $description "icon" $icon "host" $parsed.Host) -}}
+{{- end -}}
+{{- $result := try (resources.GetRemote $fetchURL $options) -}}
+{{- if $result.Err -}}
+  {{- warnf "web card: metadata request failed for %s: %s (%s)" $url $result.Err $page.Params._night.sourcePath -}}
+  {{- return (dict "ok" false) -}}
+{{- else if not $result.Value -}}
+  {{- warnf "web card: metadata not found: %s (%s)" $url $page.Params._night.sourcePath -}}
+  {{- return (dict "ok" false) -}}
+{{- end -}}
+{{- $mediaType := $result.Value.MediaType.Type -}}
+{{- if not (or (strings.Contains $mediaType "text/html") (strings.Contains $mediaType "application/xhtml+xml")) -}}
+  {{- warnf "web card: non-HTML response for %s (%s)" $url $page.Params._night.sourcePath -}}
+  {{- return (dict "ok" false) -}}
+{{- end -}}
+{{- $card := partial "web-card/generic.html" (dict "html" $result.Value.Content "parsed" $parsed) -}}
+{{- if not $card.ok -}}
+  {{- warnf "web card: title not found: %s (%s)" $url $page.Params._night.sourcePath -}}
+  {{- return (dict "ok" false) -}}
+{{- end -}}
+{{- return (merge $card (dict "kind" "generic")) -}}

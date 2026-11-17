@@ -1,0 +1,38 @@
+{{- $url := strings.TrimSpace (.Get 0) -}}
+{{- $card := partial "web-card/metadata.html" (dict "url" $url "page" .Page) -}}
+{{- if not $card.ok -}}
+  <a href="{{ $url }}">{{ $url }}</a>
+{{- else -}}
+  <a
+    class="web-card web-card-{{ $card.kind }}"
+    href="{{ $url }}"
+    referrerpolicy="no-referrer"
+    data-search-exclude
+  >
+    <span class="web-card-media" aria-hidden="true">
+      <svg viewBox="0 0 24 24" focusable="false">
+        <path d="M10 14a4 4 0 0 0 6 .4l3-3a4 4 0 0 0-5.6-5.6l-1.7 1.7" />
+        <path d="M14 10a4 4 0 0 0-6-.4l-3 3a4 4 0 0 0 5.6 5.6l1.7-1.7" />
+      </svg>
+      {{- with $card.icon -}}
+        <img
+          src="{{ . }}"
+          alt=""
+          width="56"
+          height="56"
+          loading="lazy"
+          decoding="async"
+          referrerpolicy="no-referrer"
+          onerror="this.hidden = true"
+        />
+      {{- end -}}
+    </span>
+    <span class="web-card-body">
+      <span class="web-card-title">{{ $card.title }}</span>
+      {{- with $card.description }}
+        <span class="web-card-description">{{ . }}</span>
+      {{- end }}
+      <span class="web-card-host">{{ $card.host }}</span>
+    </span>
+  </a>
+{{- end -}}

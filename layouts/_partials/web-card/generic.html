@@ -1,0 +1,60 @@
+{{- $html := .html -}}
+{{- $parsed := .parsed -}}
+{{- $ogTitle := "" -}}
+{{- $twitterTitle := "" -}}
+{{- $ogDescription := "" -}}
+{{- $metaDescription := "" -}}
+{{- range $tag := findRE `(?i)<meta\s+(?:[^>"']|"[^"]*"|'[^']*')*>` $html -}}
+  {{- $property := strings.ToLower (partial "web-card/attribute.html" (dict "tag" $tag "name" "property")) -}}
+  {{- $name := strings.ToLower (partial "web-card/attribute.html" (dict "tag" $tag "name" "name")) -}}
+  {{- $key := $property | default $name -}}
+  {{- $content := partial "web-card/attribute.html" (dict "tag" $tag "name" "content") -}}
+  {{- if and (eq $key "og:title") (not $ogTitle) }}
+    {{ $ogTitle = $content }}
+  {{ end -}}
+  {{- if and (eq $key "twitter:title") (not $twitterTitle) }}
+    {{ $twitterTitle = $content }}
+  {{ end -}}
+  {{- if and (eq $key "og:description") (not $ogDescription) }}
+    {{ $ogDescription = $content }}
+  {{ end -}}
+  {{- if and (eq $key "description") (not $metaDescription) }}
+    {{ $metaDescription = $content }}
+  {{ end -}}
+{{- end -}}
+{{- $title := $ogTitle | default $twitterTitle -}}
+{{- if not $title -}}
+  {{- $matches := findRESubmatch `(?is)<title[^>]*>(.*?)</title>` $html -}}
+  {{- if $matches }}{{ $title = index (index $matches 0) 1 }}{{ end -}}
+{{- end -}}
+{{- $description := $ogDescription | default $metaDescription -}}
+{{- $title = $title | replaceRE `[\s\p{Z}]+` " " | strings.TrimSpace | htmlUnescape -}}
+{{- $description = $description | replaceRE `[\s\p{Z}]+` " " | strings.TrimSpace | htmlUnescape -}}
+{{- if not $title }}{{ return (dict "ok" false) }}{{ end -}}
+{{- $href := "" -}}
+{{- range $tag := findRE `(?i)<link\s+(?:[^>"']|"[^"]*"|'[^']*')*>` $html -}}
+  {{- $rel := strings.ToLower (partial "web-card/attribute.html" (dict "tag" $tag "name" "rel")) -}}
+  {{- if and (not $href) (findRE `(?i)(^|\s)(shortcut\s+)?icon(\s|$)` $rel) -}}
+    {{- $href = partial "web-card/attribute.html" (dict "tag" $tag "name" "href") -}}
+  {{- end -}}
+{{- end -}}
+{{- $origin := printf "%s://%s" $parsed.Scheme $parsed.Host -}}
+{{- $icon := "" -}}
+{{- if strings.HasPrefix $href "https://" -}}
+  {{- $icon = $href -}}
+{{- else if strings.HasPrefix $href "//" -}}
+  {{- $icon = printf "https:%s" $href -}}
+{{- else if strings.HasPrefix $href "/" -}}
+  {{- $icon = printf "%s%s" $origin $href -}}
+{{- else if and $href (not (findRE `(?i)^[a-z][a-z0-9+.-]*://` $href)) -}}
+  {{- $directory := $parsed.Path -}}
+  {{- if not (strings.HasSuffix $directory "/") }}
+    {{ $directory = path.Dir $directory }}
+  {{ end -}}
+  {{- if not (strings.HasSuffix $directory "/") }}
+    {{ $directory = printf "%s/" $directory }}
+  {{ end -}}
+  {{- $icon = printf "%s%s" $origin (path.Join $directory $href) -}}
+{{- end -}}
+{{- if not $icon }}{{ $icon = printf "%s/favicon.ico" $origin }}{{ end -}}
+{{- return (dict "ok" true "title" $title "description" $description "icon" $icon "host" $parsed.Host) -}}

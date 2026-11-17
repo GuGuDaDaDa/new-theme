@@ -58,7 +58,9 @@
   {{- end -}}
   {{- $dates := dict "date" .date "publishDate" .published "lastmod" .lastmod -}}
   {{- with .dates.expiryDate }}{{ $dates = merge $dates (dict "expiryDate" .) }}{{ end -}}
-  {{- $page := merge (dict "path" $logical "kind" $kind "params" $params "dates" $dates "content" (dict "mediaType" "text/markdown" "value" .content)) $data -}}
+  {{- $content := .content -}}
+  {{- if .post }}{{ $content = partial "content/web-card-links.html" $content }}{{ end -}}
+  {{- $page := merge (dict "path" $logical "kind" $kind "params" $params "dates" $dates "content" (dict "mediaType" "text/markdown" "value" $content)) $data -}}
   {{- $.AddPage $page -}}
 {{- end -}}
 {{- range $key, $label := $labels -}}

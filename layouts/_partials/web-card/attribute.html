@@ -1,0 +1,13 @@
+{{- $tag := .tag -}}
+{{- $name := .name -}}
+{{- $pattern := printf `(?i)\s%s\s*=\s*"([^"]*)"` $name -}}
+{{- $matches := findRESubmatch $pattern $tag -}}
+{{- if $matches -}}
+  {{- return (index (index $matches 0) 1 | htmlUnescape) -}}
+{{- end -}}
+{{- $pattern = printf `(?i)\s%s\s*=\s*'([^']*)'` $name -}}
+{{- $matches = findRESubmatch $pattern $tag -}}
+{{- if $matches -}}
+  {{- return (index (index $matches 0) 1 | htmlUnescape) -}}
+{{- end -}}
+{{- return "" -}}

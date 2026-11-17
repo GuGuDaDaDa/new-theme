@@ -1,0 +1,24 @@
+{{- $lines := slice -}}
+{{- $inFence := false -}}
+{{- $fenceChar := "" -}}
+{{- $fenceLength := 0 -}}
+{{- range $line := split . "\n" -}}
+  {{- $opening := findRESubmatch "^ {0,3}(`{3,}|~{3,})" $line -}}
+  {{- if and (not $inFence) $opening -}}
+    {{- $marker := index (index $opening 0) 1 -}}
+    {{- $inFence = true -}}
+    {{- $fenceChar = substr $marker 0 1 -}}
+    {{- $fenceLength = len $marker -}}
+    {{- $lines = $lines | append $line -}}
+  {{- else if $inFence -}}
+    {{- $closing := findRESubmatch (printf "^ {0,3}%s{%d,}\\s*$" $fenceChar $fenceLength) $line -}}
+    {{- if $closing }}{{ $inFence = false }}{{ end -}}
+    {{- $lines = $lines | append $line -}}
+  {{- else if findRE `^ {0,3}https://[^\s<>'"]+\s*$` $line -}}
+    {{- $lines = $lines | append (printf `{{< web-card "%s" >}}`
+    (strings.TrimSpace $line)) -}}
+  {{- else -}}
+    {{- $lines = $lines | append $line -}}
+  {{- end -}}
+{{- end -}}
+{{- return (delimit $lines "\n") -}}
