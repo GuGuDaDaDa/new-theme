@@ -412,7 +412,7 @@ test('light and dark themes apply semantic tokens and monochrome GitHub icon col
   const dark = await readColors();
   expect(dark).toEqual({
     headerBg: 'rgb(38, 38, 38)',
-    bodyBg: 'rgb(23, 23, 23)',
+    bodyBg: 'rgb(28, 28, 28)',
     titleColor: 'rgb(157, 197, 232)',
     descColor: 'rgb(163, 163, 163)',
     previewBorder: 'rgb(64, 64, 64)',

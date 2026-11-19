@@ -264,7 +264,7 @@ test('wide code and tables scroll locally without hiding page overflow', async (
   await page.evaluate(() => {
     globalThis.document.documentElement.dataset.theme = 'dark';
   });
-  await expect(codeBlock).toHaveCSS('background-color', 'rgb(23, 23, 23)');
+  await expect(codeBlock).toHaveCSS('background-color', 'rgb(28, 28, 28)');
 });
 
 test('long title, tag, and summary wrap inside a 320px article header', async ({
@@ -601,6 +601,10 @@ test('spoiler cover keeps the reading column in both themes and viewports', asyn
       await page.goto(`${fixtureBaseURL}/posts/complete-frontmatter/`);
       await setTheme(page, theme);
       const spoiler = page.locator('.spoiler');
+      await expect(spoiler).toHaveCSS(
+        'background-color',
+        theme === 'light' ? 'rgb(23, 23, 23)' : 'rgb(115, 115, 115)',
+      );
       const geometry = await spoiler.evaluate((element) => ({
         documentWidth: globalThis.document.documentElement.scrollWidth,
         viewport: globalThis.innerWidth,

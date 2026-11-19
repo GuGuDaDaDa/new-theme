@@ -46,6 +46,12 @@
   initial-value: #496b73;
 }
 
+@property --spoiler-cover {
+  syntax: '<color>';
+  inherits: true;
+  initial-value: #171717;
+}
+
 html {
   transition:
     --bg 0.38s ease,
@@ -55,7 +61,8 @@ html {
     --accent 0.38s ease,
     --soft 0.38s ease,
     --line 0.38s ease,
-    --focus 0.38s ease;
+    --focus 0.38s ease,
+    --spoiler-cover 0.38s ease;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -84,12 +91,13 @@ html {
 
 [data-theme='dark'] {
   color-scheme: dark;
-  --bg: #0a0a0a;
-  --surface: #171717;
-  --text: #f5f5f5;
+  --bg: #141414;
+  --surface: #1c1c1c;
+  --text: #e5e5e5;
   --muted: #a3a3a3;
   --accent: #9dc5e8;
   --soft: #262626;
   --line: #404040;
   --focus: #acd3f4;
+  --spoiler-cover: #737373;
 }

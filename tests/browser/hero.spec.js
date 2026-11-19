@@ -303,7 +303,7 @@ test('fixed hero palette stays neutral in both themes while the overlay header f
 
   for (const theme of ['light', 'dark']) {
     const surface =
-      theme === 'light' ? 'rgb(250, 250, 250)' : 'rgb(23, 23, 23)';
+      theme === 'light' ? 'rgb(250, 250, 250)' : 'rgb(28, 28, 28)';
     await page.emulateMedia({ colorScheme: theme });
     // Re-opening the same URL restores the previous scroll offset, which would
     // leave the header in its scrolled (solid) state; a blank hop avoids it.

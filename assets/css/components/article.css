@@ -118,12 +118,12 @@ main.article-layout {
 }
 
 [data-theme='dark'] .prose {
-  --code-bg: #171717;
-  --code-header-bg: #1f1f1f;
+  --code-bg: #1c1c1c;
+  --code-header-bg: #242424;
   --code-border: #404040;
-  --code-text: #f5f5f5;
+  --code-text: #e5e5e5;
   --code-muted: #a3a3a3;
-  --code-btn-hover: #262626;
+  --code-btn-hover: #2e2e2e;
   --syn-kw: #9dc5e8;
   --syn-fn: #8ec7b7;
   --syn-type: #c5a8dc;

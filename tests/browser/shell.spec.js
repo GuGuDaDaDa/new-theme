@@ -82,7 +82,7 @@ for (const pathname of ['/', '/posts/engineering-notes/']) {
         await expect(page.locator('body')).toHaveCSS(
           'background-color',
           scenario === 'dark-slow-module'
-            ? 'rgb(10, 10, 10)'
+            ? 'rgb(20, 20, 20)'
             : 'rgb(255, 255, 255)',
         );
       } finally {
@@ -470,10 +470,10 @@ test('neutral palette drives page, footer, and solid navigation surfaces in both
       line: 'rgb(229, 229, 229)',
     },
     dark: {
-      page: 'rgb(10, 10, 10)',
-      surface: 'rgb(23, 23, 23)',
+      page: 'rgb(20, 20, 20)',
+      surface: 'rgb(28, 28, 28)',
       soft: 'rgb(38, 38, 38)',
-      text: 'rgb(245, 245, 245)',
+      text: 'rgb(229, 229, 229)',
       muted: 'rgb(163, 163, 163)',
       line: 'rgb(64, 64, 64)',
     },
@@ -597,7 +597,7 @@ test('theme token transitions animate surfaces and respect reduced motion', asyn
   );
 
   expect(light).toBe('rgb(255, 255, 255)');
-  expect(dark).toBe('rgb(10, 10, 10)');
+  expect(dark).toBe('rgb(20, 20, 20)');
   expect(midpoint).not.toBe(light);
   expect(midpoint).not.toBe(dark);
 
@@ -616,7 +616,7 @@ test('theme token transitions animate surfaces and respect reduced motion', asyn
       () =>
         globalThis.getComputedStyle(globalThis.document.body).backgroundColor,
     ),
-  ).toBe('rgb(10, 10, 10)');
+  ).toBe('rgb(20, 20, 20)');
 });
 
 test('first load plays the content entry animation and every opt-out keeps it still', async ({
