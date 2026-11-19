@@ -148,7 +148,7 @@ test.beforeAll(async () => {
       path: 'content/posts/gallery-suite/g1-5-end.svg',
       source: makeSvg(700, 500, '#527680', 'G1-5 End'),
     },
-    // Narrow pair for Gallery 2 (fits within 960px desktop without scrolling, overflows on 320px/390px)
+    // Narrow pair for Gallery 2 (fits within the desktop gallery column without scrolling, overflows on 320px/390px)
     {
       path: 'content/posts/gallery-suite/g2-1-narrow.svg',
       source: makeSvg(240, 420, '#3e5c63', 'G2-1 Narrow'),
@@ -255,7 +255,7 @@ test.afterAll(async () => {
   if (fixtureRoot) await removeBoundarySite(fixtureRoot);
 });
 
-test('inline gallery layout: equal height, variable width, 12px radius, hidden captions, >7 sliding window, wide-screen auto-hide, and 320px no overflow', async ({
+test('inline gallery layout: equal height, variable width, prose-width column, 12px radius, hidden captions, >7 sliding window, no-overflow progress, and 320px no overflow', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -292,6 +292,7 @@ test('inline gallery layout: equal height, variable width, 12px radius, hidden c
   });
 
   expect(g1Metrics.trackHeight).toBe(420);
+  expect(g1Metrics.viewportWidth).toBe(740);
   expect(g1Metrics.cardHeights.every((h) => h === 420)).toBe(true);
   // Wide (800x500 -> ~672px) vs Tall (400x600 -> ~280px) vs Square (500x500 -> 420px)
   expect(g1Metrics.cardWidths[0]).toBeGreaterThan(g1Metrics.cardWidths[2]);
@@ -305,10 +306,15 @@ test('inline gallery layout: equal height, variable width, 12px radius, hidden c
   expect(g1Metrics.linkRadii.every((r) => r === '12px')).toBe(true);
   expect(g1Metrics.captionsHidden).toBe(true);
 
-  // 2. Gallery 2 fits completely in 960px wide container -> progress bar and arrows auto-hide
+  // 2. Gallery 2 fits completely in the prose-width gallery column -> arrows auto-hide, progress stays visible
   const g2 = galleries.nth(1);
   await expect(g2).toHaveAttribute('data-gallery-static', '');
-  await expect(g2.locator('[data-gallery-progress]')).toBeHidden();
+  const g2Progress = g2.locator('[data-gallery-progress]');
+  await expect(g2Progress).toBeVisible();
+  await expect(g2Progress.locator('.gallery-progress-segment')).toHaveCount(2);
+  await expect(
+    g2Progress.locator('.gallery-progress-segment.is-active'),
+  ).toHaveAttribute('data-index', '0');
   await expect(g2.locator('[data-gallery-prev]')).toBeHidden();
   await expect(g2.locator('[data-gallery-next]')).toBeHidden();
 
@@ -379,13 +385,25 @@ test('inline gallery desktop and mobile interactions: arrows, trimSnaps end alig
     '[data-gallery-progress] .gallery-progress-segment.is-active',
   );
 
-  // At start: prev arrow is hidden, next arrow is visible with >=44x44px hit box
+  // At start: arrows stay hidden until the pointer enters the gallery; then next arrow shows with >=44x44px hit box
   await expect(prevBtn).toBeHidden();
+  await expect(nextBtn).toBeHidden();
+  await g1.scrollIntoViewIfNeeded();
+  const galleryBox = await g1.boundingBox();
+  const hoverX = galleryBox.x + galleryBox.width * 0.5;
+  const hoverY = galleryBox.y + galleryBox.height * 0.5;
+  await page.mouse.move(hoverX, hoverY);
   await expect(nextBtn).toBeVisible();
   const nextBox = await nextBtn.boundingBox();
   expect(nextBox.width).toBeGreaterThanOrEqual(44);
   expect(nextBox.height).toBeGreaterThanOrEqual(44);
   await expect(activeSegment).toHaveAttribute('data-index', '0');
+
+  // Leaving the gallery hides the arrows again; re-entering restores them
+  await page.mouse.move(0, 0);
+  await expect(nextBtn).toBeHidden();
+  await page.mouse.move(hoverX, hoverY);
+  await expect(nextBtn).toBeVisible();
 
   // Mouse drag starting directly on a card link moves the gallery without opening the lightbox dialog
   const firstCardLink = g1.locator('a[data-lightbox]').first();
@@ -575,6 +593,7 @@ test('gallery-mode lightbox: opens at clicked index, stable stage across aspect 
   // Reopen at index 4, step back to index 3, and dismiss via backdrop outside click
   await fifthLink.click();
   await expect(dialog).toBeVisible();
+  await expect(lbSegments.nth(4)).toHaveClass(/is-active/);
   await page.keyboard.press('ArrowLeft');
   await expect(lbSegments.nth(3)).toHaveClass(/is-active/);
   const dialogBox = await dialog.boundingBox();
@@ -836,6 +855,7 @@ test('no-JS fallback, multi-gallery independence, and partial page navigation li
     await expect(g3).toHaveClass(/is-enhanced/);
 
     // Clicking next on g1 advances g1 by exactly 1 step (no duplicate listeners) and does not affect g3
+    await g1.hover();
     await g1.locator('[data-gallery-next]').click();
     await expect(
       g1.locator('[data-gallery-progress] .gallery-progress-segment.is-active'),

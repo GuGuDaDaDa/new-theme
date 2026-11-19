@@ -118,7 +118,11 @@ export function initGallery(root) {
     root.toggleAttribute('data-gallery-static', noOverflow);
 
     if (progress) {
-      renderProgressBar(progress, totalSnaps, selectedSnap);
+      renderProgressBar(
+        progress,
+        noOverflow ? cards.length : totalSnaps,
+        noOverflow ? 0 : selectedSnap,
+      );
     }
     if (prevBtn) {
       prevBtn.hidden = noOverflow || !embla.canScrollPrev();
