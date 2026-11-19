@@ -39,14 +39,8 @@
   {{- $title := index $data "full_name" | default "" -}}
   {{- if not $title }}{{ return (dict "ok" false) }}{{ end -}}
   {{- $description := index $data "description" | default "" -}}
-  {{- $icon := "" -}}
-  {{- with index $data "owner" -}}
-    {{- $candidate := index . "avatar_url" | default "" -}}
-    {{- if and (eq (printf "%T" $candidate) "string") (strings.HasPrefix $candidate "https://") }}
-      {{ $icon = $candidate }}
-    {{ end -}}
-  {{- end -}}
-  {{- return (dict "ok" true "kind" "github" "title" $title "description" $description "icon" $icon "host" $parsed.Host) -}}
+  {{- $preview := printf "https://opengraph.githubassets.com/1/%s" (strings.TrimPrefix "/" $repoPath) -}}
+  {{- return (dict "ok" true "kind" "github" "title" $title "description" $description "icon" "" "preview" $preview "host" "github.com") -}}
 {{- end -}}
 {{- $result := try (resources.GetRemote $fetchURL $options) -}}
 {{- if $result.Err -}}

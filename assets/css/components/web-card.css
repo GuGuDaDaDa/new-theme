@@ -1,55 +1,62 @@
 /* Static external-page card inside the reading column. */
 .prose .web-card {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  display: block;
   min-width: 0;
   margin: 24px 0;
-  padding: 15px;
+  overflow: hidden;
   color: var(--text);
   background: var(--surface);
   border: 1px solid var(--line);
   border-radius: 2px;
   overflow-wrap: anywhere;
   text-decoration: none;
-  transition:
-    background-color 0.2s ease,
-    border-color 0.2s ease;
+  transition: border-color 0.2s ease;
 }
 
-.web-card-media {
-  position: relative;
+.web-card-header {
   display: flex;
   align-items: center;
-  justify-content: center;
-  width: 56px;
-  height: 56px;
-  flex: 0 0 auto;
-  overflow: hidden;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 8px 14px;
   color: var(--muted);
   background: var(--soft);
-  border: 1px solid var(--line);
-  border-radius: 3px;
+  border-bottom: 1px solid var(--line);
+  font-size: 12px;
+  line-height: 1.5;
 }
 
-.web-card-media > img {
+.web-card-source {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex: 1;
+}
+
+.web-card-favicon {
   position: relative;
-  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+}
+
+.web-card-favicon > svg {
   display: block;
-  width: 56px;
-  height: 56px;
-  object-fit: cover;
+  width: 16px;
+  height: 16px;
 }
 
-.web-card-github .web-card-media,
-.web-card-github .web-card-media > img {
-  border-radius: 50%;
+.web-card-github-icon {
+  fill: currentcolor;
 }
 
-.web-card-media > svg {
+.web-card-link-icon {
   position: absolute;
-  width: 24px;
-  height: 24px;
+  inset: 0;
   fill: none;
   stroke: currentcolor;
   stroke-width: 2;
@@ -57,22 +64,94 @@
   stroke-linejoin: round;
 }
 
+.web-card-favicon > img {
+  position: relative;
+  z-index: 1;
+  display: block;
+  width: 16px;
+  height: 16px;
+  object-fit: contain;
+  background: var(--soft);
+  border-radius: 2px;
+}
+
+.web-card-favicon > img[hidden] {
+  display: none;
+}
+
+.web-card-host {
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.web-card-arrow {
+  display: block;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: currentcolor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition: color 0.2s ease;
+}
+
 .web-card-body {
   display: block;
+  padding: 14px;
+  background: var(--surface);
+}
+
+.web-card-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
   min-width: 0;
 }
 
-.web-card-title {
+.web-card-preview {
   display: block;
-  color: var(--text);
+  width: 180px;
+  height: 90px;
+  aspect-ratio: 2 / 1;
+  flex: 0 0 180px;
+  overflow: hidden;
+  background: var(--soft);
+  border: 1px solid var(--line);
+  border-radius: 2px;
+}
+
+.web-card-preview[hidden] {
+  display: none;
+}
+
+.web-card-preview > img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.web-card-title {
+  display: -webkit-box;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent);
   font-size: 16px;
   font-weight: 650;
   line-height: 1.5;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .web-card-description {
   display: -webkit-box;
-  margin-top: 5px;
+  margin-top: 10px;
   overflow: hidden;
   color: var(--muted);
   font-size: 13px;
@@ -81,31 +160,55 @@
   -webkit-line-clamp: 2;
 }
 
-.web-card-host {
-  display: block;
-  margin-top: 6px;
-  color: var(--muted);
-  font-size: 12px;
-  line-height: 1.5;
-}
-
 @media (hover: hover) {
   .prose .web-card:hover {
-    background: var(--soft);
     border-color: var(--accent);
+  }
+
+  .prose .web-card:hover .web-card-arrow {
+    color: var(--accent);
   }
 }
 
 @media (max-width: 768px) {
   .prose .web-card {
-    gap: 12px;
     margin: 22px 0;
-    padding: 13px;
+  }
+
+  .web-card-header {
+    padding: 8px 12px;
+  }
+
+  .web-card-body {
+    padding: 12px;
+  }
+
+  .web-card-main {
+    gap: 14px;
+  }
+}
+
+@media (max-width: 560px) {
+  .web-card-main {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .web-card-preview {
+    width: 100%;
+    height: auto;
+    flex: 0 0 auto;
+  }
+
+  .web-card-title {
+    flex: 0 0 auto;
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .prose .web-card {
+  .prose .web-card,
+  .web-card-arrow {
     transition: none;
   }
 }

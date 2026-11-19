@@ -2,46 +2,14 @@
 
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { execFile } from 'node:child_process';
-import { mkdir, readFile, appendFile } from 'node:fs/promises';
+import { readFile, appendFile } from 'node:fs/promises';
 import { createServer } from 'node:https';
 import path from 'node:path';
-import { promisify } from 'node:util';
 import { load } from 'cheerio';
 import { buildSite } from '../../scripts/build.mjs';
 import { readJson } from '../../scripts/lib.mjs';
 import { createBoundarySite, removeBoundarySite } from '../helpers/site.mjs';
-
-const execFileAsync = promisify(execFile);
-
-/** Create a short-lived localhost certificate trusted by the Hugo process. @param {string} directory - Managed fixture directory. @returns {Promise<{key: string, cert: string, certFile: string}>} PEM contents and CA file path. */
-async function createLocalCertificate(directory) {
-  await mkdir(directory, { recursive: true });
-  const keyFile = path.join(directory, 'localhost-key.pem');
-  const certFile = path.join(directory, 'localhost.pem');
-  await execFileAsync('openssl', [
-    'req',
-    '-x509',
-    '-newkey',
-    'rsa:2048',
-    '-keyout',
-    keyFile,
-    '-out',
-    certFile,
-    '-days',
-    '1',
-    '-nodes',
-    '-subj',
-    '/CN=localhost',
-    '-addext',
-    'subjectAltName=DNS:localhost',
-  ]);
-  return {
-    key: await readFile(keyFile, 'utf8'),
-    cert: await readFile(certFile, 'utf8'),
-    certFile,
-  };
-}
+import { createLocalCertificate } from '../helpers/tls.mjs';
 
 /** Start the controlled metadata and GitHub API server. @param {string} fixtureRoot - Fixture root used for the certificate. @returns {Promise<{origin: string, requests: Map<string, number>, close: () => Promise<void>}>} Running server details. */
 async function startMetadataServer(fixtureRoot) {
@@ -57,6 +25,8 @@ async function startMetadataServer(fixtureRoot) {
       response.end(`<!doctype html><html><head>
 <meta property="og:title" content="外部 > 页面">
 <meta property="og:description" content="这是外部网页简介。">
+<meta property="og:image" content="/og-cover.png?v=1&amp;size=2">
+<meta name="twitter:image" content="https://cdn.example.test/ignored.png">
 <link rel="apple-touch-icon" href="/apple.png">
 <link rel="icon" href="/icon.svg">
 </head><body>page</body></html>`);
@@ -68,8 +38,35 @@ async function startMetadataServer(fixtureRoot) {
 <meta property="twitter:title" content="Twitter 备用标题">
 <meta name="twitter:description" content="忽略的 Twitter 简介。">
 <meta name="description" content="Twitter 备用简介。">
+<meta name='twitter:image' content='//cdn.example.test/twitter-card.png'>
 <link rel="icon" href="http://cdn.example.test/icon.png">
 </head><body>twitter</body></html>`);
+      return;
+    }
+    if (url.pathname === '/docs/guide') {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end(`<!doctype html><html><head>
+<title>相对路径文档</title>
+<meta property="og:image" content="images/guide-preview.png">
+<link rel="icon" href="favicon.png">
+</head><body>guide</body></html>`);
+      return;
+    }
+    if (url.pathname === '/unsafe-preview') {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end(`<!doctype html><html><head>
+<title>非安全预览图</title>
+<meta property="og:image" content="http://insecure.example.test/cover.png">
+<meta name="twitter:image" content="data:image/png;base64,iVBORw0KGgo=">
+<link rel="icon" href="data:image/svg+xml,<svg/>">
+</head><body>unsafe</body></html>`);
+      return;
+    }
+    if (url.pathname === '/no-preview') {
+      response.writeHead(200, { 'content-type': 'text/html; charset=utf-8' });
+      response.end(`<!doctype html><html><head>
+<title>纯标题页面</title>
+</head><body>minimal</body></html>`);
       return;
     }
     if (url.pathname === '/not-html') {
@@ -136,6 +133,19 @@ async function readPage(publicDir, ...segments) {
   );
 }
 
+/** Assert the standard card preview image contract on a Cheerio img element. @param {import('cheerio').Cheerio<any>} preview - Preview img selection. @param {string} expectedSrc - Expected absolute HTTPS preview URL. @returns {void} */
+function assertPreviewImage(preview, expectedSrc) {
+  assert.equal(preview.length, 1);
+  assert.equal(preview.attr('src'), expectedSrc);
+  assert.equal(preview.attr('width'), '180');
+  assert.equal(preview.attr('height'), '90');
+  assert.equal(preview.attr('alt'), '');
+  assert.equal(preview.attr('loading'), 'lazy');
+  assert.equal(preview.attr('decoding'), 'async');
+  assert.equal(preview.attr('referrerpolicy'), 'no-referrer');
+  assert.match(preview.attr('onerror') ?? '', /parentElement\.hidden/);
+}
+
 test('standalone HTTPS URLs render cached static cards without leaking into search text', async () => {
   const certificateWorkspace = await createBoundarySite({
     name: 'web-cards-tls',
@@ -158,8 +168,12 @@ test('standalone HTTPS URLs render cached static cards without leaking into sear
     const genericURL = `${server.origin}/page`;
     const fallbackURL = `${server.origin}/plain`;
     const twitterURL = `${server.origin}/twitter`;
+    const relativeURL = `${server.origin}/docs/guide`;
+    const unsafePreviewURL = `${server.origin}/unsafe-preview`;
+    const noPreviewURL = `${server.origin}/no-preview`;
     const notHtmlURL = `${server.origin}/not-html`;
     const githubURL = 'https://github.com/owner/repo/';
+    const uppercaseGitHubURL = 'https://GITHUB.COM/owner/repo';
     const emptyGitHubURL = 'https://github.com/owner/empty';
     const missingGitHubURL = 'https://github.com/owner/missing';
     const fragmentURL = `${genericURL}#section`;
@@ -197,6 +211,12 @@ ${queryURL}
 
 ${twitterURL}
 
+${relativeURL}
+
+${unsafePreviewURL}
+
+${noPreviewURL}
+
 ${notHtmlURL}
 
 ${siteURL}
@@ -214,6 +234,8 @@ ${genericURL}
 ${fallbackURL}
 
 ${githubURL}
+
+${uppercaseGitHubURL}
 
 ${emptyGitHubURL}
 
@@ -260,7 +282,7 @@ urls = ['^https://localhost']
     const $ = await readPage(firstBuild.publicDir, 'posts', 'cards');
     assert.equal(
       $('.web-card').length,
-      6,
+      10,
       JSON.stringify(Object.fromEntries(server.requests)),
     );
 
@@ -277,15 +299,26 @@ urls = ['^https://localhost']
       '这是外部网页简介。',
     );
     assert.equal(
-      genericCard.find('.web-card-host').text().trim(),
+      genericCard.find('.web-card-header .web-card-host').text().trim(),
       new URL(genericURL).host,
     );
     assert.equal(
-      genericCard.find('img').attr('src'),
-      `${server.origin}/icon.svg`,
+      genericCard.find('.web-card-header .web-card-arrow').attr('aria-hidden'),
+      'true',
     );
-    assert.ok(genericCard.find('img').attr('onerror'));
-    assert.equal(genericCard.find('.web-card-media svg').length, 1);
+    const genericFavicon = genericCard.find('.web-card-favicon img');
+    assert.equal(genericFavicon.attr('src'), `${server.origin}/icon.svg`);
+    assert.equal(genericFavicon.attr('width'), '16');
+    assert.equal(genericFavicon.attr('height'), '16');
+    assert.equal(genericFavicon.attr('loading'), 'lazy');
+    assert.equal(genericFavicon.attr('decoding'), 'async');
+    assert.equal(genericFavicon.attr('referrerpolicy'), 'no-referrer');
+    assert.ok(genericFavicon.attr('onerror'));
+    assert.equal(genericCard.find('.web-card-favicon svg').length, 1);
+    assertPreviewImage(
+      genericCard.find('.web-card-preview img'),
+      `${server.origin}/og-cover.png?v=1&size=2`,
+    );
 
     const fragmentCard = $(`.web-card[href="${fragmentURL}"]`);
     assert.equal(fragmentCard.length, 1);
@@ -311,12 +344,55 @@ urls = ['^https://localhost']
       'Twitter 备用简介。',
     );
     assert.equal(
-      twitterCard.find('img').attr('src'),
+      twitterCard.find('.web-card-favicon img').attr('src'),
+      `${server.origin}/favicon.ico`,
+    );
+    assert.equal(
+      twitterCard.find('.web-card-preview img').attr('src'),
+      'https://cdn.example.test/twitter-card.png',
+    );
+
+    const relativeCard = $(`.web-card[href="${relativeURL}"]`);
+    assert.equal(relativeCard.length, 1);
+    assert.equal(
+      relativeCard.find('.web-card-favicon img').attr('src'),
+      `${server.origin}/docs/favicon.png`,
+    );
+    assert.equal(
+      relativeCard.find('.web-card-preview img').attr('src'),
+      `${server.origin}/docs/images/guide-preview.png`,
+    );
+
+    const unsafePreviewCard = $(`.web-card[href="${unsafePreviewURL}"]`);
+    assert.equal(unsafePreviewCard.length, 1);
+    assert.equal(unsafePreviewCard.find('.web-card-preview').length, 0);
+    assert.equal(
+      unsafePreviewCard.find('.web-card-favicon img').attr('src'),
       `${server.origin}/favicon.ico`,
     );
 
+    const noPreviewCard = $(`.web-card[href="${noPreviewURL}"]`);
+    assert.equal(noPreviewCard.length, 1);
+    assert.equal(noPreviewCard.find('.web-card-preview').length, 0);
+    assert.equal(noPreviewCard.find('.web-card-description').length, 0);
+
     const githubCard = $(`.web-card[href="${githubURL}"]`);
     assert.equal(githubCard.length, 1);
+    assert.equal(
+      githubCard.find('.web-card-header .web-card-host').text().trim(),
+      'github.com',
+    );
+    assert.equal(githubCard.find('.web-card-favicon svg').length, 1);
+    assert.equal(githubCard.find('.web-card-favicon img').length, 0);
+    assert.equal(
+      githubCard.find('.web-card-header .web-card-arrow').attr('aria-hidden'),
+      'true',
+    );
+    assertPreviewImage(
+      githubCard.find('.web-card-preview img'),
+      'https://opengraph.githubassets.com/1/owner/repo',
+    );
+    assert.doesNotMatch(githubCard.html() ?? '', /avatars\.example\.test/);
     assert.equal(
       githubCard.find('.web-card-title').text().trim(),
       'owner/repo',
@@ -325,13 +401,28 @@ urls = ['^https://localhost']
       githubCard.find('.web-card-description').text().trim(),
       '受控仓库简介。',
     );
+
+    const uppercaseGitHubCard = $(`.web-card[href="${uppercaseGitHubURL}"]`);
+    assert.equal(uppercaseGitHubCard.length, 1);
     assert.equal(
-      githubCard.find('img').attr('src'),
-      'https://avatars.example.test/owner.png',
+      uppercaseGitHubCard.find('.web-card-header .web-card-host').text().trim(),
+      'github.com',
+    );
+    assert.equal(
+      uppercaseGitHubCard.find('.web-card-preview img').attr('src'),
+      'https://opengraph.githubassets.com/1/owner/repo',
     );
 
     const emptyGitHubCard = $(`.web-card[href="${emptyGitHubURL}"]`);
     assert.equal(emptyGitHubCard.length, 1);
+    assert.equal(
+      emptyGitHubCard.find('.web-card-header .web-card-host').text().trim(),
+      'github.com',
+    );
+    assert.equal(
+      emptyGitHubCard.find('.web-card-preview img').attr('src'),
+      'https://opengraph.githubassets.com/1/owner/empty',
+    );
     assert.equal(
       emptyGitHubCard.find('.web-card-title').text().trim(),
       'owner/empty',
@@ -374,24 +465,38 @@ urls = ['^https://localhost']
     const index = await readJson(path.join(firstBuild.publicDir, 'index.json'));
     const entry = index.posts.find((post) => post.url === '/posts/cards/');
     assert.ok(entry);
-    assert.doesNotMatch(
-      entry.content,
-      /外部 > 页面|这是外部网页简介|受控仓库简介/,
+    const excludedCardText =
+      /外部 > 页面|这是外部网页简介|受控仓库简介|相对路径文档|非安全预览图|纯标题页面|owner\/repo|owner\/empty/;
+    assert.doesNotMatch(entry.content, excludedCardText);
+    assert.equal(
+      entry.content.match(/github\.com/gi)?.length ?? 0,
+      1,
+      'only the fallback missing GitHub link should remain in searchable content',
     );
     assert.match(entry.content, /作者正文开始/);
-    assert.doesNotMatch(
-      $('.dek').text(),
-      /外部 > 页面|这是外部网页简介|受控仓库简介/,
+    assert.doesNotMatch($('.dek').text(), excludedCardText);
+    assert.equal(
+      $('.dek')
+        .text()
+        .match(/github\.com/gi)?.length ?? 0,
+      1,
+      'only the fallback missing GitHub link should remain in the summary',
     );
 
     assert.equal(server.requests.get('/page'), 2);
     assert.equal(server.requests.get('/plain'), 1);
     assert.equal(server.requests.get('/twitter'), 1);
+    assert.equal(server.requests.get('/docs/guide'), 1);
+    assert.equal(server.requests.get('/unsafe-preview'), 1);
+    assert.equal(server.requests.get('/no-preview'), 1);
     assert.equal(server.requests.get('/not-html'), 1);
     assert.equal(server.requests.get('/repos/owner/repo'), 1);
     assert.equal(server.requests.get('/repos/owner/empty'), 1);
     assert.equal(server.requests.get('/repos/owner/missing'), 1);
     assert.equal(server.requests.get('/icon.svg') ?? 0, 0);
+    assert.equal(server.requests.get('/og-cover.png') ?? 0, 0);
+    assert.equal(server.requests.get('/docs/favicon.png') ?? 0, 0);
+    assert.equal(server.requests.get('/docs/images/guide-preview.png') ?? 0, 0);
 
     await server.close();
     const secondBuild = await buildSite({
@@ -399,7 +504,7 @@ urls = ['^https://localhost']
       clock: fixture.clock,
     });
     const cached = await readPage(secondBuild.publicDir, 'posts', 'cards');
-    assert.equal(cached('.web-card').length, 6);
+    assert.equal(cached('.web-card').length, 10);
     assert.equal(
       cached(`.web-card[href="${genericURL}"] .web-card-title`).text().trim(),
       '外部 > 页面',

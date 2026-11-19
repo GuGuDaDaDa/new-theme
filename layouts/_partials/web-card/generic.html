@@ -4,6 +4,8 @@
 {{- $twitterTitle := "" -}}
 {{- $ogDescription := "" -}}
 {{- $metaDescription := "" -}}
+{{- $ogImage := "" -}}
+{{- $twitterImage := "" -}}
 {{- range $tag := findRE `(?i)<meta\s+(?:[^>"']|"[^"]*"|'[^']*')*>` $html -}}
   {{- $property := strings.ToLower (partial "web-card/attribute.html" (dict "tag" $tag "name" "property")) -}}
   {{- $name := strings.ToLower (partial "web-card/attribute.html" (dict "tag" $tag "name" "name")) -}}
@@ -20,6 +22,12 @@
   {{ end -}}
   {{- if and (eq $key "description") (not $metaDescription) }}
     {{ $metaDescription = $content }}
+  {{ end -}}
+  {{- if and (eq $key "og:image") (not $ogImage) }}
+    {{ $ogImage = partial "web-card/resolve-url.html" (dict "raw" $content "parsed" $parsed) }}
+  {{ end -}}
+  {{- if and (eq $key "twitter:image") (not $twitterImage) }}
+    {{ $twitterImage = partial "web-card/resolve-url.html" (dict "raw" $content "parsed" $parsed) }}
   {{ end -}}
 {{- end -}}
 {{- $title := $ogTitle | default $twitterTitle -}}
@@ -39,22 +47,7 @@
   {{- end -}}
 {{- end -}}
 {{- $origin := printf "%s://%s" $parsed.Scheme $parsed.Host -}}
-{{- $icon := "" -}}
-{{- if strings.HasPrefix $href "https://" -}}
-  {{- $icon = $href -}}
-{{- else if strings.HasPrefix $href "//" -}}
-  {{- $icon = printf "https:%s" $href -}}
-{{- else if strings.HasPrefix $href "/" -}}
-  {{- $icon = printf "%s%s" $origin $href -}}
-{{- else if and $href (not (findRE `(?i)^[a-z][a-z0-9+.-]*://` $href)) -}}
-  {{- $directory := $parsed.Path -}}
-  {{- if not (strings.HasSuffix $directory "/") }}
-    {{ $directory = path.Dir $directory }}
-  {{ end -}}
-  {{- if not (strings.HasSuffix $directory "/") }}
-    {{ $directory = printf "%s/" $directory }}
-  {{ end -}}
-  {{- $icon = printf "%s%s" $origin (path.Join $directory $href) -}}
-{{- end -}}
+{{- $icon := partial "web-card/resolve-url.html" (dict "raw" $href "parsed" $parsed) -}}
 {{- if not $icon }}{{ $icon = printf "%s/favicon.ico" $origin }}{{ end -}}
-{{- return (dict "ok" true "title" $title "description" $description "icon" $icon "host" $parsed.Host) -}}
+{{- $preview := $ogImage | default $twitterImage -}}
+{{- return (dict "ok" true "title" $title "description" $description "icon" $icon "preview" $preview "host" $parsed.Host) -}}

@@ -1,0 +1,21 @@
+{{- $raw := strings.TrimSpace .raw -}}
+{{- $parsed := .parsed -}}
+{{- if not $raw }}{{ return "" }}{{ end -}}
+{{- $origin := printf "%s://%s" $parsed.Scheme $parsed.Host -}}
+{{- if strings.HasPrefix (strings.ToLower $raw) "https://" -}}
+  {{- return (printf "https://%s" (substr $raw 8)) -}}
+{{- else if strings.HasPrefix $raw "//" -}}
+  {{- return (printf "https:%s" $raw) -}}
+{{- else if strings.HasPrefix $raw "/" -}}
+  {{- return (printf "%s%s" $origin $raw) -}}
+{{- else if not (findRE `(?i)^[a-z][a-z0-9+.-]*:` $raw) -}}
+  {{- $directory := $parsed.Path | default "/" -}}
+  {{- if not (strings.HasSuffix $directory "/") }}
+    {{ $directory = path.Dir $directory }}
+  {{ end -}}
+  {{- if not (strings.HasSuffix $directory "/") }}
+    {{ $directory = printf "%s/" $directory }}
+  {{ end -}}
+  {{- return (printf "%s%s" $origin (path.Join $directory $raw)) -}}
+{{- end -}}
+{{- return "" -}}
