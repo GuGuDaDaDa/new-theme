@@ -5,7 +5,7 @@
 {{- with $resource -}}
   {{- if eq .MediaType.MainType "image" -}}
     {{- $src = .RelPermalink -}}
-    {{- $originalURL = .Permalink -}}
+    {{- $originalURL = .RelPermalink -}}
     {{- $allowed = true -}}
   {{- end -}}
 {{- else -}}

@@ -1,0 +1,136 @@
+{{- if .Params -}}
+  {{- errorf "gallery does not accept parameters (%s)" .Position -}}
+{{- end -}}
+{{- $inner := .Inner -}}
+{{- $photos := .Store.GetSortedMapValues "photos" -}}
+{{- $id := printf "night-gallery-%s-%d" .Page.Params._night.sourceId .Ordinal -}}
+{{- if not $photos -}}
+  {{- warnf "Empty gallery omitted (%s, %s)" .Position $id -}}
+{{- else if eq (len $photos) 1 -}}
+  {{- $photo := index $photos 0 -}}
+  <div class="wide gallery-wide">
+    <div class="gallery gallery-single" id="{{ $id }}">
+      <figure class="gallery-card">
+        <a
+          class="gallery-link"
+          href="{{ $photo.originalURL }}"
+          data-lightbox-src="{{ $photo.url }}"
+          data-lightbox
+          data-caption="{{ $photo.caption }}"
+          aria-label="{{ i18n "lightbox.openImage" (dict "Alt" $photo.alt) }}"
+          draggable="false"
+        >
+          <img
+            class="gallery-image"
+            src="{{ $photo.url }}"
+            alt="{{ $photo.alt }}"
+            loading="lazy"
+            decoding="async"
+            draggable="false"
+            {{- if $photo.width }}
+              width="{{ $photo.width }}" height="{{ $photo.height }}"
+            {{ end }}
+            {{- with $photo.srcset }}
+              srcset="{{ delimit . ", " }}" sizes="(max-width: 768px) 85vw,
+              960px"
+            {{ end }}
+          />
+        </a>
+        {{- with $photo.caption }}
+          <figcaption class="gallery-caption">{{ . }}</figcaption>
+        {{ end -}}
+      </figure>
+    </div>
+  </div>
+{{- else -}}
+  <div class="wide gallery-wide">
+    <div
+      class="gallery"
+      id="{{ $id }}"
+      data-gallery
+      role="region"
+      aria-label="{{ i18n "shortcode.gallery" }}"
+    >
+      <div
+        class="gallery-progress"
+        data-gallery-progress
+        data-search-exclude
+        aria-hidden="true"
+        hidden
+      ></div>
+      <div class="gallery-stage">
+        <div class="gallery-viewport" data-gallery-viewport>
+          <div class="gallery-track" id="{{ $id }}-track" data-gallery-track>
+            {{- range $photos }}
+              <figure class="gallery-card" data-gallery-card>
+                <a
+                  class="gallery-link"
+                  href="{{ .originalURL }}"
+                  data-lightbox-src="{{ .url }}"
+                  data-lightbox
+                  data-caption="{{ .caption }}"
+                  aria-label="{{ i18n "lightbox.openImage" (dict "Alt" .alt) }}"
+                  draggable="false"
+                >
+                  <img
+                    class="gallery-image"
+                    src="{{ .url }}"
+                    alt="{{ .alt }}"
+                    loading="lazy"
+                    decoding="async"
+                    draggable="false"
+                    {{- if .width }}
+                      width="{{ .width }}" height="{{ .height }}"
+                    {{ end }}
+                    {{- with .srcset }}
+                      srcset="{{ delimit . ", " }}" sizes="(max-width: 768px)
+                      85vw, 720px"
+                    {{ end }}
+                  />
+                </a>
+                {{- with .caption }}
+                  <figcaption class="gallery-caption">{{ . }}</figcaption>
+                {{ end -}}
+              </figure>
+            {{- end }}
+          </div>
+        </div>
+        <button
+          type="button"
+          class="gallery-nav prev"
+          data-gallery-prev
+          data-search-exclude
+          aria-label="{{ i18n "shortcode.prevGallery" }}"
+          aria-controls="{{ $id }}-track"
+          hidden
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <polyline points="15 4 7 12 15 20"></polyline>
+          </svg>
+        </button>
+        <button
+          type="button"
+          class="gallery-nav next"
+          data-gallery-next
+          data-search-exclude
+          aria-label="{{ i18n "shortcode.nextGallery" }}"
+          aria-controls="{{ $id }}-track"
+          hidden
+        >
+          <svg aria-hidden="true" viewBox="0 0 24 24">
+            <polyline points="9 4 17 12 9 20"></polyline>
+          </svg>
+        </button>
+      </div>
+      <div
+        class="gallery-status"
+        data-gallery-status
+        data-search-exclude
+        role="status"
+        aria-live="polite"
+        aria-atomic="true"
+        hidden
+      ></div>
+    </div>
+  </div>
+{{- end -}}

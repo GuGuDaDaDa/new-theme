@@ -1,11 +1,11 @@
 {{- if not .Parent -}}
-  {{- errorf "photo requires a photos parent (%s, photo %d)" .Position .Ordinal -}}
-{{- else if ne .Parent.Name "photos" -}}
-  {{- errorf "photo requires a photos parent (%s, photo %d)" .Position .Ordinal -}}
+  {{- errorf "photo requires a photos or gallery parent (%s, photo %d)" .Position .Ordinal -}}
+{{- else if not (in (slice "photos" "gallery") .Parent.Name) -}}
+  {{- errorf "photo requires a photos or gallery parent (%s, photo %d)" .Position .Ordinal -}}
 {{- else -}}
   {{- $src := strings.TrimSpace (.Get "src" | default "") -}}
   {{- if not $src -}}
-    {{- errorf "photo src is required (%s, photos %d, photo %d)" .Position .Parent.Ordinal .Ordinal -}}
+    {{- errorf "photo src is required (%s, %s %d, photo %d)" .Position .Parent.Name .Parent.Ordinal .Ordinal -}}
   {{- else -}}
     {{- $resource := .Page.Resources.GetMatch $src -}}
     {{- $local := and $resource (not (strings.HasPrefix $src "/")) (not (strings.Contains $src ":")) -}}
@@ -15,11 +15,11 @@
       {{- $remote = ne $url.Host "" -}}
     {{- end -}}
     {{- if not (or $local $remote) -}}
-      {{- errorf "photo src %q must reference a page image resource or an HTTPS URL (%s, photos %d, photo %d)" $src .Position .Parent.Ordinal .Ordinal -}}
+      {{- errorf "photo src %q must reference a page image resource or an HTTPS URL (%s, %s %d, photo %d)" $src .Position .Parent.Name .Parent.Ordinal .Ordinal -}}
     {{- else -}}
       {{- $image := partial "data/article-image.html" (dict "page" .Page "src" $src) -}}
       {{- if not $image.allowed -}}
-        {{- errorf "photo src %q is not an image (%s, photos %d, photo %d)" $src .Position .Parent.Ordinal .Ordinal -}}
+        {{- errorf "photo src %q is not an image (%s, %s %d, photo %d)" $src .Position .Parent.Name .Parent.Ordinal .Ordinal -}}
       {{- else -}}
         {{- $caption := .Get "caption" | default "" -}}
         {{- $alt := $caption -}}

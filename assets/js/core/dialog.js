@@ -113,6 +113,14 @@ export function initDialog(dialog) {
       focus.focus({ preventScroll: true });
     },
     close,
+    /**
+     * Update the trigger element restored when the modal closes.
+     * @param {HTMLElement} entry - New focus restoration target.
+     * @returns {void}
+     */
+    setTrigger(entry) {
+      trigger = entry;
+    },
     /** Dispose all bindings and close the modal. @returns {void} */
     cleanup() {
       close();

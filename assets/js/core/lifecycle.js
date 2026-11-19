@@ -43,6 +43,23 @@ export function initPage(root) {
       photosCleanup();
     });
   }
+  if (root.querySelector('[data-gallery]')) {
+    let disposed = false;
+    let galleryCleanup = () => {};
+    pending.push(
+      import('../components/gallery.js')
+        .then(({ initGalleries }) => {
+          if (!disposed) galleryCleanup = initGalleries(root);
+        })
+        .catch((error) => {
+          console.error('Night Theme gallery initialization failed.', error);
+        }),
+    );
+    cleanups.push(() => {
+      disposed = true;
+      galleryCleanup();
+    });
+  }
   if (root.querySelector('[data-toc]')) {
     let disposed = false;
     let tocCleanup = () => {};

@@ -20,14 +20,22 @@ export function initReadingMedia(root) {
   const content = dialog.querySelector('[data-lightbox-content]');
   const status = dialog.querySelector('[data-lightbox-status]');
   const caption = dialog.querySelector('[data-lightbox-caption]');
+  const progress = dialog.querySelector('[data-lightbox-progress]');
   let disposeImage = () => {};
+  let requestToken = 0;
   /** Invalidate any image still in flight. @returns {void} */
   function cancel() {
+    requestToken += 1;
     disposeImage();
     disposeImage = () => {};
     dialog.removeAttribute('data-lightbox-loading');
     dialog.removeAttribute('data-lightbox-opening');
     dialog.removeAttribute('data-lightbox-flying');
+    dialog.removeAttribute('data-lightbox-mode');
+    if (progress) {
+      progress.hidden = true;
+      progress.replaceChildren();
+    }
   }
   dialog.addEventListener(
     'close',
@@ -87,6 +95,35 @@ export function initReadingMedia(root) {
         return;
       event.preventDefault();
       cancel();
+      const currentToken = requestToken;
+      const galleryRoot = trigger.closest('[data-gallery]');
+      const galleryLinks = galleryRoot
+        ? [...galleryRoot.querySelectorAll('a[data-lightbox]')]
+        : [];
+      if (galleryRoot && galleryLinks.length > 1) {
+        const startIndex = Math.max(0, galleryLinks.indexOf(trigger));
+        content.replaceChildren();
+        caption.textContent = trigger.dataset.caption || '';
+        caption.hidden = !caption.textContent;
+        status.textContent = '';
+        dialog.setAttribute('data-lightbox-mode', 'gallery');
+        modal.open(trigger);
+        import('./gallery.js')
+          .then(({ initGalleryLightbox }) => {
+            if (currentToken !== requestToken || !dialog.open) return;
+            disposeImage = initGalleryLightbox(dialog, {
+              galleryRoot,
+              startIndex,
+              onSelectLink: (link) => modal.setTrigger(link),
+            });
+          })
+          .catch((error) => {
+            console.error('Night Theme gallery lightbox failed.', error);
+            if (currentToken !== requestToken || !dialog.open) return;
+            status.textContent = t('lightbox.unavailable');
+          });
+        return;
+      }
       const img = trigger.querySelector('img');
       const width =
         Number(img?.getAttribute('width')) || img?.naturalWidth || 960;
