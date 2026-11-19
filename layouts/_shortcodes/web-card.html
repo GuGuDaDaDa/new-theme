@@ -65,6 +65,12 @@
     </span>
     <span class="web-card-body">
       <span class="web-card-main">
+        <span class="web-card-content">
+          <span class="web-card-title">{{ $card.title }}</span>
+          {{- with $card.description }}
+            <span class="web-card-description">{{ . }}</span>
+          {{- end }}
+        </span>
         {{- with $card.preview -}}
           <span class="web-card-preview">
             <img
@@ -79,11 +85,7 @@
             />
           </span>
         {{- end -}}
-        <span class="web-card-title">{{ $card.title }}</span>
       </span>
-      {{- with $card.description }}
-        <span class="web-card-description">{{ . }}</span>
-      {{- end }}
     </span>
   </a>
 {{- end -}}

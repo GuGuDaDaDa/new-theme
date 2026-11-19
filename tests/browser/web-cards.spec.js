@@ -241,7 +241,7 @@ test.afterAll(async () => {
   if (certificateRoot) await removeBoundarySite(certificateRoot);
 });
 
-test('desktop renders 180x90 preview beside title, full-width description, and 2-line clamp', async ({
+test('desktop renders left text column beside 180x90 right preview and 2-line clamp', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -264,6 +264,8 @@ test('desktop renders 180x90 preview beside title, full-width description, and 2
     )
     .toBeGreaterThan(0);
 
+  const ghMain = await githubCard.locator('.web-card-main').boundingBox();
+  const ghContent = await githubCard.locator('.web-card-content').boundingBox();
   const ghPreview = await githubCard.locator('.web-card-preview').boundingBox();
   const ghTitle = await githubCard.locator('.web-card-title').boundingBox();
   const ghDesc = await githubCard
@@ -271,14 +273,17 @@ test('desktop renders 180x90 preview beside title, full-width description, and 2
     .boundingBox();
   expect(Math.abs(ghPreview.width - 180)).toBeLessThanOrEqual(1);
   expect(Math.abs(ghPreview.height - 90)).toBeLessThanOrEqual(1);
-  expect(ghTitle.x).toBeGreaterThanOrEqual(ghPreview.x + ghPreview.width);
-  expect(ghTitle.y).toBeGreaterThanOrEqual(ghPreview.y - 2);
-  expect(ghTitle.y + ghTitle.height).toBeLessThanOrEqual(
-    ghPreview.y + ghPreview.height + 2,
-  );
-  expect(ghDesc.y).toBeGreaterThanOrEqual(ghPreview.y + ghPreview.height);
-  expect(Math.abs(ghDesc.x - ghPreview.x)).toBeLessThanOrEqual(2);
-  expect(ghDesc.width).toBeGreaterThan(ghTitle.width + 100);
+  expect(
+    Math.abs(ghPreview.x + ghPreview.width - (ghMain.x + ghMain.width)),
+  ).toBeLessThanOrEqual(2);
+  expect(ghPreview.x).toBeGreaterThanOrEqual(ghTitle.x + ghTitle.width);
+  expect(ghPreview.x).toBeGreaterThanOrEqual(ghDesc.x + ghDesc.width);
+  expect(Math.abs(ghTitle.x - ghMain.x)).toBeLessThanOrEqual(2);
+  expect(Math.abs(ghDesc.x - ghMain.x)).toBeLessThanOrEqual(2);
+  expect(Math.abs(ghTitle.x - ghDesc.x)).toBeLessThanOrEqual(2);
+  expect(Math.abs(ghTitle.width - ghContent.width)).toBeLessThanOrEqual(2);
+  expect(Math.abs(ghDesc.width - ghContent.width)).toBeLessThanOrEqual(2);
+  expect(ghDesc.y).toBeGreaterThanOrEqual(ghTitle.y + ghTitle.height - 1);
 
   const longCard = page.locator(
     `.web-card[href="${metadataOrigin}/long-generic"]`,
@@ -420,7 +425,7 @@ test('light and dark themes apply semantic tokens and monochrome GitHub icon col
   });
 });
 
-test('runtime 404 preview hides container for full-width title and 404 favicon exposes inline link icon', async ({
+test('runtime 404 preview hides container for full-width text and 404 favicon exposes inline link icon', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 1440, height: 900 });
@@ -444,5 +449,9 @@ test('runtime 404 preview hides container for full-width title and 404 favicon e
 
   const mainBox = await brokenCard.locator('.web-card-main').boundingBox();
   const titleBox = await brokenCard.locator('.web-card-title').boundingBox();
+  const descBox = await brokenCard
+    .locator('.web-card-description')
+    .boundingBox();
   expect(Math.abs(titleBox.width - mainBox.width)).toBeLessThanOrEqual(2);
+  expect(Math.abs(descBox.width - mainBox.width)).toBeLessThanOrEqual(2);
 });
