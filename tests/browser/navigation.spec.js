@@ -330,6 +330,8 @@ test('photo stack material surface stays neutral while the paper print stays whi
 
 test('image lightbox uses a fullscreen dark canvas, explicit captions, smooth load transitions, and blank-space dismissal', async ({
   page,
+  browser,
+  browserName,
 }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
   const dialog = page.locator('#image-dialog[data-lightbox-dialog]');
@@ -506,6 +508,48 @@ test('image lightbox uses a fullscreen dark canvas, explicit captions, smooth lo
   ).toEqual({ dialog: 0, image: 0 });
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
+
+  // 7. Mobile touch open: close button stays visually quiet (no focus ring or hover fill) and compact inside the viewport; keyboard focus ring also stays inside the 320px viewport.
+  const touchContext = await browser.newContext({
+    viewport: { width: 320, height: 568 },
+    hasTouch: true,
+    isMobile: browserName !== 'firefox',
+  });
+  const touchPage = await touchContext.newPage();
+  try {
+    await touchPage.emulateMedia({ reducedMotion: 'reduce' });
+    await touchPage.goto('/posts/vibecoding/');
+    const touchDialog = touchPage.locator(
+      '#image-dialog[data-lightbox-dialog]',
+    );
+    const touchClose = touchDialog.locator('[data-dialog-close]');
+    await touchPage.locator('a[data-lightbox]').first().tap();
+    await expect(touchDialog).toBeVisible();
+    await expect(touchClose).toHaveCSS('outline-style', 'none');
+    await expect(touchClose).toHaveCSS('background-color', 'rgba(0, 0, 0, 0)');
+    const touchBtnBox = await touchClose.boundingBox();
+    expect(touchBtnBox.width).toBeCloseTo(32, 0);
+    expect(touchBtnBox.height).toBeCloseTo(32, 0);
+    expect(touchBtnBox.y).toBeGreaterThanOrEqual(6);
+    expect(touchBtnBox.x + touchBtnBox.width).toBeLessThanOrEqual(320 - 8);
+    await touchClose.tap();
+    await expect(touchDialog).not.toBeVisible();
+
+    // Keyboard open on a 320px mobile viewport keeps the close button outline strictly inside the viewport.
+    await touchPage.locator('a[data-lightbox]').first().focus();
+    await touchPage.keyboard.press('Enter');
+    await expect(touchDialog).toBeVisible();
+    await expect(touchClose).toHaveCSS('outline-style', 'solid');
+    await expect(touchClose).toHaveCSS('outline-width', '2px');
+    const kbBtnBox = await touchClose.boundingBox();
+    // 2px outline + 2px outline-offset = 4px beyond the button border box
+    expect(kbBtnBox.y - 4).toBeGreaterThanOrEqual(0);
+    expect(kbBtnBox.x + kbBtnBox.width + 4).toBeLessThanOrEqual(320);
+    await touchPage.keyboard.press('Escape');
+    await expect(touchDialog).not.toBeVisible();
+  } finally {
+    await touchContext.close();
+  }
 });
 
 test('image lightbox fits the preview and its caption inside fullscreen bounds without scrolling', async ({

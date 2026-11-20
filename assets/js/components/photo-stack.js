@@ -286,6 +286,23 @@ export function initPhotoStack(root) {
     () => root.classList.remove('touch-active'),
     { signal },
   );
+  root.addEventListener(
+    'night:sync-index',
+    (event) => {
+      const requested = event.detail?.index;
+      if (!Number.isInteger(requested)) return;
+      const clamped = Math.min(
+        Math.max(0, requested),
+        Math.max(0, cards.length - 1),
+      );
+      state.pendingCommit = null;
+      finishAnimation();
+      if (state.index === clamped) return;
+      state.index = clamped;
+      render();
+    },
+    { signal },
+  );
   reducedMotion.addEventListener(
     'change',
     () => {

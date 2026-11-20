@@ -322,7 +322,7 @@ export function initGalleryLightbox(dialog, context) {
   const links = [...galleryRoot.querySelectorAll('a[data-lightbox]')];
   if (!links.length) return () => {};
 
-  if (!instances.has(galleryRoot)) {
+  if (galleryRoot.hasAttribute('data-gallery') && !instances.has(galleryRoot)) {
     try {
       initGallery(galleryRoot);
     } catch (error) {
@@ -534,7 +534,14 @@ export function initGalleryLightbox(dialog, context) {
     preloadWindow();
 
     const galleryRecord = instances.get(galleryRoot);
-    const targetLink = galleryRecord?.syncToSlide(activeIndex) ?? current.link;
+    let targetLink = current.link;
+    if (galleryRecord) {
+      targetLink = galleryRecord.syncToSlide(activeIndex) ?? current.link;
+    } else if (galleryRoot.hasAttribute('data-photo-stack')) {
+      galleryRoot.dispatchEvent(
+        new CustomEvent('night:sync-index', { detail: { index: activeIndex } }),
+      );
+    }
     if (targetLink) {
       onSelectLink?.(targetLink);
     }

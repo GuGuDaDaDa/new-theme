@@ -157,13 +157,13 @@ export function initReadingMedia(root) {
       event.preventDefault();
       cancel();
       const currentToken = requestToken;
-      const galleryRoot = trigger.closest('[data-gallery]');
-      const galleryLinks = galleryRoot
-        ? [...galleryRoot.querySelectorAll('a[data-lightbox]')]
+      const groupRoot = trigger.closest('[data-gallery], [data-photo-stack]');
+      const groupLinks = groupRoot
+        ? [...groupRoot.querySelectorAll('a[data-lightbox]')]
         : [];
-      if (galleryRoot && galleryLinks.length > 1) {
-        const startIndex = Math.max(0, galleryLinks.indexOf(trigger));
-        const hasCaptions = galleryLinks.some((link) =>
+      if (groupRoot && groupLinks.length > 1) {
+        const startIndex = Math.max(0, groupLinks.indexOf(trigger));
+        const hasCaptions = groupLinks.some((link) =>
           Boolean(link.dataset.caption),
         );
         content.replaceChildren();
@@ -180,7 +180,7 @@ export function initReadingMedia(root) {
           .then(({ initGalleryLightbox }) => {
             if (currentToken !== requestToken || !dialog.open) return;
             disposeImage = initGalleryLightbox(dialog, {
-              galleryRoot,
+              galleryRoot: groupRoot,
               startIndex,
               onSelectLink: (link) => modal.setTrigger(link),
             });

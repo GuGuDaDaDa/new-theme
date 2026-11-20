@@ -106,21 +106,30 @@ dialog::backdrop {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 44px;
-  min-width: 44px;
-  height: 44px;
-  min-height: 44px;
+  width: 32px;
+  min-width: 32px;
+  height: 32px;
+  min-height: 32px;
   border-radius: 50%;
+  background: transparent;
   color: rgb(255 255 255 / 82%);
   transform: translateY(-50%);
+  -webkit-tap-highlight-color: transparent;
 }
 
 #image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog::after {
-  inset: 0;
+  inset: -6px;
 }
 
-#image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog:hover {
-  background: rgb(255 255 255 / 12%);
+@media (hover: hover) {
+  #image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog:hover {
+    background: rgb(255 255 255 / 12%);
+    color: #ffffff;
+  }
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog:active {
+  background: rgb(255 255 255 / 16%);
   color: #ffffff;
 }
 
@@ -129,6 +138,18 @@ dialog::backdrop {
   > .close-dialog:focus-visible {
   outline: 2px solid #ffffff;
   outline-offset: 2px;
+}
+
+html:not([data-input-mode='keyboard'])
+  #image-dialog[data-lightbox-dialog]
+  .lightbox-topbar
+  > .close-dialog:focus,
+html:not([data-input-mode='keyboard'])
+  #image-dialog[data-lightbox-dialog]
+  .lightbox-topbar
+  > .close-dialog:focus-visible {
+  outline: none;
+  box-shadow: none;
 }
 
 #image-dialog[data-lightbox-dialog]:not([data-lightbox-mode='gallery'])
@@ -382,12 +403,12 @@ dialog::backdrop {
 
 @media (max-width: 768px) {
   #image-dialog[data-lightbox-dialog] .lightbox-topbar {
-    min-height: 48px;
-    padding: 8px 56px;
+    min-height: 52px;
+    padding: 10px 56px;
   }
 
   #image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog {
-    right: 8px;
+    right: 12px;
   }
 
   #image-dialog[data-lightbox-dialog] [data-lightbox-content] {
@@ -425,6 +446,5 @@ html[data-input-mode='pointer'] .close-dialog:active {
 html[data-input-mode='pointer']
   #image-dialog[data-lightbox-dialog]
   .close-dialog:active {
-  outline: 1px solid #ffffff;
-  outline-offset: 2px;
+  outline: none;
 }

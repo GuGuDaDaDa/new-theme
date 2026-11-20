@@ -836,7 +836,7 @@ test('gallery-mode lightbox: lazy ±1 preloading, image load failure fallback, a
   await touchContext.close();
 });
 
-test('single-image gallery, standalone image, and photo wall continue using single-image lightbox without regression', async ({
+test('single-image gallery and standalone image use single-image lightbox while multi-image photo wall uses gallery-mode lightbox and syncs on close', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -883,13 +883,29 @@ test('single-image gallery, standalone image, and photo wall continue using sing
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
 
-  // 3. Photo wall opens standard single-image lightbox
-  await page.locator('.photo-stack a[data-lightbox]').first().click();
+  // 3. Multi-image photo wall opens gallery-mode lightbox with segmented progress bar and syncs photo wall state on close
+  const photoWall = page.locator('.photo-stack[data-photo-stack]');
+  await photoWall.scrollIntoViewIfNeeded();
+  await photoWall.locator('a[data-lightbox]').first().click();
   await expect(dialog).toBeVisible();
-  await expect(dialog).not.toHaveAttribute('data-lightbox-mode', 'gallery');
-  await expect(dialog.locator('[data-lightbox-progress]')).toBeHidden();
+  await expect(dialog).toHaveAttribute('data-lightbox-mode', 'gallery');
+  const photoSegments = dialog.locator(
+    '[data-lightbox-progress] .gallery-progress-segment',
+  );
+  await expect(photoSegments).toHaveCount(2);
+  await expect(photoSegments.nth(0)).toHaveClass(/is-active/);
+  await expect(dialog.locator('[data-lightbox-caption]')).toHaveText(
+    '照片墙图一',
+  );
+  await page.keyboard.press('ArrowRight');
+  await expect(photoSegments.nth(1)).toHaveClass(/is-active/);
+  await expect(dialog.locator('[data-lightbox-caption]')).toHaveText(
+    '照片墙图二',
+  );
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
+  await expect(photoWall.locator('[data-photo-counter]')).toHaveText('2 / 2');
+  await expect(photoWall.locator('a[data-lightbox]').nth(1)).toBeFocused();
 });
 
 test('no-JS fallback, multi-gallery independence, and partial page navigation lifecycle without duplicate bindings or unused chunk loads', async ({
