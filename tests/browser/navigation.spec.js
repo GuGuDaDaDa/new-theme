@@ -299,57 +299,6 @@ test('page media and references reinitialize cleanly after repeated partial visi
   }
 });
 
-/**
- * Assert the card's first frame sits on the trigger's painted area.
- * @param {{x: number, y: number, width: number, height: number}} start - Preview box at the flight's first frame.
- * @param {{x: number, y: number, width: number, height: number}} source - Trigger image box.
- * @param {{x: number, y: number, width: number, height: number}} target - Preview box at rest.
- * @param {boolean} exactSize - Also compare the start size against the trigger box.
- * @returns {void} Completion.
- */
-function expectFlightStart(start, source, target, exactSize) {
-  expect(start.width).toBeLessThan(target.width);
-  expect(
-    Math.abs(start.x + start.width / 2 - (source.x + source.width / 2)),
-  ).toBeLessThan(1.5);
-  expect(
-    Math.abs(start.y + start.height / 2 - (source.y + source.height / 2)),
-  ).toBeLessThan(1.5);
-  if (!exactSize) return;
-  expect(start.width).toBeLessThanOrEqual(source.width + 0.5);
-  expect(start.height).toBeLessThanOrEqual(source.height + 0.5);
-  expect(
-    Math.min(
-      Math.abs(start.width - source.width),
-      Math.abs(start.height - source.height),
-    ),
-  ).toBeLessThan(0.5);
-}
-
-/** Read how the lightbox card is currently painted. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<{background: string, opening: boolean, flying: boolean}>} Computed card colour and open markers. */
-async function cardState(page) {
-  return page.evaluate(() => {
-    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    return {
-      background: globalThis.getComputedStyle(dialog).backgroundColor,
-      opening: dialog.hasAttribute('data-lightbox-opening'),
-      flying: dialog.hasAttribute('data-lightbox-flying'),
-    };
-  });
-}
-
-/** Resolve the card colour the lightbox settles on. @param {import('@playwright/test').Page} page - Browser page. @returns {Promise<string>} Computed colour of the `--bg` token. */
-async function settledCardColor(page) {
-  return page.evaluate(() => {
-    const probe = globalThis.document.createElement('div');
-    probe.style.background = 'var(--bg)';
-    globalThis.document.body.append(probe);
-    const color = globalThis.getComputedStyle(probe).backgroundColor;
-    probe.remove();
-    return color;
-  });
-}
-
 test('photo stack material surface stays neutral while the paper print stays white', async ({
   page,
 }) => {
@@ -379,238 +328,190 @@ test('photo stack material surface stays neutral while the paper print stays whi
   await expect(counter).toHaveCSS('color', 'rgb(163, 163, 163)');
 });
 
-test('image lightbox flies the card out of its trigger and skips the flight when reduced', async ({
+test('image lightbox uses a fullscreen dark canvas, explicit captions, smooth load transitions, and blank-space dismissal', async ({
   page,
 }) => {
-  const triggers = [
-    ['/posts/vibecoding/', page.locator('a[data-lightbox]').first(), true],
-    ['/posts/vibecoding/', page.locator('a[data-lightbox]').nth(1), true],
-    ['/posts/blender-mesh/', page.locator('a[data-lightbox]').first(), true],
-    [
-      '/posts/gallery-walk/',
-      page.locator('.photo-stack a[data-lightbox]').first(),
-      false,
-    ],
-  ];
-  let cardColor = '';
-  for (const [url, trigger, exactSize] of triggers) {
-    await page.goto(url);
-    cardColor ||= await settledCardColor(page);
-    // TOC articles smooth-scroll, so the trigger keeps moving while the preview
-    // measures it; settle the viewport before opening.
-    await page.addStyleTag({
-      content: 'html { scroll-behavior: auto !important; }',
-    });
-    const flying = page.waitForFunction(() =>
-      globalThis.document
-        .querySelector('[data-lightbox-dialog]')
-        .hasAttribute('data-lightbox-flying'),
-    );
-    await trigger.click();
-    await flying;
-    const flight = await page.evaluate(() => {
-      const dialog = globalThis.document.querySelector(
-        '[data-lightbox-dialog]',
-      );
-      const rect = (node) => {
-        const box = node.getBoundingClientRect();
-        return { x: box.x, y: box.y, width: box.width, height: box.height };
-      };
-      const preview = dialog.querySelector('[data-lightbox-content] img');
-      const animation = dialog
-        .getAnimations()
-        .find((item) => item.constructor.name === 'Animation');
-      animation.pause();
-      animation.currentTime = 0;
-      const start = rect(preview);
-      animation.currentTime = 320;
-      const landed = rect(preview);
-      animation.currentTime = 0;
-      return {
-        keyframes: animation.effect
-          .getKeyframes()
-          .map(({ transform }) => transform ?? null),
-        background: globalThis.getComputedStyle(dialog).backgroundColor,
-        start,
-        landed,
-      };
-    });
-    expect(flight.keyframes, url).toHaveLength(2);
-    expect(flight.keyframes[1]).toBeNull();
-    expect(flight.background, url).toBe(cardColor);
-    expect(await cardState(page), url).toEqual({
-      background: cardColor,
-      opening: false,
-      flying: true,
-    });
-    for (const selector of ['[data-dialog-close]', '[data-lightbox-caption]']) {
-      await expect(
-        page.locator(`[data-lightbox-dialog] ${selector}`),
-      ).toHaveCSS('opacity', '0');
-    }
-    expectFlightStart(
-      flight.start,
-      await trigger.locator('img').boundingBox(),
-      flight.landed,
-      exactSize,
-    );
-    await page.evaluate(() => {
-      globalThis.document
-        .querySelector('[data-lightbox-dialog]')
-        .getAnimations()
-        .find((item) => item.constructor.name === 'Animation')
-        .play();
-    });
-    await expect(
-      page.locator('[data-lightbox-dialog] [data-dialog-close]'),
-    ).toHaveCSS('opacity', '1');
-    await expect
-      .poll(async () => cardState(page))
-      .toEqual({
-        background: cardColor,
-        opening: false,
-        flying: false,
-      });
-    expect(
-      await page.evaluate(
-        () =>
-          globalThis.getComputedStyle(
-            globalThis.document.querySelector('[data-lightbox-dialog]'),
-          ).transform,
-      ),
-      url,
-    ).toBe('none');
-    const landed = await page
-      .locator('[data-lightbox-dialog] [data-lightbox-content] img')
-      .boundingBox();
-    expect(Math.abs(landed.x - flight.landed.x), url).toBeLessThan(1);
-    expect(Math.abs(landed.y - flight.landed.y), url).toBeLessThan(1);
-    await page.keyboard.press('Escape');
-    await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
-  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  const dialog = page.locator('#image-dialog[data-lightbox-dialog]');
+  const preview = dialog.locator('[data-lightbox-content] > img');
+  const caption = dialog.locator('[data-lightbox-caption]');
+  const closeBtn = dialog.locator('[data-dialog-close]');
 
-  // Slow image network: the card flies once with the thumbnail preview, then swaps in the full image in place without re-flying or resizing.
-  let releaseImage;
-  const heldImage = new Promise((resolve) => {
-    releaseImage = resolve;
+  // 1. Explicit caption post: fullscreen dark canvas stays identical in light and dark themes, sharp corners, no fly-in transform.
+  await page.goto('/posts/vibecoding/');
+  const captionedTrigger = page.locator('a[data-lightbox]').nth(1);
+  await captionedTrigger.scrollIntoViewIfNeeded();
+  await captionedTrigger.click();
+  await expect(dialog).toBeVisible();
+  await expect(preview).toHaveAttribute('data-lightbox-ready', '');
+  await expect(caption).toBeVisible();
+  await expect(caption).toHaveText('人机协同的持续闭环流');
+
+  const lightCanvas = await page.evaluate(() => {
+    const dlg = globalThis.document.querySelector('[data-lightbox-dialog]');
+    const img = dlg.querySelector('[data-lightbox-content] > img');
+    const dlgBox = dlg.getBoundingClientRect();
+    const dlgStyle = globalThis.getComputedStyle(dlg);
+    const imgStyle = globalThis.getComputedStyle(img);
+    return {
+      width: dlgBox.width,
+      height: dlgBox.height,
+      background: dlgStyle.backgroundColor,
+      borderRadius: dlgStyle.borderRadius,
+      transform: dlgStyle.transform,
+      imgRadius: imgStyle.borderRadius,
+      flying: dlg.hasAttribute('data-lightbox-flying'),
+      opening: dlg.hasAttribute('data-lightbox-opening'),
+    };
   });
-  await page.goto(triggers[0][0]);
+  expect(lightCanvas.width).toBeCloseTo(1280, 0);
+  expect(lightCanvas.height).toBeCloseTo(900, 0);
+  expect(lightCanvas.background).toBe('rgba(10, 10, 10, 0.92)');
+  expect(lightCanvas.borderRadius).toBe('0px');
+  expect(lightCanvas.transform).toBe('none');
+  expect(lightCanvas.imgRadius).toBe('0px');
+  expect(lightCanvas.flying).toBe(false);
+  expect(lightCanvas.opening).toBe(false);
+
+  // Dark theme renders the exact same dark canvas background.
+  await page.evaluate(() => {
+    globalThis.document.documentElement.dataset.theme = 'dark';
+  });
+  await expect(dialog).toHaveCSS('background-color', 'rgba(10, 10, 10, 0.92)');
+
+  // Clicking the image itself or the caption text does NOT close the lightbox.
+  await preview.click();
+  await expect(dialog).toBeVisible();
+  await caption.click();
+  await expect(dialog).toBeVisible();
+
+  // Clicking blank space around the image closes the lightbox immediately and restores focus to the trigger.
+  await page.mouse.click(20, 450);
+  await expect(dialog).not.toBeVisible();
+  await expect(captionedTrigger).toBeFocused();
+
+  // 2. Alt-only image (no explicit caption): caption stays hidden instead of falling back to img.alt.
+  await page.goto('/posts/post-3/');
+  const altOnlyTrigger = page.locator('a[data-lightbox]').first();
+  await altOnlyTrigger.click();
+  await expect(dialog).toBeVisible();
+  await expect(preview).toHaveAttribute('data-lightbox-ready', '');
+  await expect(preview).toHaveAttribute('alt', 'Bryce Canyon National Park');
+  await expect(caption).toBeHidden();
+  await closeBtn.click();
+  await expect(dialog).not.toBeVisible();
+  await expect(altOnlyTrigger).toBeFocused();
+
+  // 3. Slow network with decoded thumbnail: displays thumbnail immediately and swaps in full image without pending spinner.
+  let releaseThumbUpgrade;
+  const heldUpgrade = new Promise((resolve) => {
+    releaseThumbUpgrade = resolve;
+  });
+  await page.goto('/posts/vibecoding/');
   await page.waitForFunction(() => {
     const img = globalThis.document.querySelector('a[data-lightbox] img');
     return Boolean(img?.complete && img.naturalWidth);
   });
   await page.route('**/posts/vibecoding/*.webp', async (route) => {
-    await heldImage;
+    await heldUpgrade;
     await route.continue();
   });
   await page.locator('a[data-lightbox]').first().click();
-  await page.waitForFunction(() => {
-    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    return dialog?.open && !dialog.hasAttribute('data-lightbox-flying');
-  });
-  const loadingLanded = await page.evaluate(() => {
+  await expect(dialog).toBeVisible();
+  const loadingWithThumb = await page.evaluate(() => {
     const trigger = globalThis.document.querySelector('a[data-lightbox]');
     const thumb = trigger.querySelector('img');
-    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    const preview = dialog.querySelector('[data-lightbox-content] img');
-    const cardBox = dialog.getBoundingClientRect();
-    const contentBox = dialog
-      .querySelector('[data-lightbox-content]')
-      .getBoundingClientRect();
+    const dlg = globalThis.document.querySelector('[data-lightbox-dialog]');
+    const img = dlg.querySelector('[data-lightbox-content] > img');
     return {
-      background: globalThis.getComputedStyle(dialog).backgroundColor,
-      loading: dialog.hasAttribute('data-lightbox-loading'),
-      flying: dialog.hasAttribute('data-lightbox-flying'),
-      animations: dialog.getAnimations().length,
+      loading: dlg.hasAttribute('data-lightbox-loading'),
+      pending: dlg.hasAttribute('data-lightbox-pending'),
       thumbSrc: thumb.currentSrc || thumb.src,
       fullSrc: new URL(
         trigger.dataset.lightboxSrc || trigger.href,
         globalThis.location.href,
       ).href,
-      previewSrc: preview.src,
-      previewOpacity: globalThis.getComputedStyle(preview).opacity,
-      cardWidth: cardBox.width,
-      cardHeight: cardBox.height,
-      placeholderHeight: contentBox.height,
+      previewSrc: img.src,
+      ready: img.hasAttribute('data-lightbox-ready'),
     };
   });
-  expect(loadingLanded.background).toBe(cardColor);
-  expect(loadingLanded.loading).toBe(true);
-  expect(loadingLanded.flying).toBe(false);
-  expect(loadingLanded.animations).toBe(0);
-  expect(loadingLanded.previewSrc).toBe(loadingLanded.thumbSrc);
-  expect(loadingLanded.previewOpacity).toBe('1');
-  expect(loadingLanded.placeholderHeight).toBeGreaterThanOrEqual(220);
+  expect(loadingWithThumb.loading).toBe(true);
+  expect(loadingWithThumb.pending).toBe(false);
+  expect(loadingWithThumb.ready).toBe(true);
+  expect(loadingWithThumb.previewSrc).toBe(loadingWithThumb.thumbSrc);
 
-  releaseImage();
+  releaseThumbUpgrade();
   await page.waitForFunction(() => {
-    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    return !dialog.hasAttribute('data-lightbox-loading');
+    const dlg = globalThis.document.querySelector('[data-lightbox-dialog]');
+    return !dlg.hasAttribute('data-lightbox-loading');
   });
-  const settledState = await page.evaluate(() => {
-    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    const preview = dialog.querySelector('[data-lightbox-content] img');
-    const cardBox = dialog.getBoundingClientRect();
-    return {
-      flying: dialog.hasAttribute('data-lightbox-flying'),
-      animations: dialog.getAnimations().length,
-      previewSrc: preview.src,
-      cardWidth: cardBox.width,
-      cardHeight: cardBox.height,
-    };
-  });
-  expect(settledState.flying).toBe(false);
-  expect(settledState.animations).toBe(0);
-  expect(settledState.previewSrc).toBe(loadingLanded.fullSrc);
-  expect(
-    Math.abs(settledState.cardWidth - loadingLanded.cardWidth),
-  ).toBeLessThan(1);
-  expect(
-    Math.abs(settledState.cardHeight - loadingLanded.cardHeight),
-  ).toBeLessThan(1);
+  await expect(preview).toHaveJSProperty('src', loadingWithThumb.fullSrc);
   await page.unroute('**/posts/vibecoding/*.webp');
-  await expect(
-    page.locator('[data-lightbox-dialog] [data-dialog-close]'),
-  ).toHaveCSS('opacity', '1');
   await page.keyboard.press('Escape');
-  await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
+  await expect(dialog).not.toBeVisible();
 
-  // Reduced motion: no flight, the card and its controls are ready at once.
-  await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto(triggers[0][0]);
-  await triggers[0][1].click();
-  await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
-  await page.waitForFunction(() => {
-    const image = globalThis.document.querySelector(
-      '[data-lightbox-dialog] img',
-    );
-    return Boolean(image?.complete && image.naturalWidth);
+  // 4. Slow network WITHOUT a decoded thumbnail: shows pending spinner until loaded, then marks ready and fades in.
+  let releaseColdImage;
+  const heldCold = new Promise((resolve) => {
+    releaseColdImage = resolve;
   });
-  await expect
-    .poll(async () => cardState(page))
-    .toEqual({
-      background: cardColor,
-      opening: false,
-      flying: false,
-    });
-  await expect(
-    page.locator('[data-lightbox-dialog] [data-dialog-close]'),
-  ).toHaveCSS('opacity', '1');
+  await page.route('**/posts/vibecoding/flow*.webp', async (route) => {
+    await heldCold;
+    await route.continue();
+  });
+  await page.goto('/posts/vibecoding/', { waitUntil: 'domcontentloaded' });
+  await page.waitForSelector('html[data-js="ready"]');
+  const coldTrigger = page.locator('a[data-lightbox]').nth(1);
+  await coldTrigger.focus();
+  await page.keyboard.press('Enter');
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toHaveAttribute('data-lightbox-pending', '');
+  await expect(preview).not.toHaveAttribute('data-lightbox-ready', '');
+  releaseColdImage();
+  await expect(preview).toHaveAttribute('data-lightbox-ready', '');
+  await expect(dialog).not.toHaveAttribute('data-lightbox-pending', '');
+  await expect(preview).toHaveCSS('opacity', '1');
+  await page.unroute('**/posts/vibecoding/flow*.webp');
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
+
+  // 5. Image load failure without thumbnail shows failure message while keeping caption and close path working.
+  await page.route('**/posts/vibecoding/flow*.webp', (route) => route.abort());
+  await page.goto('/posts/vibecoding/');
+  await page.locator('a[data-lightbox]').nth(1).click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('[data-lightbox-status]')).toHaveText(
+    '图片加载失败，请稍后重试。',
+  );
+  await expect(caption).toHaveText('人机协同的持续闭环流');
+  await page.mouse.click(20, 450);
+  await expect(dialog).not.toBeVisible();
+  await page.unroute('**/posts/vibecoding/flow*.webp');
+
+  // 6. Reduced motion: zero animations on dialog and image.
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/posts/vibecoding/');
+  await page.locator('a[data-lightbox]').first().click();
+  await expect(dialog).toBeVisible();
+  await expect(preview).toHaveAttribute('data-lightbox-ready', '');
   expect(
     await page.evaluate(() => ({
       dialog: globalThis.document
         .querySelector('[data-lightbox-dialog]')
         .getAnimations().length,
       image: globalThis.document
-        .querySelector('[data-lightbox-dialog] img')
+        .querySelector('[data-lightbox-dialog] [data-lightbox-content] > img')
         .getAnimations().length,
     })),
   ).toEqual({ dialog: 0, image: 0 });
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
 });
 
-test('image lightbox fits the preview and its caption without scrolling', async ({
+test('image lightbox fits the preview and its caption inside fullscreen bounds without scrolling', async ({
   page,
 }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
   const viewports = [
     { width: 1280, height: 900 },
     { width: 1024, height: 700 },
@@ -631,11 +532,11 @@ test('image lightbox fits the preview and its caption without scrolling', async 
         const dialog = globalThis.document.querySelector(
           '[data-lightbox-dialog]',
         );
-        const image = dialog?.querySelector('[data-lightbox-content] img');
+        const image = dialog?.querySelector('[data-lightbox-content] > img');
         return Boolean(
           dialog?.open &&
-          !dialog.hasAttribute('data-lightbox-flying') &&
-          image?.complete &&
+          image?.hasAttribute('data-lightbox-ready') &&
+          image.complete &&
           image.naturalWidth,
         );
       });
@@ -643,35 +544,63 @@ test('image lightbox fits the preview and its caption without scrolling', async 
         const dialog = globalThis.document.querySelector(
           '[data-lightbox-dialog]',
         );
-        const image = dialog.querySelector('[data-lightbox-content] img');
-        const card = dialog.getBoundingClientRect();
+        const topbar = dialog.querySelector('[data-lightbox-topbar]');
+        const image = dialog.querySelector('[data-lightbox-content] > img');
+        const caption = dialog.querySelector('[data-lightbox-caption]');
+        const canvas = dialog.getBoundingClientRect();
+        const topbarBox = topbar.getBoundingClientRect();
         const picture = image.getBoundingClientRect();
+        const captionBox = caption.hidden
+          ? null
+          : caption.getBoundingClientRect();
         return {
+          viewportWidth: globalThis.window.innerWidth,
+          viewportHeight: globalThis.window.innerHeight,
+          canvasWidth: canvas.width,
+          canvasHeight: canvas.height,
           scrollHeight: dialog.scrollHeight,
           clientHeight: dialog.clientHeight,
+          naturalWidth: image.naturalWidth,
+          naturalHeight: image.naturalHeight,
+          paintedWidth: picture.width,
+          paintedHeight: picture.height,
           naturalRatio: image.naturalWidth / image.naturalHeight,
           paintedRatio: picture.width / picture.height,
-          cardWidthDelta: card.width - picture.width,
+          imgRadius: globalThis.getComputedStyle(image).borderRadius,
+          belowTopbar: picture.top >= topbarBox.bottom - 1,
+          aboveCaption: captionBox
+            ? picture.bottom <= captionBox.top + 1
+            : true,
           inside:
-            picture.top >= card.top - 1 &&
-            picture.bottom <= card.bottom + 1 &&
-            picture.left >= card.left - 1 &&
-            picture.right <= card.right + 1,
+            picture.top >= canvas.top - 1 &&
+            picture.bottom <= canvas.bottom + 1 &&
+            picture.left >= canvas.left - 1 &&
+            picture.right <= canvas.right + 1,
         };
       });
       const label = `${url} at ${viewport.width}x${viewport.height}`;
+      expect(frame.canvasWidth, label).toBeCloseTo(frame.viewportWidth, 0);
+      expect(frame.canvasHeight, label).toBeCloseTo(frame.viewportHeight, 0);
       expect(frame.scrollHeight, label).toBeLessThanOrEqual(
         frame.clientHeight + 1,
       );
       expect(frame.paintedRatio, label).toBeCloseTo(frame.naturalRatio, 2);
-      expect(frame.cardWidthDelta, label).toBeCloseTo(20, 0);
+      expect(frame.paintedWidth, label).toBeLessThanOrEqual(
+        frame.naturalWidth + 1,
+      );
+      expect(frame.paintedHeight, label).toBeLessThanOrEqual(
+        frame.naturalHeight + 1,
+      );
+      expect(frame.imgRadius, label).toBe('0px');
+      expect(frame.belowTopbar, label).toBe(true);
+      expect(frame.aboveCaption, label).toBe(true);
       expect(frame.inside, label).toBe(true);
       await page.keyboard.press('Escape');
       await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
     }
   }
 
-  // Classic non-overlay scrollbar (e.g. Edge on Windows): locking scroll on open must not shift page layout.
+  // Classic non-overlay scrollbar (e.g. Edge on Windows): locking scroll on open must not shift page layout, and fullscreen dialog spans edge-to-edge.
   await page.setViewportSize({ width: 1280, height: 720 });
   await page.goto('/posts/vibecoding/');
   await page.addStyleTag({
@@ -691,15 +620,12 @@ test('image lightbox fits the preview and its caption without scrolling', async 
     };
   });
   await page.locator('a[data-lightbox]').first().click();
-  await page.waitForFunction(() => {
-    const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    return dialog?.open && !dialog.hasAttribute('data-lightbox-flying');
-  });
+  await expect(page.locator('[data-lightbox-dialog]')).toBeVisible();
   const duringOpen = await page.evaluate(() => {
     const prose = globalThis.document.querySelector('.prose');
     const brand = globalThis.document.querySelector('.brand');
     const dialog = globalThis.document.querySelector('[data-lightbox-dialog]');
-    const card = dialog.getBoundingClientRect();
+    const canvas = dialog.getBoundingClientRect();
     return {
       scrollbarGapVar:
         globalThis.document.documentElement.style.getPropertyValue(
@@ -708,8 +634,9 @@ test('image lightbox fits the preview and its caption without scrolling', async 
       bodyWidth: globalThis.document.body.getBoundingClientRect().width,
       proseLeft: prose.getBoundingClientRect().left,
       brandLeft: brand.getBoundingClientRect().left,
-      dialogCenter: card.left + card.width / 2,
-      bodyCenter: globalThis.document.body.getBoundingClientRect().width / 2,
+      canvasLeft: canvas.left,
+      canvasWidth: canvas.width,
+      viewportWidth: globalThis.window.innerWidth,
     };
   });
   if (beforeOpen.gap > 0) {
@@ -718,7 +645,8 @@ test('image lightbox fits the preview and its caption without scrolling', async 
   expect(duringOpen.bodyWidth).toBeCloseTo(beforeOpen.bodyWidth, 1);
   expect(duringOpen.proseLeft).toBeCloseTo(beforeOpen.proseLeft, 1);
   expect(duringOpen.brandLeft).toBeCloseTo(beforeOpen.brandLeft, 1);
-  expect(duringOpen.dialogCenter).toBeCloseTo(duringOpen.bodyCenter, 1);
+  expect(duringOpen.canvasLeft).toBeCloseTo(0, 1);
+  expect(duringOpen.canvasWidth).toBeCloseTo(duringOpen.viewportWidth, 1);
   await page.keyboard.press('Escape');
   await expect(page.locator('[data-lightbox-dialog]')).not.toBeVisible();
   const afterClose = await page.evaluate(() => ({

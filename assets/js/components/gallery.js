@@ -351,6 +351,8 @@ export function initGalleryLightbox(dialog, context) {
     };
   });
 
+  const hasCaptions = items.some((item) => Boolean(item.caption));
+
   let activeIndex = Math.min(
     Math.max(0, startIndex),
     Math.max(0, items.length - 1),
@@ -358,8 +360,12 @@ export function initGalleryLightbox(dialog, context) {
 
   dialog.setAttribute('data-lightbox-mode', 'gallery');
   dialog.removeAttribute('data-lightbox-loading');
-  dialog.removeAttribute('data-lightbox-opening');
-  dialog.removeAttribute('data-lightbox-flying');
+  dialog.removeAttribute('data-lightbox-pending');
+  if (hasCaptions) {
+    dialog.setAttribute('data-lightbox-has-captions', '');
+  } else {
+    dialog.removeAttribute('data-lightbox-has-captions');
+  }
 
   const stage = doc.createElement('div');
   stage.className = 'lightbox-gallery-stage';
@@ -385,6 +391,7 @@ export function initGalleryLightbox(dialog, context) {
     img.draggable = false;
     if (item.thumbUrl) {
       img.src = item.thumbUrl;
+      slide.setAttribute('data-slide-ready', '');
     }
     slide.append(img);
     track.append(slide);
@@ -419,20 +426,6 @@ export function initGalleryLightbox(dialog, context) {
   stage.append(viewport, prevBtn, nextBtn);
   content.replaceChildren(stage);
 
-  let openAnimation = null;
-  if (!reducedMotion.matches) {
-    openAnimation = dialog.animate(
-      [
-        { opacity: 0, transform: 'scale(0.96)' },
-        { opacity: 1, transform: 'scale(1)' },
-      ],
-      {
-        duration: 200,
-        easing: 'cubic-bezier(0.22, 0.61, 0.36, 1)',
-      },
-    );
-  }
-
   const embla = EmblaCarousel(viewport, {
     align: 'center',
     containScroll: false,
@@ -464,9 +457,13 @@ export function initGalleryLightbox(dialog, context) {
     if (state.loaded || state.loading) return;
     if (state.item.thumbUrl && state.item.thumbUrl === state.item.url) {
       state.loaded = true;
+      state.slide.setAttribute('data-slide-ready', '');
       return;
     }
     state.loading = true;
+    if (!state.item.thumbUrl) {
+      state.slide.setAttribute('data-slide-loading', '');
+    }
     const loader = new Image();
     state.loader = loader;
     loader.decoding = 'async';
@@ -477,7 +474,9 @@ export function initGalleryLightbox(dialog, context) {
         state.loaded = true;
         state.failed = false;
         state.img.src = state.item.url;
+        state.slide.removeAttribute('data-slide-loading');
         state.slide.removeAttribute('data-slide-failed');
+        state.slide.setAttribute('data-slide-ready', '');
         if (index === activeIndex) updateStatus();
       },
       { signal },
@@ -487,6 +486,7 @@ export function initGalleryLightbox(dialog, context) {
       () => {
         state.loading = false;
         state.failed = true;
+        state.slide.removeAttribute('data-slide-loading');
         state.slide.setAttribute('data-slide-failed', '');
         if (!state.item.thumbUrl) {
           state.img.removeAttribute('src');
@@ -519,8 +519,16 @@ export function initGalleryLightbox(dialog, context) {
     nextBtn.hidden = activeIndex >= items.length - 1;
 
     if (caption) {
-      caption.textContent = current.caption;
-      caption.hidden = !current.caption;
+      if (hasCaptions) {
+        caption.textContent = current.caption;
+        caption.hidden = false;
+        if (current.caption) caption.removeAttribute('aria-hidden');
+        else caption.setAttribute('aria-hidden', 'true');
+      } else {
+        caption.textContent = '';
+        caption.hidden = true;
+        caption.removeAttribute('aria-hidden');
+      }
     }
     updateStatus();
     preloadWindow();
@@ -604,8 +612,6 @@ export function initGalleryLightbox(dialog, context) {
   /** Clean up gallery lightbox mode and restore single-image dialog shell. @returns {void} */
   function cleanup() {
     controller.abort();
-    openAnimation?.cancel();
-    openAnimation = null;
     slideStates.forEach((state) => {
       state.loader?.removeAttribute('src');
       state.img.removeAttribute('src');
@@ -616,7 +622,11 @@ export function initGalleryLightbox(dialog, context) {
       progress.hidden = true;
       progress.replaceChildren();
     }
+    if (caption) {
+      caption.removeAttribute('aria-hidden');
+    }
     dialog.removeAttribute('data-lightbox-mode');
+    dialog.removeAttribute('data-lightbox-has-captions');
     lightboxInstances.delete(dialog);
   }
 

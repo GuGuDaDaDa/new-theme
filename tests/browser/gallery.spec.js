@@ -162,6 +162,19 @@ test.beforeAll(async () => {
       path: 'content/posts/gallery-suite/solo.svg',
       source: makeSvg(600, 400, '#3a5a64', 'Solo'),
     },
+    // Assets for captionless gallery & small image edge cases
+    {
+      path: 'content/posts/lightbox-edges/plain-1.svg',
+      source: makeSvg(600, 400, '#2c4852', 'Plain 1'),
+    },
+    {
+      path: 'content/posts/lightbox-edges/plain-2.svg',
+      source: makeSvg(400, 600, '#3c5a64', 'Plain 2'),
+    },
+    {
+      path: 'content/posts/lightbox-edges/tiny.svg',
+      source: makeSvg(220, 140, '#496b73', 'Tiny'),
+    },
   ];
 
   const g3Photos = Array.from(
@@ -226,6 +239,23 @@ test.beforeAll(async () => {
             '  {{< photo src="g1-1-wide.svg" alt="照片墙一" caption="照片墙图一" >}}',
             '  {{< photo src="g1-2-tall.svg" alt="照片墙二" caption="照片墙图二" >}}',
             '{{< /photos >}}',
+            '',
+          ].join('\n'),
+        },
+        {
+          path: 'posts/lightbox-edges/index.md',
+          source: [
+            '---',
+            'title: 灯箱边界测试',
+            'date: 2026-09-07T00:00:00Z',
+            '---',
+            '',
+            '{{< gallery >}}',
+            '  {{< photo src="plain-1.svg" alt="无题注一" >}}',
+            '  {{< photo src="plain-2.svg" alt="无题注二" >}}',
+            '{{< /gallery >}}',
+            '',
+            '![小尺寸无题注截图](tiny.svg)',
             '',
           ].join('\n'),
         },
@@ -513,7 +543,7 @@ async function swipeHorizontal(viewport, deltaX) {
   }, deltaX);
 }
 
-test('gallery-mode lightbox: opens at clicked index, stable stage across aspect ratios, progress & caption updates, backdrop & close dismissal, syncs inline gallery and restores focus', async ({
+test('gallery-mode lightbox: fullscreen dark canvas, reserved caption slot stability, blank-space dismissal without drag false positives, syncs inline gallery and restores focus', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -529,16 +559,33 @@ test('gallery-mode lightbox: opens at clicked index, stable stage across aspect 
   await g1.locator('a[data-lightbox]').nth(1).click();
   await expect(dialog).toBeVisible();
   await expect(dialog).toHaveAttribute('data-lightbox-mode', 'gallery');
+  await expect(dialog).toHaveAttribute('data-lightbox-has-captions', '');
+  await expect(dialog).toHaveCSS('background-color', 'rgba(10, 10, 10, 0.92)');
 
-  // Lightbox progress bar matches total image count (5) and highlights index 1
+  // Fullscreen dimensions and sharp image corners (border-radius: 0)
+  const canvasBox = await dialog.boundingBox();
+  expect(canvasBox.width).toBeCloseTo(1440, 0);
+  expect(canvasBox.height).toBeCloseTo(900, 0);
+  await expect(dialog.locator('[data-lightbox-slide="1"] img')).toHaveCSS(
+    'border-radius',
+    '0px',
+  );
+
+  // Lightbox progress bar matches total image count (5) and uses high-contrast white active segment on dark canvas
   const lbSegments = dialogProgress.locator('.gallery-progress-segment');
   await expect(lbSegments).toHaveCount(5);
   await expect(lbSegments.nth(1)).toHaveClass(/is-active/);
+  await expect(lbSegments.nth(1)).toHaveCSS(
+    'background-color',
+    'rgb(255, 255, 255)',
+  );
   await expect(dialogCaption).toBeVisible();
   await expect(dialogCaption).toHaveText('第二张竖图图注');
 
-  // Measure outer dialog box on tall portrait image (index 1)
-  const boxOnPortrait = await dialog.boundingBox();
+  // Measure stage height on captioned slide (index 1)
+  const stageBoxOnCaptioned = await dialog
+    .locator('[data-lightbox-gallery-stage]')
+    .boundingBox();
 
   // Navigate to index 2 (square image without caption) via lightbox next button
   const lbNext = dialog.locator('[data-lightbox-next]');
@@ -548,16 +595,13 @@ test('gallery-mode lightbox: opens at clicked index, stable stage across aspect 
   await lbNext.click();
 
   await expect(lbSegments.nth(2)).toHaveClass(/is-active/);
-  // Slide 2 has no caption -> caption element is hidden
-  await expect(dialogCaption).toBeHidden();
-
-  // Outer dialog frame size stays stable across portrait -> square -> ultra-wide transitions
-  const boxOnSquare = await dialog.boundingBox();
-  expect(Math.abs(boxOnSquare.width - boxOnPortrait.width)).toBeLessThanOrEqual(
-    1,
-  );
+  // Slide 2 has no caption -> reserved bottom slot stays mounted with empty text so stage height does not jump
+  await expect(dialogCaption).toHaveText('');
+  const stageBoxOnUncaptioned = await dialog
+    .locator('[data-lightbox-gallery-stage]')
+    .boundingBox();
   expect(
-    Math.abs(boxOnSquare.height - boxOnPortrait.height),
+    Math.abs(stageBoxOnUncaptioned.height - stageBoxOnCaptioned.height),
   ).toBeLessThanOrEqual(1);
 
   // Navigate to index 3 (ultra-wide) and index 4 (last image) via ArrowRight
@@ -574,33 +618,45 @@ test('gallery-mode lightbox: opens at clicked index, stable stage across aspect 
   await page.keyboard.press('ArrowRight');
   await expect(lbSegments.nth(4)).toHaveClass(/is-active/);
 
-  // Clicking whitespace inside the dialog stage does NOT accidentally close the dialog
+  // Clicking the image itself, caption text, or progress bar does NOT close the lightbox
+  await dialog.locator('[data-lightbox-slide="4"] img').click();
+  await expect(dialog).toBeVisible();
+  await dialogCaption.click();
+  await expect(dialog).toBeVisible();
+  const progBox = await dialogProgress.boundingBox();
+  await page.mouse.click(
+    progBox.x + progBox.width / 2,
+    progBox.y + progBox.height / 2,
+  );
+  await expect(dialog).toBeVisible();
+
+  // Dragging across blank area of the slide switches slides without accidentally closing the lightbox
   const stageBox = await dialog
     .locator('[data-lightbox-gallery-stage]')
     .boundingBox();
-  await page.mouse.click(stageBox.x + 12, stageBox.y + 12);
+  await page.mouse.move(stageBox.x + 120, stageBox.y + 40);
+  await page.mouse.down();
+  await page.mouse.move(stageBox.x + 420, stageBox.y + 40, { steps: 6 });
+  await page.mouse.up();
   await expect(dialog).toBeVisible();
+  await expect(lbSegments.nth(3)).toHaveClass(/is-active/);
 
-  // Close with Escape: inline gallery automatically synced to the last viewed image (index 4) and focus returns to its trigger link
+  // Close with Escape: inline gallery automatically synced to the last viewed image (index 3) and focus returns to its trigger link
   await page.keyboard.press('Escape');
   await expect(dialog).not.toBeVisible();
+  await expect(g1.locator('a[data-lightbox]').nth(3)).toBeFocused();
 
+  // Reopen at index 4, step back to index 3, and dismiss by clicking blank space inside the slide margin around the image
   const fifthLink = g1.locator('a[data-lightbox]').nth(4);
-  await expect(fifthLink).toBeFocused();
-  // Inline gallery is scrolled to the final snap so next button is hidden
-  await expect(g1.locator('[data-gallery-next]')).toBeHidden();
-
-  // Reopen at index 4, step back to index 3, and dismiss via backdrop outside click
   await fifthLink.click();
   await expect(dialog).toBeVisible();
   await expect(lbSegments.nth(4)).toHaveClass(/is-active/);
   await page.keyboard.press('ArrowLeft');
   await expect(lbSegments.nth(3)).toHaveClass(/is-active/);
-  const dialogBox = await dialog.boundingBox();
-  await page.mouse.click(
-    Math.max(4, dialogBox.x - 24),
-    dialogBox.y + dialogBox.height * 0.5,
-  );
+  const blankBox = await dialog
+    .locator('[data-lightbox-gallery-stage]')
+    .boundingBox();
+  await page.mouse.click(blankBox.x + 16, blankBox.y + 16);
   await expect(dialog).not.toBeVisible();
   await expect(g1.locator('a[data-lightbox]').nth(3)).toBeFocused();
 
@@ -610,6 +666,34 @@ test('gallery-mode lightbox: opens at clicked index, stable stage across aspect 
   await dialog.locator('[data-dialog-close]').click();
   await expect(dialog).not.toBeVisible();
   await expect(g1.locator('a[data-lightbox]').nth(3)).toBeFocused();
+
+  // All-uncaptioned gallery hides the bottom caption slot completely; tiny standalone image does not upscale beyond natural dimensions
+  await page.goto(`${siteBaseURL}/posts/lightbox-edges/`);
+  await page.locator('[data-gallery] a[data-lightbox]').first().click();
+  await expect(dialog).toBeVisible();
+  await expect(dialog).not.toHaveAttribute('data-lightbox-has-captions', '');
+  await expect(dialogCaption).toBeHidden();
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
+
+  await page.locator('figure.wide a[data-lightbox]').first().click();
+  await expect(dialog).toBeVisible();
+  await expect(dialogCaption).toBeHidden();
+  const tinyMetrics = await dialog
+    .locator('[data-lightbox-content] > img')
+    .evaluate((img) => {
+      const box = img.getBoundingClientRect();
+      return {
+        width: box.width,
+        height: box.height,
+        naturalWidth: img.naturalWidth,
+        naturalHeight: img.naturalHeight,
+      };
+    });
+  expect(tinyMetrics.width).toBeCloseTo(220, 0);
+  expect(tinyMetrics.height).toBeCloseTo(140, 0);
+  await page.keyboard.press('Escape');
+  await expect(dialog).not.toBeVisible();
 });
 
 test('gallery-mode lightbox: lazy ±1 preloading, image load failure fallback, and mobile touch swipe without arrows', async ({
@@ -737,7 +821,7 @@ test('gallery-mode lightbox: lazy ±1 preloading, image load failure fallback, a
 
   await swipeHorizontal(
     touchDialog.locator('[data-lightbox-gallery-viewport]'),
-    -180,
+    -220,
   );
   await expect(
     touchDialog.locator(

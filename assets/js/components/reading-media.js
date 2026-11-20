@@ -1,13 +1,31 @@
-/** Lightweight image entry points and synchronous lightbox open transition. */
+/** Lightweight image entry points and fullscreen lightbox orchestration. */
 import { initDialog } from '../core/dialog.js';
 import { t } from '../core/i18n.js';
 import { initLightbox } from './lightbox.js';
 
 const instances = new WeakMap();
 const copyTimers = new WeakMap();
+const NON_BLANK_SELECTOR =
+  'img, [data-lightbox-caption], [data-lightbox-status], [data-lightbox-progress], button, a';
+const TAP_SLOP = 8;
 
 /**
- * Bind image enhancement and cancellable lazy lightbox loading.
+ * Determine whether an event target sits on dismissible blank lightbox space.
+ * @param {EventTarget|null} target - Event target node.
+ * @returns {boolean} True when the target is not an image, non-empty caption, or control.
+ */
+function isBlankTarget(target) {
+  if (!(target instanceof Element)) return true;
+  const hit = target.closest(NON_BLANK_SELECTOR);
+  if (!hit) return true;
+  if (hit.hasAttribute('data-lightbox-caption') && !hit.textContent.trim()) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Bind image enhancement and cancellable fullscreen lightbox loading.
  * @param {Document} root - Current document.
  * @returns {() => void} Cleanup callback.
  */
@@ -23,20 +41,63 @@ export function initReadingMedia(root) {
   const progress = dialog.querySelector('[data-lightbox-progress]');
   let disposeImage = () => {};
   let requestToken = 0;
-  /** Invalidate any image still in flight. @returns {void} */
+  let blankDown = null;
+
+  /** Invalidate any image still in flight and reset lightbox attributes. @returns {void} */
   function cancel() {
     requestToken += 1;
+    blankDown = null;
     disposeImage();
     disposeImage = () => {};
     dialog.removeAttribute('data-lightbox-loading');
-    dialog.removeAttribute('data-lightbox-opening');
-    dialog.removeAttribute('data-lightbox-flying');
+    dialog.removeAttribute('data-lightbox-pending');
     dialog.removeAttribute('data-lightbox-mode');
+    dialog.removeAttribute('data-lightbox-has-captions');
+    caption.textContent = '';
+    caption.hidden = true;
+    caption.removeAttribute('aria-hidden');
+    status.textContent = '';
     if (progress) {
       progress.hidden = true;
       progress.replaceChildren();
     }
   }
+
+  dialog.addEventListener(
+    'pointerdown',
+    (event) => {
+      if (!dialog.open || !event.isPrimary || event.button !== 0) {
+        blankDown = null;
+        return;
+      }
+      blankDown = isBlankTarget(event.target)
+        ? { id: event.pointerId, x: event.clientX, y: event.clientY }
+        : null;
+    },
+    { signal },
+  );
+  dialog.addEventListener(
+    'pointerup',
+    (event) => {
+      const down = blankDown;
+      blankDown = null;
+      if (!dialog.open || !down || event.pointerId !== down.id) return;
+      if (
+        Math.hypot(event.clientX - down.x, event.clientY - down.y) < TAP_SLOP &&
+        isBlankTarget(event.target)
+      ) {
+        modal.close();
+      }
+    },
+    { signal },
+  );
+  dialog.addEventListener(
+    'pointercancel',
+    () => {
+      blankDown = null;
+    },
+    { signal },
+  );
   dialog.addEventListener(
     'close',
     () => {
@@ -102,10 +163,17 @@ export function initReadingMedia(root) {
         : [];
       if (galleryRoot && galleryLinks.length > 1) {
         const startIndex = Math.max(0, galleryLinks.indexOf(trigger));
+        const hasCaptions = galleryLinks.some((link) =>
+          Boolean(link.dataset.caption),
+        );
         content.replaceChildren();
-        caption.textContent = trigger.dataset.caption || '';
-        caption.hidden = !caption.textContent;
-        status.textContent = '';
+        if (hasCaptions) {
+          dialog.setAttribute('data-lightbox-has-captions', '');
+          caption.textContent = trigger.dataset.caption || '';
+          caption.hidden = false;
+          if (caption.textContent) caption.removeAttribute('aria-hidden');
+          else caption.setAttribute('aria-hidden', 'true');
+        }
         dialog.setAttribute('data-lightbox-mode', 'gallery');
         modal.open(trigger);
         import('./gallery.js')
@@ -125,21 +193,14 @@ export function initReadingMedia(root) {
         return;
       }
       const img = trigger.querySelector('img');
-      const width =
-        Number(img?.getAttribute('width')) || img?.naturalWidth || 960;
-      const height =
-        Number(img?.getAttribute('height')) || img?.naturalHeight || 600;
+      const captionText = trigger.dataset.caption || '';
       content.replaceChildren();
-      dialog.style.setProperty('--lightbox-w', String(width));
-      dialog.style.setProperty('--lightbox-h', String(height));
-      caption.textContent = trigger.dataset.caption || img?.alt || '';
-      caption.hidden = !caption.textContent;
-      status.textContent = '';
-      dialog.setAttribute('data-lightbox-loading', '');
+      caption.textContent = captionText;
+      caption.hidden = !captionText;
       modal.open(trigger);
       disposeImage = initLightbox(dialog, {
         url: trigger.dataset.lightboxSrc || url.href,
-        alt: img?.alt || caption.textContent,
+        alt: img?.alt || captionText,
         source: img,
       });
     },

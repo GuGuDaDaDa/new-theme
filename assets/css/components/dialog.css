@@ -60,112 +60,87 @@ dialog::backdrop {
 }
 
 #image-dialog[data-lightbox-dialog] {
-  --lightbox-w: 960;
-  --lightbox-h: 600;
-  /* Card padding and caption row: the preview shares the card's 85dvh budget
-     with them, so it may only take what is left. */
-  --lightbox-chrome: 56px;
-  --lightbox-max-w: calc(min(1200px, 95vw) - 20px);
-  --lightbox-max-h: calc(85dvh - var(--lightbox-chrome));
   position: fixed;
-  width: fit-content;
-  max-width: min(1200px, 95vw);
-  padding: 10px;
-  overflow: auto;
-  background: var(--bg);
+  inset: 0;
+  inset-inline: 0;
+  margin: 0;
+  width: 100%;
+  max-width: none;
+  height: 100dvh;
+  max-height: none;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  background: rgb(10 10 10 / 92%);
+  color: #f5f5f5;
+  box-shadow: none;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
-#image-dialog[data-lightbox-dialog] > .close-dialog,
-#image-dialog[data-lightbox-dialog]:not([data-lightbox-mode='gallery'])
-  .lightbox-topbar
-  > .close-dialog {
+#image-dialog[data-lightbox-dialog][open] {
+  display: flex;
+  flex-direction: column;
+}
+
+#image-dialog[data-lightbox-dialog]::backdrop {
+  background: transparent;
+  backdrop-filter: none;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-topbar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 56px;
+  padding: 12px 64px;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog {
   position: absolute;
-  top: 12px;
-  right: 12px;
+  top: 50%;
+  right: 16px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-width: 44px;
+  height: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  color: rgb(255 255 255 / 82%);
+  transform: translateY(-50%);
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog::after {
+  inset: 0;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog:hover {
+  background: rgb(255 255 255 / 12%);
+  color: #ffffff;
+}
+
+#image-dialog[data-lightbox-dialog]
+  .lightbox-topbar
+  > .close-dialog:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
 }
 
 #image-dialog[data-lightbox-dialog]:not([data-lightbox-mode='gallery'])
   [data-lightbox-progress] {
   display: none !important;
-}
-
-#image-dialog[data-lightbox-dialog] [data-lightbox-content] {
-  position: relative;
-  display: grid;
-  width: min(
-    calc(var(--lightbox-w) * 1px),
-    var(--lightbox-max-w),
-    calc(var(--lightbox-max-h) * var(--lightbox-w) / var(--lightbox-h))
-  );
-  min-width: 180px;
-  min-height: 120px;
-  aspect-ratio: var(--lightbox-w) / var(--lightbox-h);
-  place-items: center;
-  margin-inline: auto;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-#image-dialog[data-lightbox-dialog][data-lightbox-loading]
-  [data-lightbox-content] {
-  background: var(--soft);
-}
-
-#image-dialog[data-lightbox-dialog] [data-lightbox-content] img {
-  display: block;
-  width: 100%;
-  height: 100%;
-  margin: auto;
-  border-radius: 3px;
-  object-fit: contain;
-}
-
-#image-dialog[data-lightbox-dialog] [data-lightbox-caption],
-#image-dialog[data-lightbox-dialog] [data-lightbox-status] {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 11px;
-  line-height: 1.6;
-  text-align: center;
-}
-
-#image-dialog[data-lightbox-dialog] [data-lightbox-caption][hidden] {
-  display: none !important;
-}
-
-#image-dialog[data-lightbox-dialog] [data-lightbox-status]:empty {
-  display: none;
-}
-
-/* Gallery-mode lightbox: fixed-aspect stable stage with centered progress bar and Embla track. */
-#image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery'] {
-  display: flex;
-  flex-direction: column;
-  width: min(1100px, 92vw);
-  max-width: min(1100px, 92vw);
-  height: min(760px, 85dvh);
-  max-height: 85dvh;
-  padding: 14px 16px 16px;
-  overflow: hidden;
-  border-radius: 12px;
-  background: var(--bg);
-}
-
-#image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
-  .lightbox-topbar {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 32px;
-  margin-bottom: 10px;
-  flex-shrink: 0;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
   [data-lightbox-progress] {
   margin-bottom: 0;
   justify-content: center;
+  pointer-events: auto;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
@@ -173,28 +148,117 @@ dialog::backdrop {
   display: none !important;
 }
 
-#image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
-  .lightbox-topbar
-  > .close-dialog {
-  position: absolute;
-  top: 0;
-  right: 0;
+#image-dialog[data-lightbox-dialog] .gallery-progress-segment {
+  background-color: rgb(255 255 255 / 32%);
+}
+
+#image-dialog[data-lightbox-dialog] .gallery-progress-segment.is-active {
+  background-color: #ffffff;
+}
+
+#image-dialog[data-lightbox-dialog]
+  .gallery-progress-segment.is-edge:not(.is-active) {
+  opacity: 0.55;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-content] {
+  position: relative;
+  display: flex;
+  flex: 1 1 auto;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px 48px 32px;
+  overflow: hidden;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
   [data-lightbox-content] {
-  position: relative;
-  display: flex;
-  flex: 1 1 auto;
-  width: 100%;
-  min-width: 0;
-  min-height: 0;
-  aspect-ratio: auto;
-  border-radius: 8px;
-  overflow: hidden;
-  background: var(--soft);
+  padding: 0;
 }
 
+#image-dialog[data-lightbox-dialog][data-lightbox-pending]
+  [data-lightbox-content]::after,
+#image-dialog[data-lightbox-dialog]
+  .lightbox-gallery-slide[data-slide-loading]::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 28px;
+  height: 28px;
+  margin: -14px 0 0 -14px;
+  border: 2px solid rgb(255 255 255 / 24%);
+  border-top-color: rgb(255 255 255 / 88%);
+  border-radius: 50%;
+  content: '';
+  pointer-events: none;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-content] > img {
+  display: block;
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: 100%;
+  margin: auto;
+  border-radius: 0;
+  object-fit: contain;
+  user-select: none;
+  -webkit-user-drag: none;
+  opacity: 0;
+  pointer-events: none;
+}
+
+#image-dialog[data-lightbox-dialog]
+  [data-lightbox-content]
+  > img[data-lightbox-ready] {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-caption] {
+  flex-shrink: 0;
+  width: fit-content;
+  max-width: min(740px, calc(100% - 48px));
+  margin: 0 auto 24px;
+  color: #d4d4d4;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+  overflow-wrap: break-word;
+}
+
+#image-dialog[data-lightbox-dialog][data-lightbox-has-captions]
+  [data-lightbox-caption] {
+  min-height: 1.6em;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-caption][hidden] {
+  display: none !important;
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-status] {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 2;
+  width: fit-content;
+  max-width: min(560px, calc(100% - 48px));
+  margin: 0;
+  color: #d4d4d4;
+  font-size: 14px;
+  line-height: 1.6;
+  text-align: center;
+  transform: translate(-50%, -50%);
+}
+
+#image-dialog[data-lightbox-dialog] [data-lightbox-status]:empty {
+  display: none;
+}
+
+/* Gallery-mode lightbox track inside the shared fullscreen dark canvas. */
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
   .lightbox-gallery-stage {
   position: relative;
@@ -209,12 +273,6 @@ dialog::backdrop {
   height: 100%;
   overflow: hidden;
   touch-action: pan-y pinch-zoom;
-  cursor: grab;
-}
-
-#image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
-  .lightbox-gallery-viewport:active {
-  cursor: grabbing;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
@@ -235,7 +293,7 @@ dialog::backdrop {
   height: 100%;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: 12px 76px 24px;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
@@ -246,59 +304,110 @@ dialog::backdrop {
   height: auto;
   max-height: 100%;
   margin: auto;
-  border-radius: 6px;
+  border-radius: 0;
   object-fit: contain;
   user-select: none;
   -webkit-user-drag: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
-  [data-lightbox-caption],
-#image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
-  [data-lightbox-status] {
-  flex-shrink: 0;
-  margin-top: 12px;
-  font-size: 12px;
+  .lightbox-gallery-slide[data-slide-ready]
+  .lightbox-gallery-image {
+  opacity: 1;
+  pointer-events: auto;
 }
 
-/* The backdrop dims the page while the card grows out of the preview's trigger. */
-@keyframes lightbox-open {
+#image-dialog[data-lightbox-dialog] .lightbox-gallery-nav {
+  border-color: rgb(255 255 255 / 16%);
+  background-color: rgb(255 255 255 / 10%);
+  color: rgb(255 255 255 / 88%);
+  box-shadow: none;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-gallery-nav.prev {
+  left: 20px;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-gallery-nav.next {
+  right: 20px;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-gallery-nav:hover {
+  border-color: rgb(255 255 255 / 32%);
+  background-color: rgb(255 255 255 / 20%);
+  color: #ffffff;
+}
+
+#image-dialog[data-lightbox-dialog] .lightbox-gallery-nav:focus-visible {
+  outline: 2px solid #ffffff;
+  outline-offset: 2px;
+}
+
+@keyframes lightbox-fade-in {
   from {
     opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes lightbox-spin {
+  to {
+    transform: rotate(360deg);
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  #image-dialog[data-lightbox-dialog][open]::backdrop {
-    animation: lightbox-open 200ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  #image-dialog[data-lightbox-dialog][open] {
+    animation: lightbox-fade-in 180ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
   }
 
+  #image-dialog[data-lightbox-dialog] [data-lightbox-content] > img,
+  #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
+    .lightbox-gallery-image {
+    transition: opacity 180ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  }
+
+  #image-dialog[data-lightbox-dialog][data-lightbox-pending]
+    [data-lightbox-content]::after,
   #image-dialog[data-lightbox-dialog]
-    :is(.close-dialog, [data-lightbox-caption]) {
-    transition: opacity 200ms cubic-bezier(0.22, 0.61, 0.36, 1);
-  }
-
-  /* The frame's controls would only smear while the card flies out. */
-  #image-dialog[data-lightbox-dialog][data-lightbox-flying]
-    :is(.close-dialog, [data-lightbox-caption]) {
-    opacity: 0;
-    transition: none;
+    .lightbox-gallery-slide[data-slide-loading]::after {
+    animation: lightbox-spin 0.8s linear infinite;
   }
 }
 
 @media (max-width: 768px) {
-  #image-dialog[data-lightbox-dialog] {
-    --lightbox-max-w: calc(95vw - 20px);
-    --lightbox-max-h: calc(78dvh - var(--lightbox-chrome));
-    max-width: 95vw;
+  #image-dialog[data-lightbox-dialog] .lightbox-topbar {
+    min-height: 48px;
+    padding: 8px 56px;
   }
 
-  #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery'] {
-    width: 95vw;
-    max-width: 95vw;
-    height: min(620px, 85dvh);
-    max-height: 85dvh;
-    padding: 12px;
+  #image-dialog[data-lightbox-dialog] .lightbox-topbar > .close-dialog {
+    right: 8px;
+  }
+
+  #image-dialog[data-lightbox-dialog] [data-lightbox-content] {
+    padding: 8px 16px 24px;
+  }
+
+  #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
+    [data-lightbox-content] {
+    padding: 0;
+  }
+
+  #image-dialog[data-lightbox-dialog][data-lightbox-mode='gallery']
+    .lightbox-gallery-slide {
+    padding: 8px 16px 20px;
+  }
+
+  #image-dialog[data-lightbox-dialog] [data-lightbox-caption] {
+    max-width: calc(100% - 32px);
+    margin-bottom: 16px;
+    font-size: 13px;
   }
 }
 
@@ -311,4 +420,11 @@ html[data-input-mode='pointer'] .close-dialog:focus {
 html[data-input-mode='pointer'] .close-dialog:active {
   outline: 1px solid var(--focus);
   outline-offset: 3px;
+}
+
+html[data-input-mode='pointer']
+  #image-dialog[data-lightbox-dialog]
+  .close-dialog:active {
+  outline: 1px solid #ffffff;
+  outline-offset: 2px;
 }
